@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\DTOs\ProjectDTO;
+use App\Events\ProjectCreated;
+use App\Events\ProjectDeleted;
+use App\Events\ProjectUpdated;
 use App\Models\Project;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -26,16 +29,26 @@ class ProjectService
     public function createProject(ProjectDTO $dto): Project
     {
         $project = $this->projectRepository->create($dto->toArray());
-        return $this->projectRepository->findById($project->id);
+        $project = $this->projectRepository->findById($project->id);
+
+        ProjectCreated::dispatch($project);
+
+        return $project;
     }
 
     public function updateProject(Project $project, ProjectDTO $dto): Project
     {
-        return $this->projectRepository->update($project, $dto->toArray());
+        $project = $this->projectRepository->update($project, $dto->toArray());
+
+        ProjectUpdated::dispatch($project);
+
+        return $project;
     }
 
     public function deleteProject(Project $project): bool
     {
+        ProjectDeleted::dispatch($project);
+
         return $this->projectRepository->delete($project);
     }
 }
