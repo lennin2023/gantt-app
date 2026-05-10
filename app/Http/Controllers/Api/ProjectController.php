@@ -79,4 +79,17 @@ class ProjectController extends Controller
             'message' => 'Project deleted successfully',
         ]);
     }
+
+    public function restore(int $id): JsonResponse
+    {
+        $project = Project::withTrashed()->findOrFail($id);
+
+        abort_unless(Gate::allows('restore', $project), 403);
+
+        $restored = $this->projectService->restoreProject($id);
+
+        return response()->json([
+            'message' => $restored ? 'Project restored successfully' : 'Failed to restore project',
+        ]);
+    }
 }

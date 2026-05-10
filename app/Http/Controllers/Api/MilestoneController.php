@@ -83,4 +83,17 @@ class MilestoneController extends Controller
             'message' => 'Milestone deleted successfully',
         ]);
     }
+
+    public function restore(int $projectId, int $milestoneId): JsonResponse
+    {
+        $milestone = Milestone::withTrashed()->where('project_id', $projectId)->findOrFail($milestoneId);
+
+        abort_unless(Gate::allows('restore', $milestone), 403);
+
+        $restored = $this->milestoneService->restoreMilestone($milestoneId);
+
+        return response()->json([
+            'message' => $restored ? 'Milestone restored successfully' : 'Failed to restore milestone',
+        ]);
+    }
 }

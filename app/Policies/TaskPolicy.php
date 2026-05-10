@@ -10,26 +10,31 @@ class TaskPolicy
 {
     public function viewAny(User $user, Project $project): bool
     {
-        return $user->id === $project->user_id;
+        return $user->id === $project->created_by;
     }
 
     public function view(User $user, Task $task): bool
     {
-        return $user->id === $task->project->user_id;
+        return $user->id === $task->project->created_by;
     }
 
     public function create(User $user, Project $project): bool
     {
-        return $user->id === $project->user_id;
+        return $user->id === $project->created_by;
     }
 
     public function update(User $user, Task $task): bool
     {
-        return $user->id === $task->project->user_id;
+        return $user->id === $task->project->created_by;
     }
 
     public function delete(User $user, Task $task): bool
     {
-        return $user->id === $task->project->user_id;
+        return $user->id === $task->project->created_by;
+    }
+
+    public function restore(User $user, Task $task): bool
+    {
+        return $user->id === $task->project->created_by;
     }
 }

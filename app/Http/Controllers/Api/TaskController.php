@@ -144,4 +144,17 @@ class TaskController extends Controller
             'message' => "$deleted tasks deleted successfully",
         ]);
     }
+
+    public function restore(int $id): JsonResponse
+    {
+        $task = Task::withTrashed()->findOrFail($id);
+
+        abort_unless(Gate::allows('restore', $task), 403);
+
+        $restored = $this->taskService->restoreTask($id);
+
+        return response()->json([
+            'message' => $restored ? 'Task restored successfully' : 'Failed to restore task',
+        ]);
+    }
 }
