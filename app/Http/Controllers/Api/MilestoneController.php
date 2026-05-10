@@ -50,9 +50,9 @@ class MilestoneController extends Controller
     public function show(int $projectId, int $milestoneId): MilestoneResource
     {
         $project = Project::findOrFail($projectId);
-        $milestone = $this->milestoneService->findById($milestoneId);
+        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
 
-        abort_unless($milestone && Gate::allows('view', $project), 403);
+        abort_unless(Gate::allows('view', $project), 403);
 
         return new MilestoneResource($milestone);
     }
