@@ -36,13 +36,4 @@ class LogTaskActivity implements ShouldQueue
             'project_id' => $event->task->project_id,
         ]);
     }
-
-    public function subscribe($events): array
-    {
-        return [
-            TaskCreated::class => 'handleTaskCreated',
-            TaskUpdated::class => 'handleTaskUpdated',
-            TaskDeleted::class => 'handleTaskDeleted',
-        ];
-    }
 }
