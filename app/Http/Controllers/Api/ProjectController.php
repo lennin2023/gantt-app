@@ -11,6 +11,7 @@ use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
@@ -20,6 +21,8 @@ class ProjectController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
+        abort_unless(Gate::allows('viewAny', Project::class), 403);
+
         $projects = $this->projectService->getUserProjects(
             userId: Auth::id(),
             perPage: 10
@@ -30,6 +33,8 @@ class ProjectController extends Controller
 
     public function store(ProjectRequest $request): JsonResponse
     {
+        abort_unless(Gate::allows('create', Project::class), 403);
+
         $dto = ProjectDTO::fromArray($request->validated(), Auth::id());
         $project = $this->projectService->createProject($dto);
 
@@ -42,7 +47,7 @@ class ProjectController extends Controller
     {
         $project = $this->projectService->findById($id, ['tasks.dependencies', 'milestones']);
 
-        abort_unless($project->user_id === Auth::id(), 403);
+        abort_unless(Gate::allows('view', $project), 403);
 
         return new ProjectResource($project);
     }
@@ -51,7 +56,7 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
 
-        abort_unless($project->user_id === Auth::id(), 403);
+        abort_unless(Gate::allows('update', $project), 403);
 
         $dto = ProjectDTO::fromArray($request->validated(), Auth::id());
         $project = $this->projectService->updateProject($project, $dto);
@@ -63,7 +68,7 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
 
-        abort_unless($project->user_id === Auth::id(), 403);
+        abort_unless(Gate::allows('delete', $project), 403);
 
         $this->projectService->deleteProject($project);
 
