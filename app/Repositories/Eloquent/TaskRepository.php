@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class TaskRepository implements TaskRepositoryInterface
 {
@@ -29,6 +30,7 @@ class TaskRepository implements TaskRepositoryInterface
     public function update(Task $task, array $data): Task
     {
         $task->update($data);
+
         return $task->fresh();
     }
 
@@ -49,11 +51,17 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
     {
+        $tasksInProject = Task::with('dependents')
+            ->where('project_id', $task->project_id)
+            ->get()
+            ->keyBy('id');
+
         $visited = [];
-        return $this->hasPath($newDependencyId, $task->id, $visited);
+
+        return $this->hasPathInGraph($newDependencyId, $task->id, $visited, $tasksInProject);
     }
 
-    private function hasPath(int $from, int $to, array &$visited): bool
+    private function hasPathInGraph(int $from, int $to, array &$visited, Collection $tasksInProject): bool
     {
         if ($from === $to) {
             return true;
@@ -65,10 +73,14 @@ class TaskRepository implements TaskRepositoryInterface
 
         $visited[$from] = true;
 
-        $task = Task::with('dependents')->find($from);
+        $taskNode = $tasksInProject->get($from);
 
-        foreach ($task->dependents as $dependent) {
-            if ($this->hasPath($dependent->id, $to, $visited)) {
+        if (! $taskNode) {
+            return false;
+        }
+
+        foreach ($taskNode->dependents as $dependent) {
+            if ($this->hasPathInGraph($dependent->id, $to, $visited, $tasksInProject)) {
                 return true;
             }
         }
