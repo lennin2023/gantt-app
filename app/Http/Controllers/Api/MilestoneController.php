@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\DTOs\MilestoneDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\MilestoneRequest;
+use App\Http\Requests\Api\MilestoneRequest;
 use App\Http\Resources\MilestoneResource;
 use App\Models\Milestone;
 use App\Models\Project;

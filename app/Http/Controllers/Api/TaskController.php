@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\DTOs\TaskDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\TaskRequest;
+use App\Http\Requests\Api\TaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
@@ -102,7 +102,7 @@ class TaskController extends Controller
         ]);
     }
 
-    public function bulkUpdate(\App\Http\Requests\Api\V1\TaskRequest $request): JsonResponse
+    public function bulkUpdate(TaskRequest $request): JsonResponse
     {
         $taskIds = $request->validated()['task_ids'] ?? [];
         $data = $request->validated()['data'] ?? [];

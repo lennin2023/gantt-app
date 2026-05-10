@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\DTOs\ProjectDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\ProjectRequest;
+use App\Http\Requests\Api\ProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Services\ProjectService;
