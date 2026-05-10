@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_status_id')->default(1)->constrained('project_statuses')->cascadeOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('color', 7)->default('#3b82f6');

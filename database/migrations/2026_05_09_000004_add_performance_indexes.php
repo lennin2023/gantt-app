@@ -8,10 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->index('user_id');
-        });
-
         Schema::table('tasks', function (Blueprint $table) {
             $table->index('project_id');
             $table->index('status');
@@ -31,24 +27,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('projects', function (Blueprint $table) {
-            $table->dropIndex(['user_id']);
-        });
-
-        Schema::table('tasks', function (Blueprint $table) {
-            $table->dropIndex(['project_id']);
-            $table->dropIndex(['status']);
-            $table->dropIndex(['order']);
-        });
-
-        Schema::table('milestones', function (Blueprint $table) {
-            $table->dropIndex(['project_id']);
-            $table->dropIndex(['date']);
-        });
-
-        Schema::table('task_dependencies', function (Blueprint $table) {
-            $table->dropIndex(['task_id']);
-            $table->dropIndex(['depends_on_task_id']);
-        });
+        //
     }
 };

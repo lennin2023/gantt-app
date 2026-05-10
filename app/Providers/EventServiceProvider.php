@@ -6,8 +6,8 @@ use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
-use App\Listeners\CheckProjectCompletion;
 use App\Listeners\LogTaskActivity;
+use App\Listeners\RefreshProjectStatus;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -18,12 +18,13 @@ class EventServiceProvider extends ServiceProvider
         ],
         TaskUpdated::class => [
             LogTaskActivity::class,
+            RefreshProjectStatus::class,
         ],
         TaskDeleted::class => [
             LogTaskActivity::class,
         ],
         TaskCompleted::class => [
-            CheckProjectCompletion::class,
+            RefreshProjectStatus::class,
         ],
     ];
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Company;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Task;
@@ -18,8 +19,12 @@ class ProjectSeeder extends Seeder
             ['name' => 'Admin User', 'password' => Hash::make('password')]
         );
 
+        $company = Company::first();
+
         $project1 = Project::create([
-            'user_id' => $user->id,
+            'created_by' => $user->id,
+            'company_id' => $company->id,
+            'project_status_id' => 1,
             'name' => 'Website Redesign',
             'description' => 'Complete redesign of the company website with new branding',
             'color' => '#3b82f6',
@@ -101,7 +106,9 @@ class ProjectSeeder extends Seeder
         ]);
 
         $project2 = Project::create([
-            'user_id' => $user->id,
+            'created_by' => $user->id,
+            'company_id' => $company->id,
+            'project_status_id' => 1,
             'name' => 'Mobile App MVP',
             'description' => 'Build a minimum viable product for the mobile app',
             'color' => '#22c55e',

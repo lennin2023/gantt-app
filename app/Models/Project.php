@@ -14,13 +14,15 @@ class Project extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
         'company_id',
+        'project_status_id',
         'name',
         'description',
         'color',
         'start_date',
         'end_date',
+        'created_by',
+        'updated_by',
     ];
 
     protected function casts(): array
@@ -28,18 +30,27 @@ class Project extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
-            'completed_at' => 'datetime',
         ];
     }
 
-    public function user(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(ProjectStatus::class, 'project_status_id');
     }
 
     public function tasks(): HasMany
@@ -50,6 +61,11 @@ class Project extends Model
     public function milestones(): HasMany
     {
         return $this->hasMany(Milestone::class)->orderBy('date');
+    }
+
+    public function histories(): HasMany
+    {
+        return $this->hasMany(ProjectHistory::class)->orderByDesc('created_at');
     }
 
     public function getStats(): array
@@ -65,18 +81,25 @@ class Project extends Model
         ];
     }
 
-    public function markAsCompleted(): void
+    public function isAllTasksCompleted(): bool
     {
-        $this->update(['completed_at' => now()]);
+        $totalTasks = $this->tasks()->count();
+
+        if ($totalTasks === 0) {
+            return false;
+        }
+
+        $completedTasks = $this->tasks()->where('status', TaskStatus::COMPLETED)->count();
+
+        return $totalTasks > 0 && $totalTasks === $completedTasks;
     }
 
-    public function markAsIncomplete(): void
+    public function refreshStatus(): void
     {
-        $this->update(['completed_at' => null]);
-    }
+        $this->project_status_id = $this->isAllTasksCompleted()
+            ? \App\Enums\ProjectStatus::COMPLETED->value
+            : \App\Enums\ProjectStatus::ACTIVE->value;
 
-    public function isCompleted(): bool
-    {
-        return $this->completed_at !== null;
+        $this->save();
     }
 }
