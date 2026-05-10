@@ -12,6 +12,7 @@ use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TaskService
 {
@@ -31,36 +32,40 @@ class TaskService
 
     public function createTask(TaskDTO $dto): Task
     {
-        $task = $this->taskRepository->create($dto->toArray());
+        return DB::transaction(function () use ($dto) {
+            $task = $this->taskRepository->create($dto->toArray());
 
-        if (! empty($dto->dependencyIds)) {
-            $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
-        }
+            if (! empty($dto->dependencyIds)) {
+                $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
+            }
 
-        $task = $this->taskRepository->findById($task->id);
+            $task = $this->taskRepository->findById($task->id);
 
-        TaskCreated::dispatch($task);
+            TaskCreated::dispatch($task);
 
-        return $task;
+            return $task;
+        });
     }
 
     public function updateTask(Task $task, TaskDTO $dto): Task
     {
-        $previousStatus = $task->status;
+        return DB::transaction(function () use ($task, $dto) {
+            $previousStatus = $task->status;
 
-        $task = $this->taskRepository->update($task, $dto->toArray());
+            $task = $this->taskRepository->update($task, $dto->toArray());
 
-        if (array_key_exists('dependencyIds', $dto->toArray())) {
-            $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
-        }
+            if (array_key_exists('dependencyIds', $dto->toArray())) {
+                $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
+            }
 
-        TaskUpdated::dispatch($task);
+            TaskUpdated::dispatch($task);
 
-        if ($task->status === TaskStatus::COMPLETED && $previousStatus !== TaskStatus::COMPLETED) {
-            TaskCompleted::dispatch($task);
-        }
+            if ($task->status === TaskStatus::COMPLETED && $previousStatus !== TaskStatus::COMPLETED) {
+                TaskCompleted::dispatch($task);
+            }
 
-        return $task;
+            return $task;
+        });
     }
 
     public function deleteTask(Task $task): bool
