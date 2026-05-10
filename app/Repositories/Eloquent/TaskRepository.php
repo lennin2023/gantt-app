@@ -37,6 +37,11 @@ class TaskRepository implements TaskRepositoryInterface
         return $task->delete();
     }
 
+    public function deleteMany(array $taskIds): int
+    {
+        return Task::whereIn('id', $taskIds)->delete();
+    }
+
     public function syncDependencies(Task $task, array $dependencyIds): void
     {
         $task->dependencies()->sync($dependencyIds);

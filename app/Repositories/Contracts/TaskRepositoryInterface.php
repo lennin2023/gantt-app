@@ -17,6 +17,8 @@ interface TaskRepositoryInterface
 
     public function delete(Task $task): bool;
 
+    public function deleteMany(array $taskIds): int;
+
     public function syncDependencies(Task $task, array $dependencyIds): void;
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool;

@@ -3,6 +3,11 @@
 namespace App\Services;
 
 use App\DTOs\TaskDTO;
+use App\Enums\TaskStatus;
+use App\Events\TaskCompleted;
+use App\Events\TaskCreated;
+use App\Events\TaskDeleted;
+use App\Events\TaskUpdated;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -32,15 +37,27 @@ class TaskService
             $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
         }
 
-        return $this->taskRepository->findById($task->id);
+        $task = $this->taskRepository->findById($task->id);
+
+        TaskCreated::dispatch($task);
+
+        return $task;
     }
 
     public function updateTask(Task $task, TaskDTO $dto): Task
     {
+        $previousStatus = $task->status;
+
         $task = $this->taskRepository->update($task, $dto->toArray());
 
         if (array_key_exists('dependencyIds', $dto->toArray())) {
             $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
+        }
+
+        TaskUpdated::dispatch($task);
+
+        if ($task->status === TaskStatus::COMPLETED && $previousStatus !== TaskStatus::COMPLETED) {
+            TaskCompleted::dispatch($task);
         }
 
         return $task;
@@ -48,6 +65,8 @@ class TaskService
 
     public function deleteTask(Task $task): bool
     {
+        TaskDeleted::dispatch($task);
+
         return $this->taskRepository->delete($task);
     }
 
@@ -60,7 +79,15 @@ class TaskService
         $updated = collect();
 
         foreach ($tasks as $task) {
-            $updated->push($this->taskRepository->update($task, $filteredData));
+            $previousStatus = $task->status;
+            $updatedTask = $this->taskRepository->update($task, $filteredData);
+            $updated->push($updatedTask);
+
+            TaskUpdated::dispatch($updatedTask);
+
+            if ($updatedTask->status === TaskStatus::COMPLETED && $previousStatus !== TaskStatus::COMPLETED) {
+                TaskCompleted::dispatch($updatedTask);
+            }
         }
 
         return $updated;
@@ -68,7 +95,13 @@ class TaskService
 
     public function bulkDelete(array $taskIds): int
     {
-        return Task::whereIn('id', $taskIds)->delete();
+        $tasks = Task::whereIn('id', $taskIds)->get();
+
+        foreach ($tasks as $task) {
+            TaskDeleted::dispatch($task);
+        }
+
+        return $this->taskRepository->deleteMany($taskIds);
     }
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
