@@ -6,6 +6,7 @@ use App\DTOs\MilestoneDTO;
 use App\Models\Milestone;
 use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class MilestoneService
 {
@@ -25,17 +26,23 @@ class MilestoneService
 
     public function createMilestone(MilestoneDTO $dto): Milestone
     {
-        return $this->milestoneRepository->create($dto->toArray());
+        return DB::transaction(function () use ($dto) {
+            return $this->milestoneRepository->create($dto->toArray());
+        });
     }
 
     public function updateMilestone(Milestone $milestone, MilestoneDTO $dto): Milestone
     {
-        return $this->milestoneRepository->update($milestone, $dto->toArray());
+        return DB::transaction(function () use ($milestone, $dto) {
+            return $this->milestoneRepository->update($milestone, $dto->toArray());
+        });
     }
 
     public function deleteMilestone(Milestone $milestone): bool
     {
-        return $this->milestoneRepository->delete($milestone);
+        return DB::transaction(function () use ($milestone) {
+            return $this->milestoneRepository->delete($milestone);
+        });
     }
 
     public function restoreMilestone(int $id): bool

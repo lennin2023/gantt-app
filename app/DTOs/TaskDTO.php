@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Enums\TaskStatus;
+
 class TaskDTO
 {
     public function __construct(
@@ -12,13 +14,16 @@ class TaskDTO
         public readonly ?string $startDate,
         public readonly ?string $endDate,
         public readonly int $progress,
-        public readonly string $status,
+        public readonly TaskStatus $status,
         public readonly int $order,
         public readonly array $dependencyIds = [],
     ) {}
 
     public static function fromArray(array $data, ?int $fallbackProjectId = null): self
     {
+        $statusValue = $data['status'] ?? 'pending';
+        $status = TaskStatus::tryFrom($statusValue) ?? TaskStatus::PENDING;
+
         return new self(
             projectId: $data['project_id'] ?? $fallbackProjectId,
             name: $data['name'],
@@ -27,7 +32,7 @@ class TaskDTO
             startDate: $data['start_date'] ?? null,
             endDate: $data['end_date'] ?? null,
             progress: $data['progress'] ?? 0,
-            status: $data['status'] ?? 'pending',
+            status: $status,
             order: $data['order'] ?? 0,
             dependencyIds: $data['dependency_ids'] ?? [],
         );
@@ -43,7 +48,7 @@ class TaskDTO
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'progress' => $this->progress,
-            'status' => $this->status,
+            'status' => $this->status->value,
             'order' => $this->order,
         ];
     }
