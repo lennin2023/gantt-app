@@ -15,6 +15,7 @@ class Project extends Model
 
     protected $fillable = [
         'user_id',
+        'company_id',
         'name',
         'description',
         'color',
@@ -34,6 +35,11 @@ class Project extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function tasks(): HasMany
