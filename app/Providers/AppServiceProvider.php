@@ -15,9 +15,11 @@ use App\Repositories\Eloquent\MilestoneRepository;
 use App\Repositories\Eloquent\ProjectRepository;
 use App\Repositories\Eloquent\TaskRepository;
 use Carbon\CarbonImmutable;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -32,11 +34,22 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->configureRateLimiting();
+
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(Milestone::class, MilestonePolicy::class);
 
         $this->configureDefaults();
+    }
+
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function ($request) {
+            $user = $request->user();
+
+            return Limit::perMinute(60)->by($user?->id ?: $request->ip());
+        });
     }
 
     protected function configureDefaults(): void

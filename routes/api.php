@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\MilestoneController;
 
-Route::middleware('auth:web')->group(function () {
+Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     Route::apiResource('projects', ProjectController::class);
 
     Route::get('/projects/{project}/tasks', [TaskController::class, 'index']);
