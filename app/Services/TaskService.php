@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\DTOs\TaskDTO;
-use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;

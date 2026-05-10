@@ -1,7 +1,8 @@
 <?php
 
-namespace App\DTOs;
+namespace App\Services;
 
+use App\DTOs\ProjectDTO;
 use App\Models\Project;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
