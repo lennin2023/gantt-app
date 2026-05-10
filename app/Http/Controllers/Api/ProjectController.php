@@ -9,6 +9,7 @@ use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -19,13 +20,15 @@ class ProjectController extends Controller
         private readonly ProjectService $projectService,
     ) {}
 
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
         abort_unless(Gate::allows('viewAny', Project::class), 403);
 
+        $perPage = min((int) $request->query('per_page', 10), 100);
+
         $projects = $this->projectService->getUserProjects(
             userId: Auth::id(),
-            perPage: 10
+            perPage: $perPage
         );
 
         return ProjectResource::collection($projects);

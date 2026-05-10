@@ -10,6 +10,7 @@ use App\Models\Milestone;
 use App\Models\Project;
 use App\Services\MilestoneService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -19,13 +20,15 @@ class MilestoneController extends Controller
         private readonly MilestoneService $milestoneService,
     ) {}
 
-    public function index(int $projectId): AnonymousResourceCollection
+    public function index(Request $request, int $projectId): AnonymousResourceCollection
     {
         $project = Project::findOrFail($projectId);
 
         abort_unless(Gate::allows('view', $project), 403);
 
-        $milestones = $this->milestoneService->getProjectMilestones($projectId);
+        $perPage = min((int) $request->query('per_page', 10), 100);
+
+        $milestones = $this->milestoneService->getProjectMilestones($projectId, $perPage);
 
         return MilestoneResource::collection($milestones);
     }

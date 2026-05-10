@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Task;
 use App\Services\TaskService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -19,13 +20,15 @@ class TaskController extends Controller
         private readonly TaskService $taskService,
     ) {}
 
-    public function index(int $projectId): AnonymousResourceCollection
+    public function index(Request $request, int $projectId): AnonymousResourceCollection
     {
         $project = Project::findOrFail($projectId);
 
         abort_unless(Gate::allows('view', $project), 403);
 
-        $tasks = $this->taskService->getProjectTasks($projectId);
+        $perPage = min((int) $request->query('per_page', 10), 100);
+
+        $tasks = $this->taskService->getProjectTasks($projectId, $perPage);
 
         return TaskResource::collection($tasks);
     }
@@ -121,7 +124,7 @@ class TaskController extends Controller
         ]);
     }
 
-    public function bulkDelete(\Illuminate\Http\Request $request): JsonResponse
+    public function bulkDelete(Request $request): JsonResponse
     {
         $request->validate([
             'task_ids' => 'required|array|min:1',
