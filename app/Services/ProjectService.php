@@ -51,4 +51,9 @@ class ProjectService
 
         return $this->projectRepository->delete($project);
     }
+
+    public function restoreProject(int $id): bool
+    {
+        return $this->projectRepository->restore($id);
+    }
 }

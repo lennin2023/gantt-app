@@ -4,7 +4,6 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Project;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 
 interface ProjectRepositoryInterface
 {
@@ -17,4 +16,6 @@ interface ProjectRepositoryInterface
     public function update(Project $project, array $data): Project;
 
     public function delete(Project $project): bool;
+
+    public function restore(int $id): bool;
 }

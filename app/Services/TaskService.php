@@ -113,4 +113,9 @@ class TaskService
     {
         return $this->taskRepository->wouldCreateCycle($task, $newDependencyId);
     }
+
+    public function restoreTask(int $id): bool
+    {
+        return $this->taskRepository->restore($id);
+    }
 }

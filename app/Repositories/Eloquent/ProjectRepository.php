@@ -5,7 +5,6 @@ namespace App\Repositories\Eloquent;
 use App\Models\Project;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 
 class ProjectRepository implements ProjectRepositoryInterface
 {
@@ -33,11 +32,23 @@ class ProjectRepository implements ProjectRepositoryInterface
     public function update(Project $project, array $data): Project
     {
         $project->update($data);
+
         return $project->fresh();
     }
 
     public function delete(Project $project): bool
     {
         return $project->delete();
+    }
+
+    public function restore(int $id): bool
+    {
+        $project = Project::withTrashed()->find($id);
+
+        if (! $project) {
+            return false;
+        }
+
+        return $project->restore();
     }
 }

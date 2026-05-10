@@ -28,11 +28,23 @@ class MilestoneRepository implements MilestoneRepositoryInterface
     public function update(Milestone $milestone, array $data): Milestone
     {
         $milestone->update($data);
+
         return $milestone->fresh();
     }
 
     public function delete(Milestone $milestone): bool
     {
         return $milestone->delete();
+    }
+
+    public function restore(int $id): bool
+    {
+        $milestone = Milestone::withTrashed()->find($id);
+
+        if (! $milestone) {
+            return false;
+        }
+
+        return $milestone->restore();
     }
 }

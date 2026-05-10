@@ -87,4 +87,15 @@ class TaskRepository implements TaskRepositoryInterface
 
         return false;
     }
+
+    public function restore(int $id): bool
+    {
+        $task = Task::withTrashed()->find($id);
+
+        if (! $task) {
+            return false;
+        }
+
+        return $task->restore();
+    }
 }

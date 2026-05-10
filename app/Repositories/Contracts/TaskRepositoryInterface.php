@@ -22,4 +22,6 @@ interface TaskRepositoryInterface
     public function syncDependencies(Task $task, array $dependencyIds): void;
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool;
+
+    public function restore(int $id): bool;
 }

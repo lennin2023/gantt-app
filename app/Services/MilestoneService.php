@@ -50,4 +50,9 @@ class MilestoneService
 
         return $this->milestoneRepository->delete($milestone);
     }
+
+    public function restoreMilestone(int $id): bool
+    {
+        return $this->milestoneRepository->restore($id);
+    }
 }
