@@ -19,7 +19,9 @@ class CheckProjectCompletion implements ShouldQueue
             ->count();
 
         if ($totalTasks > 0 && $totalTasks === $completedTasks) {
-            Log::info('All tasks completed in project', [
+            $project->markAsCompleted();
+
+            Log::info('Project marked as completed', [
                 'project_id' => $project->id,
                 'project_name' => $project->name,
                 'total_tasks' => $totalTasks,

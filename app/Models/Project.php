@@ -6,7 +6,6 @@ use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -28,6 +27,7 @@ class Project extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -57,5 +57,20 @@ class Project extends Model
                 ? (int) $tasks->avg('progress')
                 : 0,
         ];
+    }
+
+    public function markAsCompleted(): void
+    {
+        $this->update(['completed_at' => now()]);
+    }
+
+    public function markAsIncomplete(): void
+    {
+        $this->update(['completed_at' => null]);
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->completed_at !== null;
     }
 }
