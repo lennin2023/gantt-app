@@ -41,7 +41,7 @@ class TaskPolicy
         if ($user->roleLevel() >= RoleType::PROJECT_MANAGER->level() && $user->id === $task->project->created_by) {
             return true;
         }
-        return $user->roleLevel() >= RoleType::DEVELOPER->level() && $task->assigned_to === $user->id;
+        return $user->roleLevel() >= RoleType::DEVELOPER->level() && (string) $task->assignee === (string) $user->id;
     }
 
     public function delete(User $user, Task $task): bool
