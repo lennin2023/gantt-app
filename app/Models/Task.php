@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\TaskStatus;
+use App\Enums\TaskStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +30,7 @@ class Task extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
-            'status' => TaskStatus::class,
+            'status' => TaskStatusEnum::class,
             'progress' => 'integer',
         ];
     }
@@ -62,6 +62,6 @@ class Task extends Model
 
     public function isCompleted(): bool
     {
-        return $this->status === TaskStatus::COMPLETED;
+        return $this->status === TaskStatusEnum::COMPLETED;
     }
 }

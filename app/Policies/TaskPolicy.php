@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Enums\RoleType;
+use App\Enums\RoleEnum;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
@@ -30,7 +30,7 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        return $user->roleLevel() >= RoleType::PROJECT_MANAGER->level() && $user->id === $project->created_by;
+        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $project->created_by;
     }
 
     public function update(User $user, Task $task): bool
@@ -38,10 +38,10 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
-        if ($user->roleLevel() >= RoleType::PROJECT_MANAGER->level() && $user->id === $task->project->created_by) {
+        if ($user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $task->project->created_by) {
             return true;
         }
-        return $user->roleLevel() >= RoleType::DEVELOPER->level() && (string) $task->assignee === (string) $user->id;
+        return $user->roleLevel() >= RoleEnum::DEVELOPER->level() && (string) $task->assignee === (string) $user->id;
     }
 
     public function delete(User $user, Task $task): bool

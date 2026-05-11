@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleEnum;
 use App\Models\Project;
 use App\Models\User;
 
@@ -22,7 +23,7 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        return $user->roleLevel() >= \App\Enums\RoleType::PROJECT_MANAGER->level();
+        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level();
     }
 
     public function update(User $user, Project $project): bool

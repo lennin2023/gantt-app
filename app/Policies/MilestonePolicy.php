@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Enums\RoleType;
+use App\Enums\RoleEnum;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\User;
@@ -30,7 +30,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
-        return $user->roleLevel() >= RoleType::PROJECT_MANAGER->level() && $user->id === $project->created_by;
+        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $project->created_by;
     }
 
     public function update(User $user, Milestone $milestone): bool

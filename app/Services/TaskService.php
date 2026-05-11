@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\TaskDTO;
-use App\Enums\TaskStatus;
+use App\Enums\TaskStatusEnum;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
@@ -60,7 +60,7 @@ class TaskService
 
             TaskUpdated::dispatch($task);
 
-            if ($task->status === TaskStatus::COMPLETED && $previousStatus !== TaskStatus::COMPLETED) {
+            if ($task->status === TaskStatusEnum::COMPLETED && $previousStatus !== TaskStatusEnum::COMPLETED) {
                 TaskCompleted::dispatch($task);
             }
 
@@ -90,7 +90,7 @@ class TaskService
 
             TaskUpdated::dispatch($updatedTask);
 
-            if ($updatedTask->status === TaskStatus::COMPLETED && $previousStatus !== TaskStatus::COMPLETED) {
+            if ($updatedTask->status === TaskStatusEnum::COMPLETED && $previousStatus !== TaskStatusEnum::COMPLETED) {
                 TaskCompleted::dispatch($updatedTask);
             }
         }

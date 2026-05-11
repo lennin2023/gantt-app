@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Enums\TaskStatus;
+use App\Enums\ProjectStatusEnum;
+use App\Enums\TaskStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,7 +75,7 @@ class Project extends Model
 
         return [
             'total_tasks' => $tasks->count(),
-            'completed_tasks' => $tasks->where('status', TaskStatus::COMPLETED)->count(),
+            'completed_tasks' => $tasks->where('status', TaskStatusEnum::COMPLETED)->count(),
             'overall_progress' => $tasks->count() > 0
                 ? (int) $tasks->avg('progress')
                 : 0,
@@ -89,7 +90,7 @@ class Project extends Model
             return false;
         }
 
-        $completedTasks = $this->tasks()->where('status', TaskStatus::COMPLETED)->count();
+        $completedTasks = $this->tasks()->where('status', TaskStatusEnum::COMPLETED)->count();
 
         return $totalTasks > 0 && $totalTasks === $completedTasks;
     }
@@ -97,8 +98,8 @@ class Project extends Model
     public function refreshStatus(): void
     {
         $this->project_status_id = $this->isAllTasksCompleted()
-            ? \App\Enums\ProjectStatus::COMPLETED->value
-            : \App\Enums\ProjectStatus::ACTIVE->value;
+            ? ProjectStatusEnum::COMPLETED->value
+            : ProjectStatusEnum::ACTIVE->value;
 
         $this->save();
     }

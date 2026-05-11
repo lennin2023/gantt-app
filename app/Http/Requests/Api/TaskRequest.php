@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Enums\TaskStatus;
+use App\Enums\TaskStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,7 +25,7 @@ class TaskRequest extends FormRequest
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'progress' => 'nullable|integer|min:0|max:100',
-            'status' => ['nullable', 'string', Rule::enum(TaskStatus::class)],
+            'status' => ['nullable', 'string', Rule::enum(TaskStatusEnum::class)],
             'order' => 'nullable|integer|min:0',
             'dependency_ids' => 'nullable|array',
             'dependency_ids.*' => 'integer|exists:tasks,id',

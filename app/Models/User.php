@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\RoleType;
+use App\Enums\RoleEnum;
 use App\Models\Project;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\UserFactory;
@@ -28,7 +28,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
-            'role_type' => RoleType::class,
+            'role_type' => RoleEnum::class,
         ];
     }
 
@@ -47,7 +47,7 @@ class User extends Authenticatable
         return $this->role?->slug === 'admin';
     }
 
-    public function hasRole(RoleType $role): bool
+    public function hasRole(RoleEnum $role): bool
     {
         return $this->role?->slug === $role->value;
     }

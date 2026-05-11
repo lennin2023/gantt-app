@@ -2,7 +2,7 @@
 
 namespace App\DTOs;
 
-use App\Enums\TaskStatus;
+use App\Enums\TaskStatusEnum;
 
 class TaskDTO
 {
@@ -14,7 +14,7 @@ class TaskDTO
         public readonly ?string $startDate,
         public readonly ?string $endDate,
         public readonly int $progress,
-        public readonly TaskStatus $status,
+        public readonly TaskStatusEnum $status,
         public readonly int $order,
         public readonly array $dependencyIds = [],
     ) {}
@@ -22,7 +22,7 @@ class TaskDTO
     public static function fromArray(array $data, ?int $fallbackProjectId = null): self
     {
         $statusValue = $data['status'] ?? 'pending';
-        $status = TaskStatus::tryFrom($statusValue) ?? TaskStatus::PENDING;
+        $status = TaskStatusEnum::tryFrom($statusValue) ?? TaskStatusEnum::PENDING;
 
         return new self(
             projectId: $data['project_id'] ?? $fallbackProjectId,
