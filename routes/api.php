@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MilestoneController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:web', 'throttle:api'])->group(function () {
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+
     Route::apiResource('projects', ProjectController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('/projects/{project}/restore', [ProjectController::class, 'restore']);
 

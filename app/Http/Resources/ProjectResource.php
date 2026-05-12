@@ -11,11 +11,14 @@ class ProjectResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'company_id' => $this->company_id,
+            'project_status_id' => $this->project_status_id,
             'name' => $this->name,
             'description' => $this->description,
             'color' => $this->color,
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
+            'created_by' => $this->created_by,
             'created_at' => $this->created_at?->toIso8601String(),
             'tasks' => TaskResource::collection($this->whenLoaded('tasks')),
             'milestones' => MilestoneResource::collection($this->whenLoaded('milestones')),

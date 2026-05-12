@@ -26,7 +26,6 @@ class ProjectDTO
             startDate: $data['start_date'] ?? null,
             endDate: $data['end_date'] ?? null,
             createdBy: $createdBy,
-
         );
     }
 
