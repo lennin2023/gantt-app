@@ -14,6 +14,7 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $project->created_by;
     }
 
@@ -22,6 +23,7 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $task->project->created_by;
     }
 
@@ -30,6 +32,7 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $project->created_by;
     }
 
@@ -41,6 +44,7 @@ class TaskPolicy
         if ($user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $task->project->created_by) {
             return true;
         }
+
         return $user->roleLevel() >= RoleEnum::DEVELOPER->level() && (string) $task->assignee === (string) $user->id;
     }
 
@@ -49,6 +53,7 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $task->project->created_by;
     }
 
@@ -57,6 +62,7 @@ class TaskPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $task->project->created_by;
     }
 }

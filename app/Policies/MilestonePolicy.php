@@ -14,6 +14,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $project->created_by;
     }
 
@@ -22,6 +23,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $milestone->project->created_by;
     }
 
@@ -30,6 +32,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $project->created_by;
     }
 
@@ -38,6 +41,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $milestone->project->created_by;
     }
 
@@ -46,6 +50,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $milestone->project->created_by;
     }
 
@@ -54,6 +59,7 @@ class MilestonePolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $milestone->project->created_by;
     }
 }

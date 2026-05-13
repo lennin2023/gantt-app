@@ -24,7 +24,7 @@ class ProjectResource extends JsonResource
             'milestones' => MilestoneResource::collection($this->whenLoaded('milestones')),
             'stats' => $this->when(
                 $request->routeIs('projects.show'),
-                fn() => $this->getStats()
+                fn () => $this->getStats()
             ),
         ];
     }

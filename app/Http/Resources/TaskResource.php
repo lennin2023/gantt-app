@@ -22,7 +22,7 @@ class TaskResource extends JsonResource
             'order' => $this->order,
             'dependency_ids' => $this->when(
                 $this->relationLoaded('dependencies'),
-                fn() => $this->dependencies->pluck('id')->toArray()
+                fn () => $this->dependencies->pluck('id')->toArray()
             ),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

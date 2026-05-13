@@ -18,6 +18,7 @@ class ProjectPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $project->created_by;
     }
 
@@ -31,6 +32,7 @@ class ProjectPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $project->created_by;
     }
 
@@ -39,6 +41,7 @@ class ProjectPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $project->created_by;
     }
 
@@ -47,6 +50,7 @@ class ProjectPolicy
         if ($user->isAdmin()) {
             return true;
         }
+
         return $user->id === $project->created_by;
     }
 }

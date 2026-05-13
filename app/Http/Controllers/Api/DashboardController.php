@@ -43,10 +43,10 @@ class DashboardController extends Controller
             ->avg('tasks.progress');
 
         return [
-            'total_projects'    => $totalProjects,
-            'active_projects'   => $activeProjects,
+            'total_projects' => $totalProjects,
+            'active_projects' => $activeProjects,
             'completed_projects' => $completedProjects,
-            'overall_progress'  => (int) round($overallProgress ?? 0),
+            'overall_progress' => (int) round($overallProgress ?? 0),
         ];
     }
 
@@ -78,13 +78,13 @@ class DashboardController extends Controller
             ->orderByDesc('projects.created_at')
             ->limit(10)
             ->get()
-            ->map(fn($project) => [
-                'id'          => $project->id,
-                'name'        => $project->name,
-                'color'       => $project->color,
+            ->map(fn ($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'color' => $project->color,
                 'status_name' => $project->status_name,
                 'status_color' => $project->status_color,
-                'progress'    => (int) $project->progress,
+                'progress' => (int) $project->progress,
                 'total_tasks' => (int) $project->total_tasks,
             ])
             ->toArray();

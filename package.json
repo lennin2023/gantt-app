@@ -8,7 +8,7 @@
     "dev": "vite",
     "format": "prettier --write \"resources/**/*.{js,ts,vue,css}\"",
     "format:check": "prettier --check resources/",
-    "lint": "eslint . --fix && vendor/bin/pint",
+    "lint": "eslint . --fix && php vendor/bin/pint",
     "lint:check": "eslint .",
     "types:check": "vue-tsc --noEmit",
     "prepare": "husky install"
@@ -63,7 +63,7 @@
     "lightningcss-win32-x64-msvc": "^1.29.1"
   },
   "lint-staged": {
-    "**/*.php": "vendor/bin/pint",
+    "**/*.php": "php vendor/bin/pint",
     "**/*.{js,ts,vue}": [
       "eslint --fix",
       "prettier --write"
