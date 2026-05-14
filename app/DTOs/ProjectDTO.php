@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Enums\ProjectStatusEnum;
+
 class ProjectDTO
 {
     public function __construct(
@@ -19,7 +21,7 @@ class ProjectDTO
     {
         return new self(
             companyId: $data['company_id'],
-            projectStatusId: $data['project_status_id'] ?? 1,
+            projectStatusId: $data['project_status_id'] ?? ProjectStatusEnum::ACTIVE->value,
             name: $data['name'],
             description: $data['description'] ?? null,
             color: $data['color'] ?? '#3b82f6',

@@ -21,7 +21,7 @@ enum ProjectStatusEnum: int
         };
     }
 
-    public function color(): string
+    /* public function color(): string
     {
         return match ($this) {
             self::ACTIVE => '#22c55e',
@@ -30,7 +30,7 @@ enum ProjectStatusEnum: int
             self::ON_HOLD => '#f59e0b',
             self::CANCELLED => '#ef4444',
         };
-    }
+    } */
 
     public function name(): string
     {

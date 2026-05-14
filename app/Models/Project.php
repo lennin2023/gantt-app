@@ -75,7 +75,7 @@ class Project extends Model
 
         return [
             'total_tasks' => $tasks->count(),
-            'completed_tasks' => $tasks->where('status', TaskStatusEnum::COMPLETED)->count(),
+            'completed_tasks' => $tasks->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count(),
             'overall_progress' => $tasks->count() > 0
                 ? (int) $tasks->avg('progress')
                 : 0,
@@ -90,7 +90,7 @@ class Project extends Model
             return false;
         }
 
-        $completedTasks = $this->tasks()->where('status', TaskStatusEnum::COMPLETED)->count();
+        $completedTasks = $this->tasks()->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count();
 
         return $totalTasks > 0 && $totalTasks === $completedTasks;
     }

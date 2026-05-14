@@ -15,13 +15,13 @@ class Task extends Model
 
     protected $fillable = [
         'project_id',
+        'task_status_id',
         'name',
         'description',
         'assignee',
         'start_date',
         'end_date',
         'progress',
-        'status',
         'order',
     ];
 
@@ -30,7 +30,6 @@ class Task extends Model
         return [
             'start_date' => 'date',
             'end_date' => 'date',
-            'status' => TaskStatusEnum::class,
             'progress' => 'integer',
         ];
     }
@@ -38,6 +37,11 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function status(): BelongsTo
+    {
+        return $this->belongsTo(TaskStatus::class, 'task_status_id');
     }
 
     public function dependencies(): BelongsToMany
@@ -62,6 +66,6 @@ class Task extends Model
 
     public function isCompleted(): bool
     {
-        return $this->status === TaskStatusEnum::COMPLETED;
+        return $this->task_status_id === TaskStatusEnum::COMPLETED->value;
     }
 }

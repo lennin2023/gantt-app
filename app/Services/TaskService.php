@@ -50,7 +50,7 @@ class TaskService
     public function updateTask(Task $task, TaskDTO $dto): Task
     {
         return DB::transaction(function () use ($task, $dto) {
-            $previousStatus = $task->status;
+            $previousStatus = $task->task_status_id;
 
             $task = $this->taskRepository->update($task, $dto->toArray());
 
@@ -60,7 +60,7 @@ class TaskService
 
             TaskUpdated::dispatch($task);
 
-            if ($task->status === TaskStatusEnum::COMPLETED && $previousStatus !== TaskStatusEnum::COMPLETED) {
+            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
                 TaskCompleted::dispatch($task);
             }
 
@@ -77,20 +77,20 @@ class TaskService
 
     public function bulkUpdate(array $taskIds, array $data): Collection
     {
-        $allowedFields = ['name', 'description', 'assignee', 'start_date', 'end_date', 'progress', 'status', 'order'];
+        $allowedFields = ['task_status_id', 'name', 'description', 'assignee', 'start_date', 'end_date', 'progress', 'order'];
         $filteredData = array_intersect_key($data, array_flip($allowedFields));
 
         $tasks = Task::whereIn('id', $taskIds)->get();
         $updated = collect();
 
         foreach ($tasks as $task) {
-            $previousStatus = $task->status;
+            $previousStatus = $task->task_status_id;
             $updatedTask = $this->taskRepository->update($task, $filteredData);
             $updated->push($updatedTask);
 
             TaskUpdated::dispatch($updatedTask);
 
-            if ($updatedTask->status === TaskStatusEnum::COMPLETED && $previousStatus !== TaskStatusEnum::COMPLETED) {
+            if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
                 TaskCompleted::dispatch($updatedTask);
             }
         }
