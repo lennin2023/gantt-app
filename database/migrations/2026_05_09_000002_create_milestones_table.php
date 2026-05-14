@@ -10,10 +10,12 @@ return new class extends Migration
     {
         Schema::create('milestones', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('project_id')->constrained()->restrictOnDelete();
             $table->string('name');
-            $table->date('date');
+            $table->date('date')->index();
             $table->boolean('reached')->default(false);
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

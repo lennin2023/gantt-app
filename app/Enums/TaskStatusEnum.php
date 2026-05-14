@@ -19,23 +19,8 @@ enum TaskStatusEnum: int
         };
     }
 
-    /* public function color(): string
+    public function slug(): string
     {
-        return match ($this) {
-            self::PENDING => '#6b7280',
-            self::IN_PROGRESS => '#3b82f6',
-            self::COMPLETED => '#22c55e',
-            self::DELAYED => '#ef4444',
-        };
-    } */
-
-    public function name(): string
-    {
-        return match ($this) {
-            self::PENDING => 'pending',
-            self::IN_PROGRESS => 'in_progress',
-            self::COMPLETED => 'completed',
-            self::DELAYED => 'delayed',
-        };
+        return strtolower($this->name);
     }
 }

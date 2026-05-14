@@ -10,12 +10,11 @@ return new class extends Migration
     {
         Schema::create('project_histories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('project_status_id')->constrained('project_statuses')->cascadeOnDelete();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('created_at');
-
-            $table->index(['project_id', 'created_at']);
+            $table->foreignId('project_id')->constrained()->restrictOnDelete();
+            $table->foreignId('project_status_id')->constrained('project_statuses')->restrictOnDelete();
+            $table->json('payload')->nullable();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->timestamp('created_at')->index();
         });
     }
 

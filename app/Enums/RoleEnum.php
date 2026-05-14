@@ -2,13 +2,29 @@
 
 namespace App\Enums;
 
-enum RoleEnum: string
+enum RoleEnum: int
 {
-    case ADMIN = 'admin';
-    case COMPANY_OWNER = 'company_owner';
-    case PROJECT_MANAGER = 'project_manager';
-    case DEVELOPER = 'developer';
-    case VIEWER = 'viewer';
+    case ADMIN = 1;
+    case COMPANY_OWNER = 2;
+    case PROJECT_MANAGER = 3;
+    case DEVELOPER = 4;
+    case VIEWER = 5;
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::ADMIN => 'Admin',
+            self::COMPANY_OWNER => 'Company Owner',
+            self::PROJECT_MANAGER => 'Project Manager',
+            self::DEVELOPER => 'Developer',
+            self::VIEWER => 'Viewer',
+        };
+    }
+
+    public function slug(): string
+    {
+        return strtolower($this->name);
+    }
 
     public function level(): int
     {

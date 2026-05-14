@@ -6,30 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->boolean('is_active')->default(true);
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->boolean('is_active')->default(true)->index();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-
-            $table->index('is_active');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('companies');
-        Schema::enableForeignKeyConstraints();
     }
 };
