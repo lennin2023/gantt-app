@@ -12,21 +12,25 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            RoleEnum::ADMIN->value => [
-                'name' => 'Admin',
-                'email' => 'admin@example.com',
+            RoleEnum::SUPER_ADMIN->value => [
+                'name' => 'Super Admin',
+                'email' => 'superadmin@example.com',
             ],
-            RoleEnum::COMPANY_OWNER->value => [
-                'name' => 'Company Owner',
-                'email' => 'owner@example.com',
+            RoleEnum::SUPERVISOR->value => [
+                'name' => 'Supervisor',
+                'email' => 'supervisor@example.com',
+            ],
+            RoleEnum::GESTOR->value => [
+                'name' => 'Gestor',
+                'email' => 'gestor@example.com',
             ],
             RoleEnum::PROJECT_MANAGER->value => [
                 'name' => 'Project Manager',
                 'email' => 'manager@example.com',
             ],
-            RoleEnum::DEVELOPER->value => [
-                'name' => 'Developer',
-                'email' => 'developer@example.com',
+            RoleEnum::TEAM_MEMBER->value => [
+                'name' => 'Team Member',
+                'email' => 'teammember@example.com',
             ],
             RoleEnum::VIEWER->value => [
                 'name' => 'Viewer',

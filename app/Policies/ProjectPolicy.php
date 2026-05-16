@@ -20,7 +20,7 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -29,12 +29,12 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level();
+        return $user->roleLevel() >= RoleEnum::GESTOR->level();
     }
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -43,7 +43,7 @@ class ProjectPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -52,7 +52,7 @@ class ProjectPolicy
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 

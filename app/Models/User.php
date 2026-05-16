@@ -39,14 +39,44 @@ class User extends Authenticatable
         return $this->hasMany(Project::class, 'created_by');
     }
 
-    public function isAdmin(): bool
+    public function isSuperAdmin(): bool
     {
-        return $this->role?->slug === RoleEnum::ADMIN->value;
+        return $this->role?->slug === RoleEnum::SUPER_ADMIN->slug();
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->role?->slug === RoleEnum::SUPERVISOR->slug();
+    }
+
+    public function isGestor(): bool
+    {
+        return $this->role?->slug === RoleEnum::GESTOR->slug();
+    }
+
+    public function isProjectManager(): bool
+    {
+        return $this->role?->slug === RoleEnum::PROJECT_MANAGER->slug();
+    }
+
+    public function isTeamMember(): bool
+    {
+        return $this->role?->slug === RoleEnum::TEAM_MEMBER->slug();
+    }
+
+    public function isViewer(): bool
+    {
+        return $this->role?->slug === RoleEnum::VIEWER->slug();
+    }
+
+    public function canBypassPolicies(): bool
+    {
+        return $this->isSuperAdmin() || $this->isSupervisor();
     }
 
     public function hasRole(RoleEnum $role): bool
     {
-        return $this->role?->slug === $role->value;
+        return $this->role?->slug === $role->slug();
     }
 
     public function roleLevel(): int

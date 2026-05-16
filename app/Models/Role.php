@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RoleEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,23 +18,33 @@ class Role extends Model
         return $this->hasMany(User::class);
     }
 
-    public function isAdmin(): bool
+    public function isSuperAdmin(): bool
     {
-        return $this->slug === 'admin';
+        return $this->slug === RoleEnum::SUPER_ADMIN->slug();
     }
 
-    public function isCompanyOwner(): bool
+    public function isSupervisor(): bool
     {
-        return $this->slug === 'company_owner';
+        return $this->slug === RoleEnum::SUPERVISOR->slug();
+    }
+
+    public function isGestor(): bool
+    {
+        return $this->slug === RoleEnum::GESTOR->slug();
     }
 
     public function isProjectManager(): bool
     {
-        return $this->slug === 'project_manager';
+        return $this->slug === RoleEnum::PROJECT_MANAGER->slug();
     }
 
-    public function isDeveloper(): bool
+    public function isTeamMember(): bool
     {
-        return $this->slug === 'developer';
+        return $this->slug === RoleEnum::TEAM_MEMBER->slug();
+    }
+
+    public function isViewer(): bool
+    {
+        return $this->slug === RoleEnum::VIEWER->slug();
     }
 }

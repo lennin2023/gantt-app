@@ -10,7 +10,7 @@ class TaskPolicy
 {
     public function viewAny(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -19,7 +19,7 @@ class TaskPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -28,7 +28,7 @@ class TaskPolicy
 
     public function create(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -38,7 +38,7 @@ class TaskPolicy
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -47,7 +47,7 @@ class TaskPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
@@ -56,7 +56,7 @@ class TaskPolicy
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->isAdmin()) {
+        if ($user->canBypassPolicies()) {
             return true;
         }
 
