@@ -18,7 +18,6 @@ class EventServiceProvider extends ServiceProvider
         ],
         TaskUpdated::class => [
             LogTaskActivity::class,
-            RefreshProjectStatus::class,
         ],
         TaskDeleted::class => [
             LogTaskActivity::class,

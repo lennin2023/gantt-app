@@ -2,8 +2,6 @@
 
 namespace App\DTOs;
 
-use App\Enums\ProjectStatusEnum;
-
 class ProjectDTO
 {
     public function __construct(
@@ -15,19 +13,21 @@ class ProjectDTO
         public readonly ?string $startDate,
         public readonly ?string $endDate,
         public readonly int $createdBy,
+        public readonly ?int $updatedBy = null,
     ) {}
 
     public static function fromArray(array $data, int $createdBy): self
     {
         return new self(
             companyId: $data['company_id'],
-            projectStatusId: $data['project_status_id'] ?? ProjectStatusEnum::ACTIVE->value,
+            projectStatusId: $data['project_status_id'] ?? null,
             name: $data['name'],
             description: $data['description'] ?? null,
-            color: $data['color'] ?? '#3b82f6',
+            color: $data['color'],
             startDate: $data['start_date'] ?? null,
             endDate: $data['end_date'] ?? null,
             createdBy: $createdBy,
+            updatedBy: $data['updated_by'] ?? null,
         );
     }
 
@@ -42,6 +42,7 @@ class ProjectDTO
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'created_by' => $this->createdBy,
+            'updated_by' => $this->updatedBy,
         ];
     }
 }

@@ -14,7 +14,6 @@ class TaskStatus extends Model
         'name',
         'slug',
         'color',
-        'order',
     ];
 
     public function tasks(): HasMany

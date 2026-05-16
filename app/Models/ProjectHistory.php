@@ -15,6 +15,7 @@ class ProjectHistory extends Model
     protected $fillable = [
         'project_id',
         'project_status_id',
+        'payload',
         'created_by',
         'created_at',
     ];
@@ -22,6 +23,7 @@ class ProjectHistory extends Model
     protected function casts(): array
     {
         return [
+            'payload' => 'array',
             'created_at' => 'datetime',
         ];
     }

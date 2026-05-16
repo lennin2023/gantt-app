@@ -11,7 +11,7 @@ class TaskRepository implements TaskRepositoryInterface
 {
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
-        return Task::with('dependencies')
+        return Task::with(['status', 'dependencies'])
             ->where('project_id', $projectId)
             ->orderBy('order')
             ->paginate($perPage);
@@ -19,7 +19,7 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function findById(int $id): ?Task
     {
-        return Task::with(['dependencies', 'dependents', 'project'])->find($id);
+        return Task::with(['status', 'dependencies', 'dependents', 'project'])->find($id);
     }
 
     public function create(array $data): Task
@@ -37,11 +37,6 @@ class TaskRepository implements TaskRepositoryInterface
     public function delete(Task $task): bool
     {
         return $task->delete();
-    }
-
-    public function deleteMany(array $taskIds): int
-    {
-        return Task::whereIn('id', $taskIds)->delete();
     }
 
     public function syncDependencies(Task $task, array $dependencyIds): void
@@ -88,14 +83,8 @@ class TaskRepository implements TaskRepositoryInterface
         return false;
     }
 
-    public function restore(int $id): bool
+    public function restore(Task $task): bool
     {
-        $task = Task::withTrashed()->find($id);
-
-        if (! $task) {
-            return false;
-        }
-
         return $task->restore();
     }
 }

@@ -23,6 +23,13 @@ class Task extends Model
         'end_date',
         'progress',
         'order',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $attributes = [
+        'task_status_id' => TaskStatusEnum::PENDING->value,
+        'progress' => 0,
     ];
 
     protected function casts(): array
@@ -42,6 +49,16 @@ class Task extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(TaskStatus::class, 'task_status_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function dependencies(): BelongsToMany

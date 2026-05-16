@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class MilestoneRequest extends FormRequest
 {
+    // Authorization is handled via Gates in the controller
     public function authorize(): bool
     {
         return true;

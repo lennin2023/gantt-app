@@ -18,6 +18,10 @@ class Company extends Model
         'updated_by',
     ];
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     protected function casts(): array
     {
         return [

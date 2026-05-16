@@ -12,6 +12,7 @@ use App\Services\MilestoneService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class MilestoneController extends Controller
@@ -39,7 +40,11 @@ class MilestoneController extends Controller
 
         abort_unless(Gate::allows('create', $project), 403);
 
-        $dto = MilestoneDTO::fromArray($request->validated(), $projectId);
+        $dto = MilestoneDTO::fromArray(
+            array_merge($request->validated(), ['created_by' => Auth::id()]),
+            $projectId
+        );
+
         $milestone = $this->milestoneService->createMilestone($dto);
 
         return (new MilestoneResource($milestone))
@@ -50,9 +55,10 @@ class MilestoneController extends Controller
     public function show(int $projectId, int $milestoneId): MilestoneResource
     {
         $project = Project::findOrFail($projectId);
-        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
 
         abort_unless(Gate::allows('view', $project), 403);
+
+        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
 
         return new MilestoneResource($milestone);
     }
@@ -60,11 +66,16 @@ class MilestoneController extends Controller
     public function update(MilestoneRequest $request, int $projectId, int $milestoneId): MilestoneResource
     {
         $project = Project::findOrFail($projectId);
-        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
 
         abort_unless(Gate::allows('update', $project), 403);
 
-        $dto = MilestoneDTO::fromArray($request->validated(), $projectId);
+        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
+
+        $dto = MilestoneDTO::fromArray(
+            array_merge($request->validated(), ['updated_by' => Auth::id()]),
+            $projectId
+        );
+
         $milestone = $this->milestoneService->updateMilestone($milestone, $dto);
 
         return new MilestoneResource($milestone);
@@ -73,27 +84,26 @@ class MilestoneController extends Controller
     public function destroy(int $projectId, int $milestoneId): JsonResponse
     {
         $project = Project::findOrFail($projectId);
-        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
 
         abort_unless(Gate::allows('delete', $project), 403);
 
+        $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
+
         $this->milestoneService->deleteMilestone($milestone);
 
-        return response()->json([
-            'message' => 'Milestone deleted successfully',
-        ]);
+        return response()->json(['message' => 'Milestone deleted successfully']);
     }
 
     public function restore(int $projectId, int $milestoneId): JsonResponse
     {
+        $project = Project::findOrFail($projectId);
+
+        abort_unless(Gate::allows('restore', $project), 403);
+
         $milestone = Milestone::withTrashed()->where('project_id', $projectId)->findOrFail($milestoneId);
 
-        abort_unless(Gate::allows('restore', $milestone), 403);
+        $this->milestoneService->restoreMilestone($milestone);
 
-        $restored = $this->milestoneService->restoreMilestone($milestoneId);
-
-        return response()->json([
-            'message' => $restored ? 'Milestone restored successfully' : 'Failed to restore milestone',
-        ]);
+        return response()->json(['message' => 'Milestone restored successfully']);
     }
 }

@@ -9,6 +9,8 @@ class MilestoneDTO
         public readonly string $name,
         public readonly string $date,
         public readonly bool $reached = false,
+        public readonly ?int $createdBy = null,
+        public readonly ?int $updatedBy = null,
     ) {}
 
     public static function fromArray(array $data, int $projectId): self
@@ -18,6 +20,8 @@ class MilestoneDTO
             name: $data['name'],
             date: $data['date'],
             reached: $data['reached'] ?? false,
+            createdBy: $data['created_by'] ?? null,
+            updatedBy: $data['updated_by'] ?? null,
         );
     }
 
@@ -28,6 +32,8 @@ class MilestoneDTO
             'name' => $this->name,
             'date' => $this->date,
             'reached' => $this->reached,
+            'created_by' => $this->createdBy,
+            'updated_by' => $this->updatedBy,
         ];
     }
 }

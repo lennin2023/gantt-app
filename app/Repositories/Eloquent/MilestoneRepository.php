@@ -37,14 +37,8 @@ class MilestoneRepository implements MilestoneRepositoryInterface
         return $milestone->delete();
     }
 
-    public function restore(int $id): bool
+    public function restore(Milestone $milestone): bool
     {
-        $milestone = Milestone::withTrashed()->find($id);
-
-        if (! $milestone) {
-            return false;
-        }
-
         return $milestone->restore();
     }
 }

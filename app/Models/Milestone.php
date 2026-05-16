@@ -16,6 +16,12 @@ class Milestone extends Model
         'name',
         'date',
         'reached',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $attributes = [
+        'reached' => false,
     ];
 
     protected function casts(): array
@@ -29,5 +35,15 @@ class Milestone extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

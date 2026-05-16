@@ -26,6 +26,10 @@ class Project extends Model
         'updated_by',
     ];
 
+    protected $attributes = [
+        'project_status_id' => ProjectStatusEnum::ACTIVE->value,
+    ];
+
     protected function casts(): array
     {
         return [
@@ -71,28 +75,28 @@ class Project extends Model
 
     public function getStats(): array
     {
-        $tasks = $this->tasks;
+        $total = $this->tasks()->count();
+        $completed = $this->tasks()->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count();
+        $avgProgress = $this->tasks()->avg('progress');
 
         return [
-            'total_tasks' => $tasks->count(),
-            'completed_tasks' => $tasks->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count(),
-            'overall_progress' => $tasks->count() > 0
-                ? (int) $tasks->avg('progress')
-                : 0,
+            'total_tasks' => $total,
+            'completed_tasks' => $completed,
+            'overall_progress' => $total > 0 ? (int) $avgProgress : 0,
         ];
     }
 
     public function isAllTasksCompleted(): bool
     {
-        $totalTasks = $this->tasks()->count();
+        $total = $this->tasks()->count();
 
-        if ($totalTasks === 0) {
+        if ($total === 0) {
             return false;
         }
 
-        $completedTasks = $this->tasks()->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count();
+        $completed = $this->tasks()->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count();
 
-        return $totalTasks > 0 && $totalTasks === $completedTasks;
+        return $total === $completed;
     }
 
     public function refreshStatus(): void

@@ -8,11 +8,14 @@ use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
     public function stats(): JsonResponse
     {
+        abort_unless(Gate::allows('viewDashboard'), 403);
+
         $userId = Auth::id();
 
         return response()->json([
@@ -23,19 +26,18 @@ class DashboardController extends Controller
 
     private function getMetrics(int $userId): array
     {
-        $projects = Project::where('created_by', $userId);
+        $result = Project::where('created_by', $userId)
+            ->selectRaw('
+                COUNT(*) as total_projects,
+                SUM(CASE WHEN project_status_id = ? THEN 1 ELSE 0 END) as active_projects,
+                SUM(CASE WHEN project_status_id = ? THEN 1 ELSE 0 END) as completed_projects
+            ', [
+                ProjectStatusEnum::ACTIVE->value,
+                ProjectStatusEnum::COMPLETED->value,
+            ])
+            ->first();
 
-        $totalProjects = (clone $projects)->count();
-
-        $activeProjects = (clone $projects)
-            ->where('project_status_id', ProjectStatusEnum::ACTIVE->value)
-            ->count();
-
-        $completedProjects = (clone $projects)
-            ->where('project_status_id', ProjectStatusEnum::COMPLETED->value)
-            ->count();
-
-        $overallProgress = (clone $projects)
+        $overallProgress = Project::where('projects.created_by', $userId)
             ->join('tasks', function ($join) {
                 $join->on('projects.id', '=', 'tasks.project_id')
                     ->whereNull('tasks.deleted_at');
@@ -43,9 +45,9 @@ class DashboardController extends Controller
             ->avg('tasks.progress');
 
         return [
-            'total_projects' => $totalProjects,
-            'active_projects' => $activeProjects,
-            'completed_projects' => $completedProjects,
+            'total_projects' => (int) $result->total_projects,
+            'active_projects' => (int) $result->active_projects,
+            'completed_projects' => (int) $result->completed_projects,
             'overall_progress' => (int) round($overallProgress ?? 0),
         ];
     }

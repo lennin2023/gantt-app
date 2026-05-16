@@ -17,5 +17,5 @@ interface ProjectRepositoryInterface
 
     public function delete(Project $project): bool;
 
-    public function restore(int $id): bool;
+    public function restore(Project $project): bool;
 }

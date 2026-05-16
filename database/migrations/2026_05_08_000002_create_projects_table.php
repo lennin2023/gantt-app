@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('project_status_id')->default(ProjectStatusEnum::ACTIVE->value)->constrained('project_statuses')->restrictOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->string('color', 7)->default('#3b82f6');
+            $table->string('color', 7);
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();

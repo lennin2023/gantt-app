@@ -13,7 +13,7 @@ class MilestoneResource extends JsonResource
             'id' => $this->id,
             'project_id' => $this->project_id,
             'name' => $this->name,
-            'date' => $this->date->toDateString(),
+            'date' => $this->date?->toDateString(),
             'reached' => $this->reached,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

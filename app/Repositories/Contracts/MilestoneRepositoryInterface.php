@@ -17,5 +17,5 @@ interface MilestoneRepositoryInterface
 
     public function delete(Milestone $milestone): bool;
 
-    public function restore(int $id): bool;
+    public function restore(Milestone $milestone): bool;
 }

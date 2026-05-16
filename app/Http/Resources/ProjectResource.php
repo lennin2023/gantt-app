@@ -13,6 +13,11 @@ class ProjectResource extends JsonResource
             'id' => $this->id,
             'company_id' => $this->company_id,
             'project_status_id' => $this->project_status_id,
+            'status' => $this->whenLoaded('status', fn () => [
+                'name' => $this->status->name,
+                'slug' => $this->status->slug,
+                'color' => $this->status->color,
+            ]),
             'name' => $this->name,
             'description' => $this->description,
             'color' => $this->color,

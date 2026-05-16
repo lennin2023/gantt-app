@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
@@ -29,43 +30,56 @@ class ProjectService
 
     public function createProject(ProjectDTO $dto): Project
     {
-        $project = $this->projectRepository->create($dto->toArray());
-        $project = $this->projectRepository->findById($project->id);
+        return DB::transaction(function () use ($dto) {
+            $project = $this->projectRepository->create($dto->toArray());
 
-        $this->logStatusChange($project, $dto->projectStatusId);
+            $this->logStatusChange($project, $project->project_status_id, $project->created_by);
 
-        ProjectCreated::dispatch($project);
+            ProjectCreated::dispatch($project);
 
-        return $project;
+            return $project;
+        });
     }
 
     public function updateProject(Project $project, ProjectDTO $dto): Project
     {
-        $project = $this->projectRepository->update($project, $dto->toArray());
+        return DB::transaction(function () use ($project, $dto) {
+            $previousStatusId = $project->project_status_id;
 
-        ProjectUpdated::dispatch($project);
+            $project = $this->projectRepository->update($project, $dto->toArray());
 
-        return $project;
+            if ($project->project_status_id !== $previousStatusId) {
+                $this->logStatusChange($project, $project->project_status_id, $project->updated_by);
+            }
+
+            ProjectUpdated::dispatch($project);
+
+            return $project;
+        });
     }
 
     public function deleteProject(Project $project): bool
     {
-        ProjectDeleted::dispatch($project);
+        return DB::transaction(function () use ($project) {
+            ProjectDeleted::dispatch($project);
 
-        return $this->projectRepository->delete($project);
+            return $this->projectRepository->delete($project);
+        });
     }
 
-    public function restoreProject(int $id): bool
+    public function restoreProject(Project $project): bool
     {
-        return $this->projectRepository->restore($id);
+        return DB::transaction(function () use ($project) {
+            return $this->projectRepository->restore($project);
+        });
     }
 
-    private function logStatusChange(Project $project, int $statusId): void
+    private function logStatusChange(Project $project, int $statusId, int $userId): void
     {
         ProjectHistory::create([
             'project_id' => $project->id,
             'project_status_id' => $statusId,
-            'created_by' => $project->created_by,
+            'created_by' => $userId,
             'created_at' => now(),
         ]);
     }

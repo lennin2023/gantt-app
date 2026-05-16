@@ -45,8 +45,10 @@ class MilestoneService
         });
     }
 
-    public function restoreMilestone(int $id): bool
+    public function restoreMilestone(Milestone $milestone): bool
     {
-        return $this->milestoneRepository->restore($id);
+        return DB::transaction(function () use ($milestone) {
+            return $this->milestoneRepository->restore($milestone);
+        });
     }
 }

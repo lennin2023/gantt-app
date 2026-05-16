@@ -54,13 +54,14 @@ class TaskService
 
             $task = $this->taskRepository->update($task, $dto->toArray());
 
-            if (array_key_exists('dependencyIds', $dto->toArray())) {
+            if (! empty($dto->dependencyIds)) {
                 $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
             }
 
             TaskUpdated::dispatch($task);
 
-            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
+            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value
+                && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
                 TaskCompleted::dispatch($task);
             }
 
@@ -70,43 +71,46 @@ class TaskService
 
     public function deleteTask(Task $task): bool
     {
-        TaskDeleted::dispatch($task);
+        return DB::transaction(function () use ($task) {
+            TaskDeleted::dispatch($task);
 
-        return $this->taskRepository->delete($task);
+            return $this->taskRepository->delete($task);
+        });
     }
 
-    public function bulkUpdate(array $taskIds, array $data): Collection
+    public function bulkUpdate(Collection $tasks, array $data): Collection
     {
         $allowedFields = ['task_status_id', 'name', 'description', 'assignee', 'start_date', 'end_date', 'progress', 'order'];
         $filteredData = array_intersect_key($data, array_flip($allowedFields));
 
-        $tasks = Task::whereIn('id', $taskIds)->get();
-        $updated = collect();
+        return DB::transaction(function () use ($tasks, $filteredData) {
+            $updated = collect();
 
-        foreach ($tasks as $task) {
-            $previousStatus = $task->task_status_id;
-            $updatedTask = $this->taskRepository->update($task, $filteredData);
-            $updated->push($updatedTask);
+            foreach ($tasks as $task) {
+                $previousStatus = $task->task_status_id;
+                $updatedTask = $this->taskRepository->update($task, $filteredData);
+                $updated->push($updatedTask);
 
-            TaskUpdated::dispatch($updatedTask);
+                TaskUpdated::dispatch($updatedTask);
 
-            if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
-                TaskCompleted::dispatch($updatedTask);
+                if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value
+                    && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
+                    TaskCompleted::dispatch($updatedTask);
+                }
             }
-        }
 
-        return $updated;
+            return $updated;
+        });
     }
 
-    public function bulkDelete(array $taskIds): int
+    public function bulkDelete(Collection $tasks): void
     {
-        $tasks = Task::whereIn('id', $taskIds)->get();
-
-        foreach ($tasks as $task) {
-            TaskDeleted::dispatch($task);
-        }
-
-        return $this->taskRepository->deleteMany($taskIds);
+        DB::transaction(function () use ($tasks) {
+            foreach ($tasks as $task) {
+                TaskDeleted::dispatch($task);
+                $this->taskRepository->delete($task);
+            }
+        });
     }
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
@@ -114,8 +118,10 @@ class TaskService
         return $this->taskRepository->wouldCreateCycle($task, $newDependencyId);
     }
 
-    public function restoreTask(int $id): bool
+    public function restoreTask(Task $task): bool
     {
-        return $this->taskRepository->restore($id);
+        return DB::transaction(function () use ($task) {
+            return $this->taskRepository->restore($task);
+        });
     }
 }

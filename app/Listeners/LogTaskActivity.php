@@ -25,7 +25,6 @@ class LogTaskActivity implements ShouldQueue
             'task_id' => $event->task->id,
             'project_id' => $event->task->project_id,
             'name' => $event->task->name,
-            'changes' => $event->task->getChanges(),
         ]);
     }
 

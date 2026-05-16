@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Enums\RoleEnum;
-use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\User;
 
@@ -18,13 +17,13 @@ class MilestonePolicy
         return $user->id === $project->created_by;
     }
 
-    public function view(User $user, Milestone $milestone): bool
+    public function view(User $user, Project $project): bool
     {
         if ($user->isAdmin()) {
             return true;
         }
 
-        return $user->id === $milestone->project->created_by;
+        return $user->id === $project->created_by;
     }
 
     public function create(User $user, Project $project): bool
@@ -33,33 +32,34 @@ class MilestonePolicy
             return true;
         }
 
-        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level() && $user->id === $project->created_by;
+        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level()
+            && $user->id === $project->created_by;
     }
 
-    public function update(User $user, Milestone $milestone): bool
+    public function update(User $user, Project $project): bool
     {
         if ($user->isAdmin()) {
             return true;
         }
 
-        return $user->id === $milestone->project->created_by;
+        return $user->id === $project->created_by;
     }
 
-    public function delete(User $user, Milestone $milestone): bool
+    public function delete(User $user, Project $project): bool
     {
         if ($user->isAdmin()) {
             return true;
         }
 
-        return $user->id === $milestone->project->created_by;
+        return $user->id === $project->created_by;
     }
 
-    public function restore(User $user, Milestone $milestone): bool
+    public function restore(User $user, Project $project): bool
     {
         if ($user->isAdmin()) {
             return true;
         }
 
-        return $user->id === $milestone->project->created_by;
+        return $user->id === $project->created_by;
     }
 }

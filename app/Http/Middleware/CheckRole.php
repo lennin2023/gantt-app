@@ -16,6 +16,8 @@ class CheckRole
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        $user->loadMissing('role');
+
         $userRoleSlug = $user->role?->slug;
 
         foreach ($roles as $role) {

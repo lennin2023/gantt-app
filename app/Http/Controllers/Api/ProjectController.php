@@ -38,7 +38,7 @@ class ProjectController extends Controller
     {
         abort_unless(Gate::allows('create', Project::class), 403);
 
-        $dto = ProjectDTO::fromArray($request->validated(), Auth::id());
+        $dto = ProjectDTO::fromArray($request->validated(), createdBy: Auth::id());
         $project = $this->projectService->createProject($dto);
 
         return (new ProjectResource($project))
@@ -57,11 +57,15 @@ class ProjectController extends Controller
 
     public function update(ProjectRequest $request, int $id): ProjectResource
     {
-        $project = Project::findOrFail($id);
+        $project = $this->projectService->findById($id);
 
         abort_unless(Gate::allows('update', $project), 403);
 
-        $dto = ProjectDTO::fromArray($request->validated(), Auth::id());
+        $dto = ProjectDTO::fromArray(
+            array_merge($request->validated(), ['updated_by' => Auth::id()]),
+            createdBy: $project->created_by,
+        );
+
         $project = $this->projectService->updateProject($project, $dto);
 
         return new ProjectResource($project);
@@ -69,15 +73,13 @@ class ProjectController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $project = Project::findOrFail($id);
+        $project = $this->projectService->findById($id);
 
         abort_unless(Gate::allows('delete', $project), 403);
 
         $this->projectService->deleteProject($project);
 
-        return response()->json([
-            'message' => 'Project deleted successfully',
-        ]);
+        return response()->json(['message' => 'Project deleted successfully']);
     }
 
     public function restore(int $id): JsonResponse
@@ -86,10 +88,8 @@ class ProjectController extends Controller
 
         abort_unless(Gate::allows('restore', $project), 403);
 
-        $restored = $this->projectService->restoreProject($id);
+        $this->projectService->restoreProject($project);
 
-        return response()->json([
-            'message' => $restored ? 'Project restored successfully' : 'Failed to restore project',
-        ]);
+        return response()->json(['message' => 'Project restored successfully']);
     }
 }

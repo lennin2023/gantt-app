@@ -10,7 +10,7 @@ class ProjectRepository implements ProjectRepositoryInterface
 {
     public function getAllByUser(int $userId, int $perPage = 10): LengthAwarePaginator
     {
-        return Project::with(['tasks', 'milestones'])
+        return Project::with('status')
             ->where('created_by', $userId)
             ->orderByDesc('created_at')
             ->paginate($perPage);
@@ -18,10 +18,7 @@ class ProjectRepository implements ProjectRepositoryInterface
 
     public function findById(int $id, array $with = []): ?Project
     {
-        $defaultWith = ['tasks.dependencies', 'milestones'];
-        $relations = array_unique(array_merge($defaultWith, $with));
-
-        return Project::with($relations)->find($id);
+        return Project::with($with)->find($id);
     }
 
     public function create(array $data): Project
@@ -41,14 +38,8 @@ class ProjectRepository implements ProjectRepositoryInterface
         return $project->delete();
     }
 
-    public function restore(int $id): bool
+    public function restore(Project $project): bool
     {
-        $project = Project::withTrashed()->find($id);
-
-        if (! $project) {
-            return false;
-        }
-
         return $project->restore();
     }
 }

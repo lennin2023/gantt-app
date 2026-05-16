@@ -2,10 +2,13 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\TaskStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 
 class TaskRequest extends FormRequest
 {
+    // Authorization is handled via Gates in the controller
     public function authorize(): bool
     {
         return true;
@@ -14,10 +17,27 @@ class TaskRequest extends FormRequest
     public function rules(): array
     {
         $isUpdate = $this->isMethod('PATCH') || $this->isMethod('PUT');
+        $isBulk = $this->routeIs('*.bulk-update');
+
+        if ($isBulk) {
+            return [
+                'task_ids' => 'required|array|min:1',
+                'task_ids.*' => 'integer|exists:tasks,id',
+                'data' => 'required|array',
+                'data.task_status_id' => ['nullable', new Enum(TaskStatusEnum::class)],
+                'data.name' => 'sometimes|string|max:255',
+                'data.description' => 'nullable|string',
+                'data.assignee' => 'nullable|string|max:255',
+                'data.start_date' => 'nullable|date',
+                'data.end_date' => 'nullable|date|after_or_equal:data.start_date',
+                'data.progress' => 'nullable|integer|min:0|max:100',
+                'data.order' => 'nullable|integer|min:0',
+            ];
+        }
 
         return [
-            'project_id' => $isUpdate ? 'sometimes|integer|exists:projects,id' : 'required|integer|exists:projects,id',
             'name' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
+            'task_status_id' => ['nullable', new Enum(TaskStatusEnum::class)],
             'description' => 'nullable|string',
             'assignee' => 'nullable|string|max:255',
             'start_date' => 'nullable|date',
