@@ -10,6 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             ImportSqlSeeder::class,
+            UserSeeder::class,
         ]);
     }
 }
