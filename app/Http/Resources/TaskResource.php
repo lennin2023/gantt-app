@@ -23,6 +23,15 @@ class TaskResource extends JsonResource
             'order' => $this->order,
             'dependency_ids' => $this->whenLoaded('dependencies', fn () => $this->dependencies->pluck('id')),
             'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
+            'creator' => $this->whenLoaded('creator', fn () => [
+                'id' => $this->creator->id,
+                'name' => $this->creator->name,
+            ]),
+            'updater' => $this->whenLoaded('updater', fn () => [
+                'id' => $this->updater->id,
+                'name' => $this->updater->name,
+            ]),
         ];
     }
 }

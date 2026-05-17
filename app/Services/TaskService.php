@@ -42,7 +42,7 @@ class TaskService
                 $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
             }
 
-            $task->load(['status', 'dependencies', 'projectUser.projectRole']);
+            $task->load(['status', 'dependencies', 'projectUser.user', 'projectUser.projectRole']);
 
             TaskCreated::dispatch($task);
 
@@ -92,6 +92,7 @@ class TaskService
             foreach ($tasks as $task) {
                 $previousStatus = $task->task_status_id;
                 $updatedTask = $this->taskRepository->update($task, $filteredData);
+                $updatedTask->load(['status', 'dependencies', 'projectUser.user', 'projectUser.projectRole']);
 
                 $updated->push($updatedTask);
 

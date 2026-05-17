@@ -23,6 +23,11 @@ class ProjectUserRepository implements ProjectUserRepositoryInterface
             ->get();
     }
 
+    public function findById(int $id): ?ProjectUser
+    {
+        return ProjectUser::with(['user', 'projectRole'])->find($id);
+    }
+
     public function findByProjectAndUser(int $projectId, int $userId): ?ProjectUser
     {
         return ProjectUser::where('project_id', $projectId)

@@ -28,7 +28,7 @@ class ProjectResource extends JsonResource
             'tasks' => TaskResource::collection($this->whenLoaded('tasks')),
             'milestones' => MilestoneResource::collection($this->whenLoaded('milestones')),
             'stats' => $this->when(
-                $request->routeIs('projects.show'),
+                $request->routeIs('projects.show') && $request->query('include_stats', false),
                 fn () => $this->getStats()
             ),
         ];

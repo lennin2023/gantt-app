@@ -51,7 +51,13 @@ class ProjectController extends Controller
     {
         abort_unless(Gate::allows('view', $project), 403);
 
-        $project->load(['tasks.dependencies', 'milestones']);
+        $project->load([
+            'tasks.status',
+            'tasks.projectUser.user',
+            'tasks.projectUser.projectRole',
+            'tasks.dependencies',
+            'milestones.creator',
+        ]);
 
         return $this->success(new ProjectResource($project));
     }

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\DTOs\MilestoneDTO;
+use App\Events\MilestoneDeleted;
+use App\Events\MilestoneRestored;
 use App\Models\Milestone;
 use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -41,6 +43,8 @@ class MilestoneService
     public function deleteMilestone(Milestone $milestone): bool
     {
         return DB::transaction(function () use ($milestone) {
+            MilestoneDeleted::dispatch($milestone);
+
             return $this->milestoneRepository->delete($milestone);
         });
     }
@@ -48,7 +52,10 @@ class MilestoneService
     public function restoreMilestone(Milestone $milestone): bool
     {
         return DB::transaction(function () use ($milestone) {
-            return $this->milestoneRepository->restore($milestone);
+            $result = $this->milestoneRepository->restore($milestone);
+            MilestoneRestored::dispatch($milestone);
+
+            return $result;
         });
     }
 }

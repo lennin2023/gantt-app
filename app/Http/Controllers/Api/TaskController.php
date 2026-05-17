@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\DTOs\TaskDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\BulkDeleteTaskRequest;
 use App\Http\Requests\Api\TaskRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\TaskResource;
@@ -111,13 +112,8 @@ class TaskController extends Controller
         ], 'Tasks updated successfully');
     }
 
-    public function bulkDelete(Request $request): JsonResponse
+    public function bulkDelete(BulkDeleteTaskRequest $request): JsonResponse
     {
-        $request->validate([
-            'task_ids' => 'required|array|min:1',
-            'task_ids.*' => 'integer|exists:tasks,id',
-        ]);
-
         $taskIds = $request->validated()['task_ids'];
         $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 

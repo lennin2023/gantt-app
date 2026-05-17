@@ -11,7 +11,7 @@ class DashboardRepository implements DashboardRepositoryInterface
 {
     public function getMetrics(int $userId): array
     {
-        $result = Project::where('created_by', $userId)
+        $result = Project::whereHas('projectUsers', fn ($q) => $q->where('user_id', $userId))
             ->selectRaw('
                 COUNT(*) as total_projects,
                 SUM(CASE WHEN project_status_id = ? THEN 1 ELSE 0 END) as active_projects,
@@ -22,7 +22,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ])
             ->first();
 
-        $overallProgress = Project::where('projects.created_by', $userId)
+        $overallProgress = Project::whereHas('projectUsers', fn ($q) => $q->where('user_id', $userId))
             ->join('project_users', 'projects.id', '=', 'project_users.project_id')
             ->join('tasks', function ($join) {
                 $join->on('project_users.id', '=', 'tasks.project_user_id')
@@ -55,7 +55,7 @@ class DashboardRepository implements DashboardRepositoryInterface
                 $join->on('project_users.id', '=', 'tasks.project_user_id')
                     ->whereNull('tasks.deleted_at');
             })
-            ->where('projects.created_by', $userId)
+            ->whereHas('projectUsers', fn ($q) => $q->where('user_id', $userId))
             ->whereNull('projects.deleted_at')
             ->groupBy(
                 'projects.id',

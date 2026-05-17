@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ProjectUser;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ProjectUserService
 {
@@ -24,23 +25,27 @@ class ProjectUserService
 
     public function assignUser(int $projectId, int $userId, int $projectRoleId, int $createdBy): ProjectUser
     {
-        return $this->projectUserRepository->create([
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'project_role_id' => $projectRoleId,
-            'created_by' => $createdBy,
-        ]);
+        return DB::transaction(function () use ($projectId, $userId, $projectRoleId, $createdBy) {
+            return $this->projectUserRepository->create([
+                'project_id' => $projectId,
+                'user_id' => $userId,
+                'project_role_id' => $projectRoleId,
+                'created_by' => $createdBy,
+            ]);
+        });
     }
 
     public function removeUser(int $projectId, int $userId): bool
     {
-        $projectUser = $this->projectUserRepository->findByProjectAndUser($projectId, $userId);
+        return DB::transaction(function () use ($projectId, $userId) {
+            $projectUser = $this->projectUserRepository->findByProjectAndUser($projectId, $userId);
 
-        if (! $projectUser) {
-            return false;
-        }
+            if (! $projectUser) {
+                return false;
+            }
 
-        return $this->projectUserRepository->delete($projectUser);
+            return $this->projectUserRepository->delete($projectUser);
+        });
     }
 
     public function userAlreadyAssigned(int $projectId, int $userId): bool

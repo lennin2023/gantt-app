@@ -11,7 +11,7 @@ class TaskRepository implements TaskRepositoryInterface
 {
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
-        return Task::with(['status', 'dependencies', 'projectUser.projectRole'])
+        return Task::with(['status', 'dependencies', 'projectUser.user', 'projectUser.projectRole'])
             ->whereHas('projectUser', fn ($q) => $q->where('project_id', $projectId))
             ->orderBy('order')
             ->paginate($perPage);
@@ -19,7 +19,7 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function findById(int $id): ?Task
     {
-        return Task::with(['status', 'dependencies', 'dependents', 'projectUser.projectRole'])->find($id);
+        return Task::with(['status', 'dependencies', 'dependents', 'projectUser.user', 'projectUser.projectRole'])->find($id);
     }
 
     public function create(array $data): Task
