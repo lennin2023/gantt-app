@@ -8,12 +8,17 @@ use App\Models\User;
 
 class TaskPolicy
 {
-    public function viewAny(User $user, Project $project): bool
+    public function before(User $user): ?bool
     {
         if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
+        return null;
+    }
+
+    public function viewAny(User $user, Project $project): bool
+    {
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -28,10 +33,6 @@ class TaskPolicy
 
     public function create(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -44,10 +45,6 @@ class TaskPolicy
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -60,10 +57,6 @@ class TaskPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -76,10 +69,6 @@ class TaskPolicy
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         return $user->id === $project->created_by;
     }
 }

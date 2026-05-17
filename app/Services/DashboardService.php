@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\DashboardDTO;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
 
 class DashboardService
@@ -10,11 +11,11 @@ class DashboardService
         private readonly DashboardRepositoryInterface $dashboardRepository,
     ) {}
 
-    public function getStats(int $userId): array
+    public function getStats(int $userId): DashboardDTO
     {
-        return [
+        return DashboardDTO::fromArray([
             'metrics' => $this->dashboardRepository->getMetrics($userId),
             'projects' => $this->dashboardRepository->getProjects($userId),
-        ];
+        ]);
     }
 }

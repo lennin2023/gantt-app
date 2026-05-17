@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Models\Project;
+
 class ProjectDTO
 {
     public function __construct(
@@ -44,5 +46,20 @@ class ProjectDTO
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
         ];
+    }
+
+    public static function fromEntity(Project $project): self
+    {
+        return new self(
+            companyId: $project->company_id,
+            projectStatusId: $project->project_status_id,
+            name: $project->name,
+            description: $project->description,
+            color: $project->color,
+            startDate: $project->start_date?->format('Y-m-d'),
+            endDate: $project->end_date?->format('Y-m-d'),
+            createdBy: $project->created_by,
+            updatedBy: $project->updated_by,
+        );
     }
 }

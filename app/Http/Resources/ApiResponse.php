@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 
 trait ApiResponse
@@ -12,6 +13,15 @@ trait ApiResponse
 
         if ($data !== null) {
             $response['data'] = $data;
+
+            if ($data instanceof LengthAwarePaginator) {
+                $response['meta'] = [
+                    'current_page' => $data->currentPage(),
+                    'last_page' => $data->lastPage(),
+                    'per_page' => $data->perPage(),
+                    'total' => $data->total(),
+                ];
+            }
         }
 
         if ($message !== null) {

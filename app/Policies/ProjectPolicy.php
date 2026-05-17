@@ -8,6 +8,15 @@ use App\Models\User;
 
 class ProjectPolicy
 {
+    public function before(User $user): ?bool
+    {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
+            return true;
+        }
+
+        return null;
+    }
+
     public function viewAny(User $user): bool
     {
         return true;
@@ -20,10 +29,6 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -33,15 +38,11 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin() || $user->isAdmin();
+        return false;
     }
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -54,19 +55,11 @@ class ProjectPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         return $user->id === $project->created_by;
     }
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         return $user->id === $project->created_by;
     }
 }

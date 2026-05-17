@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Models\Task;
+
 class TaskDTO
 {
     public function __construct(
@@ -49,5 +51,24 @@ class TaskDTO
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
         ];
+    }
+
+    public static function fromEntity(Task $task): self
+    {
+        return new self(
+            projectUserId: $task->project_user_id,
+            taskStatusId: $task->task_status_id,
+            name: $task->name,
+            description: $task->description,
+            startDate: $task->start_date?->format('Y-m-d'),
+            endDate: $task->end_date?->format('Y-m-d'),
+            progress: $task->progress,
+            order: $task->order,
+            createdBy: $task->created_by,
+            updatedBy: $task->updated_by,
+            dependencyIds: $task->relationLoaded('dependencies')
+                ? $task->dependencies->pluck('id')->toArray()
+                : [],
+        );
     }
 }

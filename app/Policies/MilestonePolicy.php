@@ -8,12 +8,17 @@ use App\Models\User;
 
 class MilestonePolicy
 {
-    public function viewAny(User $user, Project $project): bool
+    public function before(User $user): ?bool
     {
         if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
+        return null;
+    }
+
+    public function viewAny(User $user, Project $project): bool
+    {
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -23,10 +28,6 @@ class MilestonePolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -36,10 +37,6 @@ class MilestonePolicy
 
     public function create(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -52,10 +49,6 @@ class MilestonePolicy
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -68,10 +61,6 @@ class MilestonePolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         if ($user->id === $project->created_by) {
             return true;
         }
@@ -84,10 +73,6 @@ class MilestonePolicy
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
         return $user->id === $project->created_by;
     }
 }

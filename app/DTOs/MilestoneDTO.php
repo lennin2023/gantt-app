@@ -2,6 +2,8 @@
 
 namespace App\DTOs;
 
+use App\Models\Milestone;
+
 class MilestoneDTO
 {
     public function __construct(
@@ -35,5 +37,17 @@ class MilestoneDTO
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
         ];
+    }
+
+    public static function fromEntity(Milestone $milestone): self
+    {
+        return new self(
+            projectId: $milestone->project_id,
+            name: $milestone->name,
+            date: $milestone->date?->format('Y-m-d'),
+            reached: $milestone->reached,
+            createdBy: $milestone->created_by,
+            updatedBy: $milestone->updated_by,
+        );
     }
 }
