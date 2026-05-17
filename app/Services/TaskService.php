@@ -9,8 +9,8 @@ use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
-use App\Models\ProjectUser;
 use App\Models\Task;
+use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -20,6 +20,7 @@ class TaskService
 {
     public function __construct(
         private readonly TaskRepositoryInterface $taskRepository,
+        private readonly ProjectUserRepositoryInterface $projectUserRepository,
     ) {}
 
     public function getProjectTasks(int $projectId, int $perPage = 10): LengthAwarePaginator
@@ -143,12 +144,8 @@ class TaskService
 
     private function ensureUserInProject(int $projectId, int $userId): void
     {
-        $exists = ProjectUser::where('project_id', $projectId)
-            ->where('user_id', $userId)
-            ->exists();
-
-        if (! $exists) {
-            ProjectUser::create([
+        if (! $this->projectUserRepository->exists($projectId, $userId)) {
+            $this->projectUserRepository->create([
                 'project_id' => $projectId,
                 'user_id' => $userId,
                 'project_role_id' => ProjectRoleEnum::DEVELOPER->value,
