@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\DTOs\MilestoneDTO;
+use App\Events\MilestoneCreated;
 use App\Events\MilestoneDeleted;
 use App\Events\MilestoneRestored;
+use App\Events\MilestoneUpdated;
 use App\Models\Milestone;
 use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -29,14 +31,20 @@ class MilestoneService
     public function createMilestone(MilestoneDTO $dto): Milestone
     {
         return DB::transaction(function () use ($dto) {
-            return $this->milestoneRepository->create($dto->toArray());
+            $milestone = $this->milestoneRepository->create($dto->toArray());
+            MilestoneCreated::dispatch($milestone);
+
+            return $milestone;
         });
     }
 
     public function updateMilestone(Milestone $milestone, MilestoneDTO $dto): Milestone
     {
         return DB::transaction(function () use ($milestone, $dto) {
-            return $this->milestoneRepository->update($milestone, $dto->toArray());
+            $milestone = $this->milestoneRepository->update($milestone, $dto->toArray());
+            MilestoneUpdated::dispatch($milestone);
+
+            return $milestone;
         });
     }
 
