@@ -11,7 +11,10 @@ class ProjectRepository implements ProjectRepositoryInterface
     public function getAllByUser(int $userId, int $perPage = 10): LengthAwarePaginator
     {
         return Project::with('status')
-            ->where('created_by', $userId)
+            ->where(function ($query) use ($userId) {
+                $query->where('created_by', $userId)
+                    ->orWhereHas('projectUsers', fn ($q) => $q->where('user_id', $userId));
+            })
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }

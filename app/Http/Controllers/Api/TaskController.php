@@ -96,14 +96,27 @@ class TaskController extends Controller
 
     public function bulkUpdate(TaskRequest $request): JsonResponse
     {
-        $taskIds = $request->validated()['task_ids'] ?? [];
-        $data = $request->validated()['data'] ?? [];
+        $validated = $request->validated();
+        $taskIds = $validated['task_ids'] ?? [];
+        $data = $validated['data'] ?? [];
+
+        if (empty($taskIds)) {
+            return $this->validationError('No task IDs provided');
+        }
 
         $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 
-        foreach ($tasks as $task) {
-            abort_unless(Gate::allows('update', $task->projectUser?->project), 403);
+        if ($tasks->isEmpty()) {
+            return $this->notFound('No tasks found with the provided IDs');
         }
+
+        $projectIds = $tasks->pluck('projectUser.project_id')->unique();
+        if ($projectIds->count() > 1) {
+            return $this->validationError('All tasks must belong to the same project');
+        }
+
+        $project = $tasks->first()->projectUser?->project;
+        abort_unless($project && Gate::allows('update', $project), 403);
 
         $updated = $this->taskService->bulkUpdate($tasks, $data);
 
@@ -114,16 +127,21 @@ class TaskController extends Controller
 
     public function bulkDelete(BulkDeleteTaskRequest $request): JsonResponse
     {
-        $taskIds = $request->validated()['task_ids'];
+        $validated = $request->validated();
+        $taskIds = $validated['task_ids'];
+
         $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 
-        foreach ($tasks as $task) {
-            abort_unless(Gate::allows('delete', $task->projectUser?->project), 403);
+        if ($tasks->isEmpty()) {
+            return $this->notFound('No tasks found with the provided IDs');
         }
+
+        $project = $tasks->first()->projectUser?->project;
+        abort_unless($project && Gate::allows('delete', $project), 403);
 
         $this->taskService->bulkDelete($tasks);
 
-        return $this->success(null, count($taskIds).' tasks deleted successfully');
+        return $this->deleted(count($taskIds).' tasks deleted successfully');
     }
 
     public function restore(Task $task): JsonResponse

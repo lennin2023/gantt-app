@@ -61,7 +61,14 @@ class Project extends Model
 
     public function tasks(): HasManyThrough
     {
-        return $this->hasManyThrough(Task::class, ProjectUser::class, 'project_id', 'project_user_id');
+        return $this->hasManyThrough(
+            Task::class,
+            ProjectUser::class,
+            'project_id',
+            'project_user_id',
+            'id',
+            'id'
+        );
     }
 
     public function milestones(): HasMany

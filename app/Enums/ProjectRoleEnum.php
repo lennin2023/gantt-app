@@ -12,9 +12,9 @@ enum ProjectRoleEnum: int
     case TESTER = 6;
     case VIEWER = 7;
 
-    public const MIN_LEVEL_CREATE_TASKS = 3;
-
     public const MIN_LEVEL_MANAGE_PROJECT = 4;
+
+    public const MIN_LEVEL_CREATE_TASKS = 3;
 
     public function label(): string
     {
@@ -45,25 +45,5 @@ enum ProjectRoleEnum: int
             self::TESTER => 2,
             self::VIEWER => 1,
         };
-    }
-
-    public function canCreateTasks(): bool
-    {
-        return $this->level() >= self::MIN_LEVEL_CREATE_TASKS;
-    }
-
-    public function canAssignTasks(): bool
-    {
-        return $this->level() >= self::MIN_LEVEL_CREATE_TASKS;
-    }
-
-    public function canManageProject(): bool
-    {
-        return $this->level() >= self::MIN_LEVEL_MANAGE_PROJECT;
-    }
-
-    public function canViewProject(): bool
-    {
-        return $this->level() >= 1;
     }
 }
