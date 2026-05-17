@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
@@ -10,29 +11,19 @@ use Illuminate\Support\Facades\Log;
 
 class LogTaskActivity implements ShouldQueue
 {
-    public function handleTaskCreated(TaskCreated $event): void
+    public function handle(TaskCompleted|TaskCreated|TaskDeleted|TaskUpdated $event): void
     {
-        Log::info('Task created', [
+        $action = match (true) {
+            $event instanceof TaskCreated => 'created',
+            $event instanceof TaskUpdated => 'updated',
+            $event instanceof TaskDeleted => 'deleted',
+            $event instanceof TaskCompleted => 'completed',
+        };
+
+        Log::info("Task {$action}", [
             'task_id' => $event->task->id,
             'project_id' => $event->task->projectUser?->project_id,
             'name' => $event->task->name,
-        ]);
-    }
-
-    public function handleTaskUpdated(TaskUpdated $event): void
-    {
-        Log::info('Task updated', [
-            'task_id' => $event->task->id,
-            'project_id' => $event->task->projectUser?->project_id,
-            'name' => $event->task->name,
-        ]);
-    }
-
-    public function handleTaskDeleted(TaskDeleted $event): void
-    {
-        Log::info('Task deleted', [
-            'task_id' => $event->task->id,
-            'project_id' => $event->task->projectUser?->project_id,
         ]);
     }
 }

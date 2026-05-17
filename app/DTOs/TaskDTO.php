@@ -48,7 +48,6 @@ class TaskDTO
             'order' => $this->order,
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
-            'dependency_ids' => $this->dependencyIds,
         ];
     }
 }

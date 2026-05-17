@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
@@ -57,18 +56,6 @@ class Project extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(ProjectStatus::class, 'project_status_id');
-    }
-
-    public function tasks(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            Task::class,
-            ProjectUser::class,
-            'project_id',
-            'project_user_id',
-            'id',
-            'id'
-        );
     }
 
     public function milestones(): HasMany

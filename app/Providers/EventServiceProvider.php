@@ -23,6 +23,7 @@ class EventServiceProvider extends ServiceProvider
             LogTaskActivity::class,
         ],
         TaskCompleted::class => [
+            LogTaskActivity::class,
             RefreshProjectStatus::class,
         ],
     ];
