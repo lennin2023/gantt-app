@@ -20,9 +20,9 @@ class UserSeeder extends Seeder
                 'name' => 'Admin',
                 'email' => 'admin@example.com',
             ],
-            RoleEnum::USER->value => [
-                'name' => 'User',
-                'email' => 'user@example.com',
+            RoleEnum::STAFF->value => [
+                'name' => 'Staff',
+                'email' => 'staff@example.com',
             ],
         ];
 

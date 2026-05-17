@@ -6,14 +6,14 @@ enum RoleEnum: int
 {
     case SUPER_ADMIN = 1;
     case ADMIN = 2;
-    case USER = 3;
+    case STAFF = 3;
 
     public function label(): string
     {
         return match ($this) {
             self::SUPER_ADMIN => 'Super Admin',
             self::ADMIN => 'Admin',
-            self::USER => 'User',
+            self::STAFF => 'Staff',
         };
     }
 

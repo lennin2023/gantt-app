@@ -28,8 +28,8 @@ class Role extends Model
         return $this->slug === RoleEnum::ADMIN->slug();
     }
 
-    public function isUser(): bool
+    public function isStaff(): bool
     {
-        return $this->slug === RoleEnum::USER->slug();
+        return $this->slug === RoleEnum::STAFF->slug();
     }
 }

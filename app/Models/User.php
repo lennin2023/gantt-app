@@ -49,9 +49,9 @@ class User extends Authenticatable
         return $this->role?->slug === RoleEnum::ADMIN->slug();
     }
 
-    public function isUser(): bool
+    public function isStaff(): bool
     {
-        return $this->role?->slug === RoleEnum::USER->slug();
+        return $this->role?->slug === RoleEnum::STAFF->slug();
     }
 
     public function hasRole(RoleEnum $role): bool
