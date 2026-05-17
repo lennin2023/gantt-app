@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ApiResponse;
 use App\Services\DashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private readonly DashboardService $dashboardService,
     ) {}
@@ -20,6 +23,6 @@ class DashboardController extends Controller
 
         $stats = $this->dashboardService->getStats(Auth::id());
 
-        return response()->json($stats);
+        return $this->success($stats);
     }
 }

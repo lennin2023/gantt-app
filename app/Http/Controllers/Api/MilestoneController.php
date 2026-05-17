@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\DTOs\MilestoneDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\MilestoneRequest;
+use App\Http\Resources\ApiResponse;
 use App\Http\Resources\MilestoneResource;
 use App\Models\Milestone;
 use App\Models\Project;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Gate;
 
 class MilestoneController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private readonly MilestoneService $milestoneService,
     ) {}
@@ -47,12 +50,10 @@ class MilestoneController extends Controller
 
         $milestone = $this->milestoneService->createMilestone($dto);
 
-        return (new MilestoneResource($milestone))
-            ->response()
-            ->setStatusCode(201);
+        return $this->created(new MilestoneResource($milestone));
     }
 
-    public function show(int $projectId, int $milestoneId): MilestoneResource
+    public function show(int $projectId, int $milestoneId): JsonResponse
     {
         $project = Project::findOrFail($projectId);
 
@@ -60,10 +61,10 @@ class MilestoneController extends Controller
 
         $milestone = Milestone::where('project_id', $projectId)->findOrFail($milestoneId);
 
-        return new MilestoneResource($milestone);
+        return $this->success(new MilestoneResource($milestone));
     }
 
-    public function update(MilestoneRequest $request, int $projectId, int $milestoneId): MilestoneResource
+    public function update(MilestoneRequest $request, int $projectId, int $milestoneId): JsonResponse
     {
         $project = Project::findOrFail($projectId);
 
@@ -78,7 +79,7 @@ class MilestoneController extends Controller
 
         $milestone = $this->milestoneService->updateMilestone($milestone, $dto);
 
-        return new MilestoneResource($milestone);
+        return $this->success(new MilestoneResource($milestone));
     }
 
     public function destroy(int $projectId, int $milestoneId): JsonResponse
@@ -91,7 +92,7 @@ class MilestoneController extends Controller
 
         $this->milestoneService->deleteMilestone($milestone);
 
-        return response()->json(['message' => 'Milestone deleted successfully']);
+        return $this->deleted('Milestone deleted successfully');
     }
 
     public function restore(int $projectId, int $milestoneId): JsonResponse
@@ -104,6 +105,6 @@ class MilestoneController extends Controller
 
         $this->milestoneService->restoreMilestone($milestone);
 
-        return response()->json(['message' => 'Milestone restored successfully']);
+        return $this->success(null, 'Milestone restored successfully');
     }
 }

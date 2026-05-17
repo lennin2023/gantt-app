@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\DTOs\ProjectDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProjectRequest;
+use App\Http\Resources\ApiResponse;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Services\ProjectService;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private readonly ProjectService $projectService,
     ) {}
@@ -41,21 +44,19 @@ class ProjectController extends Controller
         $dto = ProjectDTO::fromArray($request->validated(), createdBy: Auth::id());
         $project = $this->projectService->createProject($dto);
 
-        return (new ProjectResource($project))
-            ->response()
-            ->setStatusCode(201);
+        return $this->created(new ProjectResource($project));
     }
 
-    public function show(int $id): ProjectResource
+    public function show(int $id): JsonResponse
     {
         $project = $this->projectService->findById($id, ['tasks.dependencies', 'milestones']);
 
         abort_unless(Gate::allows('view', $project), 403);
 
-        return new ProjectResource($project);
+        return $this->success(new ProjectResource($project));
     }
 
-    public function update(ProjectRequest $request, int $id): ProjectResource
+    public function update(ProjectRequest $request, int $id): JsonResponse
     {
         $project = $this->projectService->findById($id);
 
@@ -68,7 +69,7 @@ class ProjectController extends Controller
 
         $project = $this->projectService->updateProject($project, $dto);
 
-        return new ProjectResource($project);
+        return $this->success(new ProjectResource($project));
     }
 
     public function destroy(int $id): JsonResponse
@@ -79,7 +80,7 @@ class ProjectController extends Controller
 
         $this->projectService->deleteProject($project);
 
-        return response()->json(['message' => 'Project deleted successfully']);
+        return $this->deleted('Project deleted successfully');
     }
 
     public function restore(int $id): JsonResponse
@@ -90,6 +91,6 @@ class ProjectController extends Controller
 
         $this->projectService->restoreProject($project);
 
-        return response()->json(['message' => 'Project restored successfully']);
+        return $this->success(null, 'Project restored successfully');
     }
 }

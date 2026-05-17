@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\DTOs\TaskDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\TaskRequest;
+use App\Http\Resources\ApiResponse;
 use App\Http\Resources\TaskResource;
 use App\Models\Project;
 use App\Models\Task;
@@ -17,6 +18,8 @@ use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
+    use ApiResponse;
+
     public function __construct(
         private readonly TaskService $taskService,
     ) {}
@@ -48,21 +51,19 @@ class TaskController extends Controller
 
         $task = $this->taskService->createTask($dto);
 
-        return (new TaskResource($task))
-            ->response()
-            ->setStatusCode(201);
+        return $this->created(new TaskResource($task));
     }
 
-    public function show(int $id): TaskResource
+    public function show(int $id): JsonResponse
     {
         $task = $this->taskService->findById($id);
 
         abort_unless($task && Gate::allows('view', $task->project), 403);
 
-        return new TaskResource($task);
+        return $this->success(new TaskResource($task));
     }
 
-    public function update(TaskRequest $request, int $id): TaskResource
+    public function update(TaskRequest $request, int $id): JsonResponse
     {
         $task = Task::with('project')->findOrFail($id);
 
@@ -76,14 +77,14 @@ class TaskController extends Controller
         if (! empty($dto->dependencyIds)) {
             foreach ($dto->dependencyIds as $depId) {
                 if ($this->taskService->wouldCreateCycle($task, $depId)) {
-                    abort(422, 'Adding this dependency would create a cycle');
+                    return $this->validationError('Adding this dependency would create a cycle');
                 }
             }
         }
 
         $task = $this->taskService->updateTask($task, $dto);
 
-        return new TaskResource($task);
+        return $this->success(new TaskResource($task));
     }
 
     public function destroy(int $id): JsonResponse
@@ -94,7 +95,7 @@ class TaskController extends Controller
 
         $this->taskService->deleteTask($task);
 
-        return response()->json(['message' => 'Task deleted successfully']);
+        return $this->deleted('Task deleted successfully');
     }
 
     public function bulkUpdate(TaskRequest $request): JsonResponse
@@ -110,10 +111,9 @@ class TaskController extends Controller
 
         $updated = $this->taskService->bulkUpdate($tasks, $data);
 
-        return response()->json([
-            'message' => 'Tasks updated successfully',
+        return $this->success([
             'tasks' => TaskResource::collection($updated),
-        ]);
+        ], 'Tasks updated successfully');
     }
 
     public function bulkDelete(Request $request): JsonResponse
@@ -132,7 +132,7 @@ class TaskController extends Controller
 
         $this->taskService->bulkDelete($tasks);
 
-        return response()->json(['message' => count($taskIds).' tasks deleted successfully']);
+        return $this->success(null, count($taskIds).' tasks deleted successfully');
     }
 
     public function restore(int $id): JsonResponse
@@ -143,6 +143,6 @@ class TaskController extends Controller
 
         $this->taskService->restoreTask($task);
 
-        return response()->json(['message' => 'Task restored successfully']);
+        return $this->success(null, 'Task restored successfully');
     }
 }
