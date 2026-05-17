@@ -14,6 +14,7 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     Route::post('/projects/{project}/restore', [ProjectController::class, 'restore']);
 
     Route::get('/projects/{project}/users', [ProjectUserController::class, 'index']);
+    Route::get('/projects/{project}/users/role/{projectRole}', [ProjectUserController::class, 'indexByRole']);
     Route::post('/projects/{project}/users', [ProjectUserController::class, 'store']);
     Route::delete('/projects/{project}/users/{user}', [ProjectUserController::class, 'destroy']);
 

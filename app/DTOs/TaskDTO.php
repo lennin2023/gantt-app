@@ -5,11 +5,10 @@ namespace App\DTOs;
 class TaskDTO
 {
     public function __construct(
-        public readonly int $projectId,
+        public readonly int $projectUserId,
         public readonly ?int $taskStatusId,
         public readonly string $name,
         public readonly ?string $description,
-        public readonly ?int $assignedTo,
         public readonly ?string $startDate,
         public readonly ?string $endDate,
         public readonly ?int $progress,
@@ -19,14 +18,13 @@ class TaskDTO
         public readonly array $dependencyIds = [],
     ) {}
 
-    public static function fromArray(array $data, int $createdBy, ?int $fallbackProjectId = null): self
+    public static function fromArray(array $data, int $createdBy): self
     {
         return new self(
-            projectId: $data['project_id'] ?? $fallbackProjectId,
+            projectUserId: $data['project_user_id'],
             taskStatusId: $data['task_status_id'] ?? null,
             name: $data['name'],
             description: $data['description'] ?? null,
-            assignedTo: $data['assigned_to'] ?? null,
             startDate: $data['start_date'] ?? null,
             endDate: $data['end_date'] ?? null,
             progress: $data['progress'] ?? null,
@@ -40,17 +38,17 @@ class TaskDTO
     public function toArray(): array
     {
         return [
-            'project_id' => $this->projectId,
+            'project_user_id' => $this->projectUserId,
             'task_status_id' => $this->taskStatusId,
             'name' => $this->name,
             'description' => $this->description,
-            'assigned_to' => $this->assignedTo,
             'start_date' => $this->startDate,
             'end_date' => $this->endDate,
             'progress' => $this->progress,
             'order' => $this->order,
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
+            'dependency_ids' => $this->dependencyIds,
         ];
     }
 }

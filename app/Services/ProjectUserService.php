@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\DTOs\ProjectUserDTO;
 use App\Models\ProjectUser;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use Illuminate\Support\Collection;
@@ -18,9 +17,19 @@ class ProjectUserService
         return $this->projectUserRepository->getAllByProject($projectId);
     }
 
-    public function assignUser(ProjectUserDTO $dto): ProjectUser
+    public function getProjectUsersByRole(int $projectId, int $projectRoleId): Collection
     {
-        return $this->projectUserRepository->create($dto->toArray());
+        return $this->projectUserRepository->getByProjectAndRole($projectId, $projectRoleId);
+    }
+
+    public function assignUser(int $projectId, int $userId, int $projectRoleId, int $createdBy): ProjectUser
+    {
+        return $this->projectUserRepository->create([
+            'project_id' => $projectId,
+            'user_id' => $userId,
+            'project_role_id' => $projectRoleId,
+            'created_by' => $createdBy,
+        ]);
     }
 
     public function removeUser(int $projectId, int $userId): bool

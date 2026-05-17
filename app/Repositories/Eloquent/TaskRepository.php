@@ -11,15 +11,15 @@ class TaskRepository implements TaskRepositoryInterface
 {
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
-        return Task::with(['status', 'dependencies'])
-            ->where('project_id', $projectId)
+        return Task::with(['status', 'dependencies', 'projectUser.projectRole'])
+            ->whereHas('projectUser', fn ($q) => $q->where('project_id', $projectId))
             ->orderBy('order')
             ->paginate($perPage);
     }
 
     public function findById(int $id): ?Task
     {
-        return Task::with(['status', 'dependencies', 'dependents', 'project'])->find($id);
+        return Task::with(['status', 'dependencies', 'dependents', 'projectUser.projectRole'])->find($id);
     }
 
     public function create(array $data): Task
@@ -47,7 +47,7 @@ class TaskRepository implements TaskRepositoryInterface
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
     {
         $tasksInProject = Task::with('dependents')
-            ->where('project_id', $task->project_id)
+            ->whereHas('projectUser', fn ($q) => $q->where('project_id', $task->projectUser->project_id))
             ->get()
             ->keyBy('id');
 

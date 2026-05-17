@@ -9,6 +9,8 @@ interface ProjectUserRepositoryInterface
 {
     public function getAllByProject(int $projectId): Collection;
 
+    public function getByProjectAndRole(int $projectId, int $projectRoleId): Collection;
+
     public function findByProjectAndUser(int $projectId, int $userId): ?ProjectUser;
 
     public function create(array $data): ProjectUser;

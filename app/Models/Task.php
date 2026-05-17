@@ -14,11 +14,10 @@ class Task extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'project_id',
+        'project_user_id',
         'task_status_id',
         'name',
         'description',
-        'assignee',
         'start_date',
         'end_date',
         'progress',
@@ -41,9 +40,9 @@ class Task extends Model
         ];
     }
 
-    public function project(): BelongsTo
+    public function projectUser(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(ProjectUser::class);
     }
 
     public function status(): BelongsTo
@@ -59,11 +58,6 @@ class Task extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function assignedUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function dependencies(): BelongsToMany

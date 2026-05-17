@@ -45,8 +45,7 @@ class TaskController extends Controller
 
         $dto = TaskDTO::fromArray(
             array_merge($request->validated(), ['created_by' => Auth::id()]),
-            createdBy: Auth::id(),
-            fallbackProjectId: $projectId,
+            Auth::id(),
         );
 
         $task = $this->taskService->createTask($dto);
@@ -58,20 +57,20 @@ class TaskController extends Controller
     {
         $task = $this->taskService->findById($id);
 
-        abort_unless($task && Gate::allows('view', $task->project), 403);
+        abort_unless($task && Gate::allows('view', $task->projectUser->project), 403);
 
         return $this->success(new TaskResource($task));
     }
 
     public function update(TaskRequest $request, int $id): JsonResponse
     {
-        $task = Task::with('project')->findOrFail($id);
+        $task = Task::with('projectUser.project')->findOrFail($id);
 
-        abort_unless(Gate::allows('update', $task->project), 403);
+        abort_unless(Gate::allows('update', $task->projectUser->project), 403);
 
         $dto = TaskDTO::fromArray(
             array_merge($request->validated(), ['updated_by' => Auth::id()]),
-            createdBy: $task->created_by,
+            $task->created_by,
         );
 
         if (! empty($dto->dependencyIds)) {
@@ -89,9 +88,9 @@ class TaskController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $task = Task::with('project')->findOrFail($id);
+        $task = Task::with('projectUser.project')->findOrFail($id);
 
-        abort_unless(Gate::allows('delete', $task->project), 403);
+        abort_unless(Gate::allows('delete', $task->projectUser->project), 403);
 
         $this->taskService->deleteTask($task);
 
@@ -103,10 +102,10 @@ class TaskController extends Controller
         $taskIds = $request->validated()['task_ids'] ?? [];
         $data = $request->validated()['data'] ?? [];
 
-        $tasks = Task::with('project')->whereIn('id', $taskIds)->get();
+        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 
         foreach ($tasks as $task) {
-            abort_unless(Gate::allows('update', $task->project), 403);
+            abort_unless(Gate::allows('update', $task->projectUser->project), 403);
         }
 
         $updated = $this->taskService->bulkUpdate($tasks, $data);
@@ -124,10 +123,10 @@ class TaskController extends Controller
         ]);
 
         $taskIds = $request->validated()['task_ids'];
-        $tasks = Task::with('project')->whereIn('id', $taskIds)->get();
+        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 
         foreach ($tasks as $task) {
-            abort_unless(Gate::allows('delete', $task->project), 403);
+            abort_unless(Gate::allows('delete', $task->projectUser->project), 403);
         }
 
         $this->taskService->bulkDelete($tasks);
@@ -139,7 +138,7 @@ class TaskController extends Controller
     {
         $task = Task::withTrashed()->findOrFail($id);
 
-        abort_unless(Gate::allows('restore', $task->project), 403);
+        abort_unless(Gate::allows('restore', $task->projectUser->project), 403);
 
         $this->taskService->restoreTask($task);
 

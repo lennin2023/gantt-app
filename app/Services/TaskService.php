@@ -42,10 +42,6 @@ class TaskService
                 $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
             }
 
-            if ($dto->assignedTo) {
-                $this->ensureUserInProject($task->project_id, $dto->assignedTo);
-            }
-
             $task = $this->taskRepository->findById($task->id);
 
             TaskCreated::dispatch($task);
@@ -58,16 +54,11 @@ class TaskService
     {
         return DB::transaction(function () use ($task, $dto) {
             $previousStatus = $task->task_status_id;
-            $previousAssignedTo = $task->assigned_to;
 
             $task = $this->taskRepository->update($task, $dto->toArray());
 
             if (! empty($dto->dependencyIds)) {
                 $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
-            }
-
-            if ($dto->assignedTo && $dto->assignedTo !== $previousAssignedTo) {
-                $this->ensureUserInProject($task->project_id, $dto->assignedTo);
             }
 
             TaskUpdated::dispatch($task);
@@ -92,7 +83,7 @@ class TaskService
 
     public function bulkUpdate(Collection $tasks, array $data): Collection
     {
-        $allowedFields = ['task_status_id', 'name', 'description', 'assigned_to', 'start_date', 'end_date', 'progress', 'order'];
+        $allowedFields = ['task_status_id', 'name', 'description', 'project_user_id', 'start_date', 'end_date', 'progress', 'order'];
         $filteredData = array_intersect_key($data, array_flip($allowedFields));
 
         return DB::transaction(function () use ($tasks, $filteredData) {
@@ -101,10 +92,6 @@ class TaskService
             foreach ($tasks as $task) {
                 $previousStatus = $task->task_status_id;
                 $updatedTask = $this->taskRepository->update($task, $filteredData);
-
-                if (isset($filteredData['assigned_to']) && $filteredData['assigned_to'] !== $task->assigned_to) {
-                    $this->ensureUserInProject($task->project_id, $filteredData['assigned_to']);
-                }
 
                 $updated->push($updatedTask);
 
@@ -142,7 +129,7 @@ class TaskService
         });
     }
 
-    private function ensureUserInProject(int $projectId, int $userId): void
+    public function ensureUserInProject(int $projectId, int $userId): void
     {
         if (! $this->projectUserRepository->exists($projectId, $userId)) {
             $this->projectUserRepository->create([

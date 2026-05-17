@@ -15,6 +15,14 @@ class ProjectUserRepository implements ProjectUserRepositoryInterface
             ->get();
     }
 
+    public function getByProjectAndRole(int $projectId, int $projectRoleId): Collection
+    {
+        return ProjectUser::with(['user', 'projectRole', 'creator'])
+            ->where('project_id', $projectId)
+            ->where('project_role_id', $projectRoleId)
+            ->get();
+    }
+
     public function findByProjectAndUser(int $projectId, int $userId): ?ProjectUser
     {
         return ProjectUser::where('project_id', $projectId)

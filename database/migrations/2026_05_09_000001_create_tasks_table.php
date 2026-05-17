@@ -11,11 +11,10 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_id')->constrained()->restrictOnDelete();
+            $table->foreignId('project_user_id')->constrained('project_users')->restrictOnDelete();
             $table->foreignId('task_status_id')->default(TaskStatusEnum::PENDING->value)->constrained('task_statuses')->restrictOnDelete();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->unsignedTinyInteger('progress')->default(0);

@@ -11,7 +11,12 @@ class TaskResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'project_id' => $this->project_id,
+            'project_user_id' => $this->project_user_id,
+            'project_user' => $this->whenLoaded('projectUser', fn () => [
+                'id' => $this->projectUser->id,
+                'user_id' => $this->projectUser->user_id,
+                'role' => $this->projectUser->projectRole->name,
+            ]),
             'task_status_id' => $this->task_status_id,
             'status' => $this->whenLoaded('status', fn () => [
                 'name' => $this->status->name,
@@ -20,7 +25,6 @@ class TaskResource extends JsonResource
             ]),
             'name' => $this->name,
             'description' => $this->description,
-            'assignee' => $this->assignee,
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
             'progress' => $this->progress,
