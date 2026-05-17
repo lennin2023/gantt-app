@@ -10,6 +10,13 @@ use Illuminate\Validation\Rules\Enum;
 
 class TaskRequest extends FormRequest
 {
+    public function __construct(
+        private readonly ProjectUserRepositoryInterface $projectUserRepo,
+        private readonly TaskRepositoryInterface $taskRepo,
+    ) {
+        parent::__construct();
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -72,8 +79,7 @@ class TaskRequest extends FormRequest
 
     protected function getProjectIdForProjectUser(int $projectUserId): ?int
     {
-        $projectUserRepo = app(ProjectUserRepositoryInterface::class);
-        $projectUser = $projectUserRepo->findById($projectUserId);
+        $projectUser = $this->projectUserRepo->findById($projectUserId);
 
         return $projectUser?->project_id;
     }
@@ -90,10 +96,9 @@ class TaskRequest extends FormRequest
             return;
         }
 
-        $tasksProjectUserRepo = app(TaskRepositoryInterface::class);
-
         foreach ($dependencyIds as $depId) {
-            $task = $tasksProjectUserRepo->findById($depId);
+            $task = $this->taskRepo->findById((int) $depId);
+
             if (! $task || ! $task->projectUser) {
                 $fail('Dependency task does not exist');
 

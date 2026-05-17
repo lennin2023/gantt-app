@@ -93,10 +93,18 @@ class Project extends Model
     public function isAllTasksCompleted(): bool
     {
         $result = Task::whereHas('projectUser', fn ($q) => $q->where('project_id', $this->id))
-            ->selectRaw('COUNT(*) = SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as all_completed', [TaskStatusEnum::COMPLETED->value])
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed
+            ', [TaskStatusEnum::COMPLETED->value]
+            )
             ->first();
 
-        return $result->all_completed && $result->total > 0;
+        if (! $result || (int) $result->total === 0) {
+            return false;
+        }
+
+        return (int) $result->total === (int) $result->completed;
     }
 
     public function refreshStatus(): void

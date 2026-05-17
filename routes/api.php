@@ -18,6 +18,9 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     Route::post('/projects/{project}/users', [ProjectUserController::class, 'store']);
     Route::delete('/projects/{project}/users/{user}', [ProjectUserController::class, 'destroy']);
 
+    Route::patch('/tasks/bulk-update', [TaskController::class, 'bulkUpdate'])->name('tasks.bulk-update');
+    Route::delete('/tasks/bulk-delete', [TaskController::class, 'bulkDelete'])->name('tasks.bulk-delete');
+
     Route::get('/projects/{project}/tasks', [TaskController::class, 'index']);
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
@@ -25,8 +28,6 @@ Route::middleware(['auth:web', 'throttle:api'])->group(function () {
     Route::patch('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
     Route::post('/tasks/{task}/restore', [TaskController::class, 'restore']);
-    Route::patch('/tasks/bulk', [TaskController::class, 'bulkUpdate']);
-    Route::delete('/tasks/bulk', [TaskController::class, 'bulkDelete']);
 
     Route::get('/projects/{project}/milestones', [MilestoneController::class, 'index']);
     Route::post('/projects/{project}/milestones', [MilestoneController::class, 'store']);
