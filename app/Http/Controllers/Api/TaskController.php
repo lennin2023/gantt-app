@@ -24,23 +24,19 @@ class TaskController extends Controller
         private readonly TaskService $taskService,
     ) {}
 
-    public function index(Request $request, int $projectId): AnonymousResourceCollection
+    public function index(Request $request, Project $project): AnonymousResourceCollection
     {
-        $project = Project::findOrFail($projectId);
-
         abort_unless(Gate::allows('view', $project), 403);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
 
-        $tasks = $this->taskService->getProjectTasks($projectId, $perPage);
+        $tasks = $this->taskService->getProjectTasks($project->id, $perPage);
 
         return TaskResource::collection($tasks);
     }
 
-    public function store(TaskRequest $request, int $projectId): JsonResponse
+    public function store(TaskRequest $request, Project $project): JsonResponse
     {
-        $project = Project::findOrFail($projectId);
-
         abort_unless(Gate::allows('create', $project), 403);
 
         $dto = TaskDTO::fromArray(
@@ -53,19 +49,15 @@ class TaskController extends Controller
         return $this->created(new TaskResource($task));
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Task $task): JsonResponse
     {
-        $task = $this->taskService->findById($id);
-
         abort_unless($task && Gate::allows('view', $task->projectUser->project), 403);
 
         return $this->success(new TaskResource($task));
     }
 
-    public function update(TaskRequest $request, int $id): JsonResponse
+    public function update(TaskRequest $request, Task $task): JsonResponse
     {
-        $task = Task::with('projectUser.project')->findOrFail($id);
-
         abort_unless(Gate::allows('update', $task->projectUser->project), 403);
 
         $dto = TaskDTO::fromArray(
@@ -86,10 +78,8 @@ class TaskController extends Controller
         return $this->success(new TaskResource($task));
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Task $task): JsonResponse
     {
-        $task = Task::with('projectUser.project')->findOrFail($id);
-
         abort_unless(Gate::allows('delete', $task->projectUser->project), 403);
 
         $this->taskService->deleteTask($task);
@@ -134,9 +124,9 @@ class TaskController extends Controller
         return $this->success(null, count($taskIds).' tasks deleted successfully');
     }
 
-    public function restore(int $id): JsonResponse
+    public function restore(Task $task): JsonResponse
     {
-        $task = Task::withTrashed()->findOrFail($id);
+        $task->load('projectUser.project');
 
         abort_unless(Gate::allows('restore', $task->projectUser->project), 403);
 
