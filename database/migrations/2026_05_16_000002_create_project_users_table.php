@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
             $table->foreignId('project_role_id')->nullable()->constrained('project_roles')->nullOnDelete();
-            $table->foreignId('added_by')->nullable()->constrained('users')->restrictOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamps();
 
             $table->unique(['project_id', 'user_id']);

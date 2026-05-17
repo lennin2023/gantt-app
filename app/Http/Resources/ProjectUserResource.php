@@ -23,10 +23,9 @@ class ProjectUserResource extends JsonResource
                 'slug' => $this->projectRole->slug,
                 'level' => $this->projectRole->level,
             ]),
-            'added_by' => $this->added_by,
-            'adder' => $this->whenLoaded('adder', fn () => [
-                'id' => $this->adder->id,
-                'name' => $this->adder->name,
+            'creator' => $this->whenLoaded('creator', fn () => [
+                'id' => $this->creator->id,
+                'name' => $this->creator->name,
             ]),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

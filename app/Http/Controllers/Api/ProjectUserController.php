@@ -20,7 +20,7 @@ class ProjectUserController extends Controller
 
         abort_unless(Gate::allows('view', $project), 403);
 
-        $projectUsers = ProjectUser::with(['user', 'projectRole', 'adder'])
+        $projectUsers = ProjectUser::with(['user', 'projectRole', 'creator'])
             ->where('project_id', $projectId)
             ->get();
 
@@ -50,10 +50,10 @@ class ProjectUserController extends Controller
             'project_id' => $projectId,
             'user_id' => $validated['user_id'],
             'project_role_id' => $validated['project_role_id'],
-            'added_by' => Auth::id(),
+            'created_by' => Auth::id(),
         ]);
 
-        $projectUser->load(['user', 'projectRole', 'adder']);
+        $projectUser->load(['user', 'projectRole', 'creator']);
 
         return (new ProjectUserResource($projectUser))
             ->response()

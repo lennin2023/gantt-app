@@ -16,7 +16,7 @@ class ProjectUser extends Pivot
         'project_id',
         'user_id',
         'project_role_id',
-        'added_by',
+        'created_by',
     ];
 
     public function project(): BelongsTo
@@ -34,8 +34,8 @@ class ProjectUser extends Pivot
         return $this->belongsTo(ProjectRole::class);
     }
 
-    public function adder(): BelongsTo
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'added_by');
+        return $this->belongsTo(User::class, 'created_by');
     }
 }
