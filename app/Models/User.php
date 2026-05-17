@@ -44,43 +44,18 @@ class User extends Authenticatable
         return $this->role?->slug === RoleEnum::SUPER_ADMIN->slug();
     }
 
-    public function isSupervisor(): bool
+    public function isAdmin(): bool
     {
-        return $this->role?->slug === RoleEnum::SUPERVISOR->slug();
+        return $this->role?->slug === RoleEnum::ADMIN->slug();
     }
 
-    public function isGestor(): bool
+    public function isUser(): bool
     {
-        return $this->role?->slug === RoleEnum::GESTOR->slug();
-    }
-
-    public function isProjectManager(): bool
-    {
-        return $this->role?->slug === RoleEnum::PROJECT_MANAGER->slug();
-    }
-
-    public function isTeamMember(): bool
-    {
-        return $this->role?->slug === RoleEnum::TEAM_MEMBER->slug();
-    }
-
-    public function isViewer(): bool
-    {
-        return $this->role?->slug === RoleEnum::VIEWER->slug();
-    }
-
-    public function canBypassPolicies(): bool
-    {
-        return $this->isSuperAdmin() || $this->isSupervisor();
+        return $this->role?->slug === RoleEnum::USER->slug();
     }
 
     public function hasRole(RoleEnum $role): bool
     {
         return $this->role?->slug === $role->slug();
-    }
-
-    public function roleLevel(): int
-    {
-        return $this->role?->level ?? 0;
     }
 }

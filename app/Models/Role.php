@@ -11,7 +11,7 @@ class Role extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'level'];
+    protected $fillable = ['name', 'slug'];
 
     public function users(): HasMany
     {
@@ -23,28 +23,13 @@ class Role extends Model
         return $this->slug === RoleEnum::SUPER_ADMIN->slug();
     }
 
-    public function isSupervisor(): bool
+    public function isAdmin(): bool
     {
-        return $this->slug === RoleEnum::SUPERVISOR->slug();
+        return $this->slug === RoleEnum::ADMIN->slug();
     }
 
-    public function isGestor(): bool
+    public function isUser(): bool
     {
-        return $this->slug === RoleEnum::GESTOR->slug();
-    }
-
-    public function isProjectManager(): bool
-    {
-        return $this->slug === RoleEnum::PROJECT_MANAGER->slug();
-    }
-
-    public function isTeamMember(): bool
-    {
-        return $this->slug === RoleEnum::TEAM_MEMBER->slug();
-    }
-
-    public function isViewer(): bool
-    {
-        return $this->slug === RoleEnum::VIEWER->slug();
+        return $this->slug === RoleEnum::USER->slug();
     }
 }

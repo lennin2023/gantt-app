@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\RoleEnum;
 use App\Models\Project;
 use App\Models\User;
 
@@ -20,7 +19,7 @@ class ProjectPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -29,12 +28,12 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        return $user->roleLevel() >= RoleEnum::GESTOR->level();
+        return $user->isSuperAdmin() || $user->isAdmin();
     }
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -43,7 +42,7 @@ class ProjectPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -52,7 +51,7 @@ class ProjectPolicy
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 

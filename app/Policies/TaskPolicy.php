@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\RoleEnum;
 use App\Models\Project;
 use App\Models\User;
 
@@ -10,7 +9,7 @@ class TaskPolicy
 {
     public function viewAny(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -19,7 +18,7 @@ class TaskPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -28,17 +27,16 @@ class TaskPolicy
 
     public function create(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
-        return $user->roleLevel() >= RoleEnum::PROJECT_MANAGER->level()
-            && $user->id === $project->created_by;
+        return $user->id === $project->created_by;
     }
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -47,7 +45,7 @@ class TaskPolicy
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
@@ -56,7 +54,7 @@ class TaskPolicy
 
     public function restore(User $user, Project $project): bool
     {
-        if ($user->canBypassPolicies()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
 
