@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum ProjectRoleEnum: int
 {
-    case MANAGER = 1;
+    case SUPERVISOR = 1;
     case PROJECT_MANAGER = 2;
     case DEVELOPER = 3;
     case ANALYST = 4;
@@ -19,7 +19,7 @@ enum ProjectRoleEnum: int
     public function label(): string
     {
         return match ($this) {
-            self::MANAGER => 'Manager',
+            self::SUPERVISOR => 'Supervisor',
             self::PROJECT_MANAGER => 'Project Manager',
             self::DEVELOPER => 'Developer',
             self::ANALYST => 'Analyst',
@@ -37,7 +37,7 @@ enum ProjectRoleEnum: int
     public function level(): int
     {
         return match ($this) {
-            self::MANAGER => 4,
+            self::SUPERVISOR => 4,
             self::PROJECT_MANAGER => 3,
             self::DEVELOPER => 2,
             self::ANALYST => 2,

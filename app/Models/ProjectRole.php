@@ -18,9 +18,9 @@ class ProjectRole extends Model
         return $this->hasMany(ProjectUser::class);
     }
 
-    public function isManager(): bool
+    public function isSupervisor(): bool
     {
-        return $this->slug === ProjectRoleEnum::MANAGER->slug();
+        return $this->slug === ProjectRoleEnum::SUPERVISOR->slug();
     }
 
     public function isProjectManager(): bool
