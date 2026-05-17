@@ -51,14 +51,18 @@ class TaskController extends Controller
 
     public function show(Task $task): JsonResponse
     {
-        abort_unless($task && Gate::allows('view', $task->projectUser->project), 403);
+        $task->load('projectUser.project');
+
+        abort_unless($task && Gate::allows('view', $task->projectUser?->project), 403);
 
         return $this->success(new TaskResource($task));
     }
 
     public function update(TaskRequest $request, Task $task): JsonResponse
     {
-        abort_unless(Gate::allows('update', $task->projectUser->project), 403);
+        $task->load('projectUser.project');
+
+        abort_unless(Gate::allows('update', $task->projectUser?->project), 403);
 
         $dto = TaskDTO::fromArray(
             array_merge($request->validated(), ['updated_by' => Auth::id()]),
@@ -80,7 +84,9 @@ class TaskController extends Controller
 
     public function destroy(Task $task): JsonResponse
     {
-        abort_unless(Gate::allows('delete', $task->projectUser->project), 403);
+        $task->load('projectUser.project');
+
+        abort_unless(Gate::allows('delete', $task->projectUser?->project), 403);
 
         $this->taskService->deleteTask($task);
 
@@ -95,7 +101,7 @@ class TaskController extends Controller
         $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 
         foreach ($tasks as $task) {
-            abort_unless(Gate::allows('update', $task->projectUser->project), 403);
+            abort_unless(Gate::allows('update', $task->projectUser?->project), 403);
         }
 
         $updated = $this->taskService->bulkUpdate($tasks, $data);
@@ -116,7 +122,7 @@ class TaskController extends Controller
         $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
 
         foreach ($tasks as $task) {
-            abort_unless(Gate::allows('delete', $task->projectUser->project), 403);
+            abort_unless(Gate::allows('delete', $task->projectUser?->project), 403);
         }
 
         $this->taskService->bulkDelete($tasks);
@@ -128,7 +134,7 @@ class TaskController extends Controller
     {
         $task->load('projectUser.project');
 
-        abort_unless(Gate::allows('restore', $task->projectUser->project), 403);
+        abort_unless(Gate::allows('restore', $task->projectUser?->project), 403);
 
         $this->taskService->restoreTask($task);
 

@@ -47,19 +47,17 @@ class ProjectController extends Controller
         return $this->created(new ProjectResource($project));
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Project $project): JsonResponse
     {
-        $project = $this->projectService->findById($id, ['tasks.dependencies', 'milestones']);
-
         abort_unless(Gate::allows('view', $project), 403);
+
+        $project->load(['tasks.dependencies', 'milestones']);
 
         return $this->success(new ProjectResource($project));
     }
 
-    public function update(ProjectRequest $request, int $id): JsonResponse
+    public function update(ProjectRequest $request, Project $project): JsonResponse
     {
-        $project = $this->projectService->findById($id);
-
         abort_unless(Gate::allows('update', $project), 403);
 
         $dto = ProjectDTO::fromArray(
@@ -72,10 +70,8 @@ class ProjectController extends Controller
         return $this->success(new ProjectResource($project));
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(Project $project): JsonResponse
     {
-        $project = $this->projectService->findById($id);
-
         abort_unless(Gate::allows('delete', $project), 403);
 
         $this->projectService->deleteProject($project);
@@ -83,10 +79,8 @@ class ProjectController extends Controller
         return $this->deleted('Project deleted successfully');
     }
 
-    public function restore(int $id): JsonResponse
+    public function restore(Project $project): JsonResponse
     {
-        $project = Project::withTrashed()->findOrFail($id);
-
         abort_unless(Gate::allows('restore', $project), 403);
 
         $this->projectService->restoreProject($project);

@@ -42,7 +42,7 @@ class TaskService
                 $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
             }
 
-            $task = $this->taskRepository->findById($task->id);
+            $task->load(['status', 'dependencies', 'projectUser.projectRole']);
 
             TaskCreated::dispatch($task);
 

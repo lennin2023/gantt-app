@@ -14,7 +14,7 @@ class LogTaskActivity implements ShouldQueue
     {
         Log::info('Task created', [
             'task_id' => $event->task->id,
-            'project_id' => $event->task->projectUser->project_id,
+            'project_id' => $event->task->projectUser?->project_id,
             'name' => $event->task->name,
         ]);
     }
@@ -23,7 +23,7 @@ class LogTaskActivity implements ShouldQueue
     {
         Log::info('Task updated', [
             'task_id' => $event->task->id,
-            'project_id' => $event->task->projectUser->project_id,
+            'project_id' => $event->task->projectUser?->project_id,
             'name' => $event->task->name,
         ]);
     }
@@ -32,7 +32,7 @@ class LogTaskActivity implements ShouldQueue
     {
         Log::info('Task deleted', [
             'task_id' => $event->task->id,
-            'project_id' => $event->task->projectUser->project_id,
+            'project_id' => $event->task->projectUser?->project_id,
         ]);
     }
 }

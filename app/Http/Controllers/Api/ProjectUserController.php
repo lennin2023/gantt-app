@@ -21,32 +21,26 @@ class ProjectUserController extends Controller
         private readonly ProjectUserService $projectUserService,
     ) {}
 
-    public function index(int $projectId): AnonymousResourceCollection
+    public function index(Project $project): AnonymousResourceCollection
     {
-        $project = Project::findOrFail($projectId);
-
         abort_unless(Gate::allows('view', $project), 403);
 
-        $projectUsers = $this->projectUserService->getProjectUsers($projectId);
+        $projectUsers = $this->projectUserService->getProjectUsers($project->id);
 
         return ProjectUserResource::collection($projectUsers);
     }
 
-    public function indexByRole(int $projectId, int $projectRoleId): AnonymousResourceCollection
+    public function indexByRole(Project $project, int $projectRoleId): AnonymousResourceCollection
     {
-        $project = Project::findOrFail($projectId);
-
         abort_unless(Gate::allows('view', $project), 403);
 
-        $projectUsers = $this->projectUserService->getProjectUsersByRole($projectId, $projectRoleId);
+        $projectUsers = $this->projectUserService->getProjectUsersByRole($project->id, $projectRoleId);
 
         return ProjectUserResource::collection($projectUsers);
     }
 
-    public function store(Request $request, int $projectId): JsonResponse
+    public function store(Request $request, Project $project): JsonResponse
     {
-        $project = Project::findOrFail($projectId);
-
         abort_unless(Gate::allows('update', $project), 403);
 
         $validated = $request->validate([
@@ -54,22 +48,20 @@ class ProjectUserController extends Controller
             'project_role_id' => 'required|exists:project_roles,id',
         ]);
 
-        if ($this->projectUserService->userAlreadyAssigned($projectId, $validated['user_id'])) {
+        if ($this->projectUserService->userAlreadyAssigned($project->id, $validated['user_id'])) {
             return $this->validationError('User already in project');
         }
 
-        $projectUser = $this->projectUserService->assignUser($projectId, $validated['user_id'], $validated['project_role_id'], Auth::id());
+        $projectUser = $this->projectUserService->assignUser($project->id, $validated['user_id'], $validated['project_role_id'], Auth::id());
 
         return $this->created(new ProjectUserResource($projectUser));
     }
 
-    public function destroy(int $projectId, int $userId): JsonResponse
+    public function destroy(Project $project, int $userId): JsonResponse
     {
-        $project = Project::findOrFail($projectId);
-
         abort_unless(Gate::allows('delete', $project), 403);
 
-        $this->projectUserService->removeUser($projectId, $userId);
+        $this->projectUserService->removeUser($project->id, $userId);
 
         return $this->deleted('User removed from project');
     }

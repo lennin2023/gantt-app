@@ -22,7 +22,7 @@ class TaskRequest extends FormRequest
             return [
                 'task_ids' => 'required|array|min:1',
                 'task_ids.*' => 'integer|exists:tasks,id',
-                'data' => 'required|array',
+                'data' => 'required|array|min:1',
                 'data.project_user_id' => 'nullable|exists:project_users,id',
                 'data.task_status_id' => ['nullable', new Enum(TaskStatusEnum::class)],
                 'data.name' => 'sometimes|string|max:255',

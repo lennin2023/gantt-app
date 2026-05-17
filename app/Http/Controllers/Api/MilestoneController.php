@@ -52,6 +52,7 @@ class MilestoneController extends Controller
     public function show(Project $project, Milestone $milestone): JsonResponse
     {
         abort_unless(Gate::allows('view', $project), 403);
+        abort_if($milestone->project_id !== $project->id, 403);
 
         return $this->success(new MilestoneResource($milestone));
     }
@@ -59,6 +60,7 @@ class MilestoneController extends Controller
     public function update(MilestoneRequest $request, Project $project, Milestone $milestone): JsonResponse
     {
         abort_unless(Gate::allows('update', $project), 403);
+        abort_if($milestone->project_id !== $project->id, 403);
 
         $dto = MilestoneDTO::fromArray(
             array_merge($request->validated(), ['updated_by' => Auth::id()]),
@@ -73,6 +75,7 @@ class MilestoneController extends Controller
     public function destroy(Project $project, Milestone $milestone): JsonResponse
     {
         abort_unless(Gate::allows('delete', $project), 403);
+        abort_if($milestone->project_id !== $project->id, 403);
 
         $this->milestoneService->deleteMilestone($milestone);
 
@@ -82,6 +85,7 @@ class MilestoneController extends Controller
     public function restore(Project $project, Milestone $milestone): JsonResponse
     {
         abort_unless(Gate::allows('restore', $project), 403);
+        abort_if($milestone->project_id !== $project->id, 403);
 
         $this->milestoneService->restoreMilestone($milestone);
 
