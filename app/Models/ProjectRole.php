@@ -18,29 +18,29 @@ class ProjectRole extends Model
         return $this->hasMany(ProjectUser::class);
     }
 
-    public function isGestor(): bool
+    public function isManager(): bool
     {
-        return $this->slug === ProjectRoleEnum::GESTOR->slug();
+        return $this->slug === ProjectRoleEnum::MANAGER->slug();
     }
 
-    public function isPm(): bool
+    public function isProjectManager(): bool
     {
-        return $this->slug === ProjectRoleEnum::PM->slug();
+        return $this->slug === ProjectRoleEnum::PROJECT_MANAGER->slug();
     }
 
-    public function isDev(): bool
+    public function isDeveloper(): bool
     {
-        return $this->slug === ProjectRoleEnum::DEV->slug();
+        return $this->slug === ProjectRoleEnum::DEVELOPER->slug();
     }
 
-    public function isAnalista(): bool
+    public function isAnalyst(): bool
     {
-        return $this->slug === ProjectRoleEnum::ANALISTA->slug();
+        return $this->slug === ProjectRoleEnum::ANALYST->slug();
     }
 
-    public function isDiseñador(): bool
+    public function isDesigner(): bool
     {
-        return $this->slug === ProjectRoleEnum::DISEÑADOR->slug();
+        return $this->slug === ProjectRoleEnum::DESIGNER->slug();
     }
 
     public function isTester(): bool
@@ -48,8 +48,8 @@ class ProjectRole extends Model
         return $this->slug === ProjectRoleEnum::TESTER->slug();
     }
 
-    public function isEspectador(): bool
+    public function isViewer(): bool
     {
-        return $this->slug === ProjectRoleEnum::ESPECTADOR->slug();
+        return $this->slug === ProjectRoleEnum::VIEWER->slug();
     }
 }

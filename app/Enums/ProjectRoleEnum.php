@@ -4,13 +4,13 @@ namespace App\Enums;
 
 enum ProjectRoleEnum: int
 {
-    case GESTOR = 1;
-    case PM = 2;
-    case DEV = 3;
-    case ANALISTA = 4;
-    case DISEÑADOR = 5;
+    case MANAGER = 1;
+    case PROJECT_MANAGER = 2;
+    case DEVELOPER = 3;
+    case ANALYST = 4;
+    case DESIGNER = 5;
     case TESTER = 6;
-    case ESPECTADOR = 7;
+    case VIEWER = 7;
 
     public const MIN_LEVEL_CREATE_TASKS = 3;
 
@@ -19,39 +19,31 @@ enum ProjectRoleEnum: int
     public function label(): string
     {
         return match ($this) {
-            self::GESTOR => 'Gestor',
-            self::PM => 'PM',
-            self::DEV => 'Dev',
-            self::ANALISTA => 'Analista',
-            self::DISEÑADOR => 'Diseñador',
+            self::MANAGER => 'Manager',
+            self::PROJECT_MANAGER => 'Project Manager',
+            self::DEVELOPER => 'Developer',
+            self::ANALYST => 'Analyst',
+            self::DESIGNER => 'Designer',
             self::TESTER => 'Tester',
-            self::ESPECTADOR => 'Espectador',
+            self::VIEWER => 'Viewer',
         };
     }
 
     public function slug(): string
     {
-        return strtolower(match ($this) {
-            self::GESTOR => 'gestor',
-            self::PM => 'pm',
-            self::DEV => 'dev',
-            self::ANALISTA => 'analista',
-            self::DISEÑADOR => 'disenador',
-            self::TESTER => 'tester',
-            self::ESPECTADOR => 'espectador',
-        });
+        return strtolower($this->name);
     }
 
     public function level(): int
     {
         return match ($this) {
-            self::GESTOR => 4,
-            self::PM => 3,
-            self::DEV => 2,
-            self::ANALISTA => 2,
-            self::DISEÑADOR => 2,
+            self::MANAGER => 4,
+            self::PROJECT_MANAGER => 3,
+            self::DEVELOPER => 2,
+            self::ANALYST => 2,
+            self::DESIGNER => 2,
             self::TESTER => 2,
-            self::ESPECTADOR => 1,
+            self::VIEWER => 1,
         };
     }
 

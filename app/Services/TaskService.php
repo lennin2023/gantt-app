@@ -151,7 +151,7 @@ class TaskService
             ProjectUser::create([
                 'project_id' => $projectId,
                 'user_id' => $userId,
-                'project_role_id' => ProjectRoleEnum::DEV->value,
+                'project_role_id' => ProjectRoleEnum::DEVELOPER->value,
             ]);
         }
     }
