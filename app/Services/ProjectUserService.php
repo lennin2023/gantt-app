@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Services;
+
+use App\DTOs\ProjectUserDTO;
+use App\Models\ProjectUser;
+use App\Repositories\Contracts\ProjectUserRepositoryInterface;
+use Illuminate\Support\Collection;
+
+class ProjectUserService
+{
+    public function __construct(
+        private readonly ProjectUserRepositoryInterface $projectUserRepository,
+    ) {}
+
+    public function getProjectUsers(int $projectId): Collection
+    {
+        return $this->projectUserRepository->getAllByProject($projectId);
+    }
+
+    public function assignUser(ProjectUserDTO $dto): ProjectUser
+    {
+        return $this->projectUserRepository->create($dto->toArray());
+    }
+
+    public function removeUser(int $projectId, int $userId): bool
+    {
+        $projectUser = $this->projectUserRepository->findByProjectAndUser($projectId, $userId);
+
+        if (! $projectUser) {
+            return false;
+        }
+
+        return $this->projectUserRepository->delete($projectUser);
+    }
+
+    public function userAlreadyAssigned(int $projectId, int $userId): bool
+    {
+        return $this->projectUserRepository->exists($projectId, $userId);
+    }
+
+    public function findByProjectAndUser(int $projectId, int $userId): ?ProjectUser
+    {
+        return $this->projectUserRepository->findByProjectAndUser($projectId, $userId);
+    }
+}

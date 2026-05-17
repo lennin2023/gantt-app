@@ -6,9 +6,11 @@ use App\Models\Project;
 use App\Policies\ProjectPolicy;
 use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
+use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use App\Repositories\Eloquent\MilestoneRepository;
 use App\Repositories\Eloquent\ProjectRepository;
+use App\Repositories\Eloquent\ProjectUserRepository;
 use App\Repositories\Eloquent\TaskRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProjectRepositoryInterface::class, ProjectRepository::class);
         $this->app->bind(TaskRepositoryInterface::class, TaskRepository::class);
         $this->app->bind(MilestoneRepositoryInterface::class, MilestoneRepository::class);
+        $this->app->bind(ProjectUserRepositoryInterface::class, ProjectUserRepository::class);
     }
 
     public function boot(): void
