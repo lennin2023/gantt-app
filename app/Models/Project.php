@@ -73,6 +73,11 @@ class Project extends Model
         return $this->hasMany(ProjectHistory::class)->orderByDesc('created_at');
     }
 
+    public function projectUsers(): HasMany
+    {
+        return $this->hasMany(ProjectUser::class);
+    }
+
     public function getStats(): array
     {
         $total = $this->tasks()->count();

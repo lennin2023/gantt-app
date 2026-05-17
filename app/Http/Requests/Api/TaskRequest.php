@@ -39,7 +39,7 @@ class TaskRequest extends FormRequest
             'name' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'task_status_id' => ['nullable', new Enum(TaskStatusEnum::class)],
             'description' => 'nullable|string',
-            'assignee' => 'nullable|string|max:255',
+            'assigned_to' => 'nullable|exists:users,id',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'progress' => 'nullable|integer|min:0|max:100',

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ProjectRoleEnum;
 use App\Models\Project;
 use App\Models\User;
 
@@ -23,7 +24,13 @@ class ProjectPolicy
             return true;
         }
 
-        return $user->id === $project->created_by;
+        if ($user->id === $project->created_by) {
+            return true;
+        }
+
+        $projectUser = $project->projectUsers()->where('user_id', $user->id)->first();
+
+        return $projectUser !== null;
     }
 
     public function create(User $user): bool
@@ -37,7 +44,16 @@ class ProjectPolicy
             return true;
         }
 
-        return $user->id === $project->created_by;
+        if ($user->id === $project->created_by) {
+            return true;
+        }
+
+        $projectUser = $project->projectUsers()
+            ->where('user_id', $user->id)
+            ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MIN_LEVEL_MANAGE_PROJECT))
+            ->first();
+
+        return $projectUser !== null;
     }
 
     public function delete(User $user, Project $project): bool
