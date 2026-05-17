@@ -23,8 +23,9 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->first();
 
         $overallProgress = Project::where('projects.created_by', $userId)
+            ->join('project_users', 'projects.id', '=', 'project_users.project_id')
             ->join('tasks', function ($join) {
-                $join->on('projects.id', '=', 'tasks.project_id')
+                $join->on('project_users.id', '=', 'tasks.project_user_id')
                     ->whereNull('tasks.deleted_at');
             })
             ->avg('tasks.progress');
@@ -49,8 +50,9 @@ class DashboardRepository implements DashboardRepositoryInterface
             DB::raw('COUNT(tasks.id) as total_tasks'),
         ])
             ->join('project_statuses', 'projects.project_status_id', '=', 'project_statuses.id')
+            ->leftJoin('project_users', 'projects.id', '=', 'project_users.project_id')
             ->leftJoin('tasks', function ($join) {
-                $join->on('projects.id', '=', 'tasks.project_id')
+                $join->on('project_users.id', '=', 'tasks.project_user_id')
                     ->whereNull('tasks.deleted_at');
             })
             ->where('projects.created_by', $userId)

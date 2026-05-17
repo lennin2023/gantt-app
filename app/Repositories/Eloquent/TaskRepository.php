@@ -46,8 +46,14 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
     {
+        $projectId = $task->projectUser?->project_id;
+
+        if (! $projectId) {
+            return false;
+        }
+
         $tasksInProject = Task::with('dependents')
-            ->whereHas('projectUser', fn ($q) => $q->where('project_id', $task->projectUser->project_id))
+            ->whereHas('projectUser', fn ($q) => $q->where('project_id', $projectId))
             ->get()
             ->keyBy('id');
 

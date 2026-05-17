@@ -28,9 +28,7 @@ class ProjectPolicy
             return true;
         }
 
-        $projectUser = $project->projectUsers()->where('user_id', $user->id)->first();
-
-        return $projectUser !== null;
+        return $project->projectUsers()->where('user_id', $user->id)->exists();
     }
 
     public function create(User $user): bool
@@ -48,12 +46,10 @@ class ProjectPolicy
             return true;
         }
 
-        $projectUser = $project->projectUsers()
+        return $project->projectUsers()
             ->where('user_id', $user->id)
             ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MIN_LEVEL_MANAGE_PROJECT))
-            ->first();
-
-        return $projectUser !== null;
+            ->exists();
     }
 
     public function delete(User $user, Project $project): bool

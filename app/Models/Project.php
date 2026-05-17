@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
@@ -58,9 +59,9 @@ class Project extends Model
         return $this->belongsTo(ProjectStatus::class, 'project_status_id');
     }
 
-    public function tasks(): HasMany
+    public function tasks(): HasManyThrough
     {
-        return $this->hasMany(Task::class)->orderBy('order');
+        return $this->hasManyThrough(Task::class, ProjectUser::class, 'project_id', 'project_user_id');
     }
 
     public function milestones(): HasMany
@@ -80,28 +81,28 @@ class Project extends Model
 
     public function getStats(): array
     {
-        $total = $this->tasks()->count();
-        $completed = $this->tasks()->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count();
-        $avgProgress = $this->tasks()->avg('progress');
+        $stats = Task::whereHas('projectUser', fn ($q) => $q->where('project_id', $this->id))
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed,
+                AVG(progress) as avg_progress
+            ', [TaskStatusEnum::COMPLETED->value])
+            ->first();
 
         return [
-            'total_tasks' => $total,
-            'completed_tasks' => $completed,
-            'overall_progress' => $total > 0 ? (int) $avgProgress : 0,
+            'total_tasks' => (int) $stats->total,
+            'completed_tasks' => (int) $stats->completed,
+            'overall_progress' => $stats->total > 0 ? (int) $stats->avg_progress : 0,
         ];
     }
 
     public function isAllTasksCompleted(): bool
     {
-        $total = $this->tasks()->count();
+        $result = Task::whereHas('projectUser', fn ($q) => $q->where('project_id', $this->id))
+            ->selectRaw('COUNT(*) = SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as all_completed', [TaskStatusEnum::COMPLETED->value])
+            ->first();
 
-        if ($total === 0) {
-            return false;
-        }
-
-        $completed = $this->tasks()->where('task_status_id', TaskStatusEnum::COMPLETED->value)->count();
-
-        return $total === $completed;
+        return $result->all_completed && $result->total > 0;
     }
 
     public function refreshStatus(): void

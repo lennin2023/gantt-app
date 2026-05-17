@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Milestone;
 use App\Models\Project;
+use App\Models\Task;
+use App\Policies\MilestonePolicy;
 use App\Policies\ProjectPolicy;
+use App\Policies\TaskPolicy;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
 use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
@@ -39,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(Task::class, TaskPolicy::class);
+        Gate::policy(Milestone::class, MilestonePolicy::class);
 
         $this->configureDefaults();
     }

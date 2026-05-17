@@ -23,15 +23,7 @@ class TaskPolicy
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
-            return true;
-        }
-
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()->where('user_id', $user->id)->exists();
+        return $this->viewAny($user, $project);
     }
 
     public function create(User $user, Project $project): bool
