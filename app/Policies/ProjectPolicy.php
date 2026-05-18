@@ -22,11 +22,6 @@ class ProjectPolicy
         return true;
     }
 
-    public function viewDashboard(User $user): bool
-    {
-        return true;
-    }
-
     public function view(User $user, Project $project): bool
     {
         if ($user->id === $project->created_by) {

@@ -2,12 +2,14 @@
 
 namespace App\Policies;
 
-use App\Enums\ProjectRoleEnum;
 use App\Models\Project;
 use App\Models\User;
+use App\Policies\Traits\HasProjectPermissions;
 
 class MilestonePolicy
 {
+    use HasProjectPermissions;
+
     public function before(User $user): ?bool
     {
         if ($user->isSuperAdmin() || $user->isAdmin()) {
@@ -19,60 +21,31 @@ class MilestonePolicy
 
     public function viewAny(User $user, Project $project): bool
     {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()->where('user_id', $user->id)->exists();
+        return $this->isProjectMember($user, $project);
     }
 
     public function view(User $user, Project $project): bool
     {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()->where('user_id', $user->id)->exists();
+        return $this->isProjectMember($user, $project);
     }
 
     public function create(User $user, Project $project): bool
     {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()
-            ->where('user_id', $user->id)
-            ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MIN_LEVEL_CREATE_TASKS))
-            ->exists();
+        return $this->canManageProjectResources($user, $project);
     }
 
     public function update(User $user, Project $project): bool
     {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()
-            ->where('user_id', $user->id)
-            ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MIN_LEVEL_CREATE_TASKS))
-            ->exists();
+        return $this->canManageProjectResources($user, $project);
     }
 
     public function delete(User $user, Project $project): bool
     {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()
-            ->where('user_id', $user->id)
-            ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MIN_LEVEL_CREATE_TASKS))
-            ->exists();
+        return $this->canManageProjectResources($user, $project);
     }
 
     public function restore(User $user, Project $project): bool
     {
-        return $user->id === $project->created_by;
+        return $this->canManageProjectResources($user, $project);
     }
 }
