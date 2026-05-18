@@ -13,43 +13,35 @@ class ProjectRole extends Model
 
     protected $fillable = ['name', 'slug', 'level'];
 
+    protected function casts(): array
+    {
+        return [
+            'id' => ProjectRoleEnum::class,
+        ];
+    }
+
+    public function isManager(): bool
+    {
+        return $this->level >= ProjectRoleEnum::MANAGER_LEVEL;
+    }
+
+    public function isExecutor(): bool
+    {
+        return $this->level === ProjectRoleEnum::EXECUTOR_LEVEL;
+    }
+
+    public function isSpectator(): bool
+    {
+        return $this->level === ProjectRoleEnum::SPECTATOR_LEVEL;
+    }
+
+    public function isRole(ProjectRoleEnum $roleEnum): bool
+    {
+        return $this->id === $roleEnum;
+    }
+
     public function projectUsers(): HasMany
     {
         return $this->hasMany(ProjectUser::class);
-    }
-
-    public function isSupervisor(): bool
-    {
-        return $this->slug === ProjectRoleEnum::SUPERVISOR->slug();
-    }
-
-    public function isProjectManager(): bool
-    {
-        return $this->slug === ProjectRoleEnum::PROJECT_MANAGER->slug();
-    }
-
-    public function isDeveloper(): bool
-    {
-        return $this->slug === ProjectRoleEnum::DEVELOPER->slug();
-    }
-
-    public function isAnalyst(): bool
-    {
-        return $this->slug === ProjectRoleEnum::ANALYST->slug();
-    }
-
-    public function isDesigner(): bool
-    {
-        return $this->slug === ProjectRoleEnum::DESIGNER->slug();
-    }
-
-    public function isTester(): bool
-    {
-        return $this->slug === ProjectRoleEnum::TESTER->slug();
-    }
-
-    public function isViewer(): bool
-    {
-        return $this->slug === ProjectRoleEnum::VIEWER->slug();
     }
 }

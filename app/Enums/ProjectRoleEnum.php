@@ -4,22 +4,22 @@ namespace App\Enums;
 
 enum ProjectRoleEnum: int
 {
-    case SUPERVISOR = 1;
-    case PROJECT_MANAGER = 2;
-    case DEVELOPER = 3;
-    case ANALYST = 4;
-    case DESIGNER = 5;
-    case TESTER = 6;
-    case VIEWER = 7;
+    case PROJECT_MANAGER = 1;
+    case DEVELOPER = 2;
+    case ANALYST = 3;
+    case DESIGNER = 4;
+    case TESTER = 5;
+    case VIEWER = 6;
 
-    public const MIN_LEVEL_MANAGE_PROJECT = 4;
+    public const MANAGER_LEVEL = 3;
 
-    public const MIN_LEVEL_CREATE_TASKS = 3;
+    public const EXECUTOR_LEVEL = 2;
+
+    public const SPECTATOR_LEVEL = 1;
 
     public function label(): string
     {
         return match ($this) {
-            self::SUPERVISOR => 'Supervisor',
             self::PROJECT_MANAGER => 'Project Manager',
             self::DEVELOPER => 'Developer',
             self::ANALYST => 'Analyst',
@@ -37,13 +37,12 @@ enum ProjectRoleEnum: int
     public function level(): int
     {
         return match ($this) {
-            self::SUPERVISOR => 4,
-            self::PROJECT_MANAGER => 3,
-            self::DEVELOPER => 2,
-            self::ANALYST => 2,
-            self::DESIGNER => 2,
-            self::TESTER => 2,
-            self::VIEWER => 1,
+            self::PROJECT_MANAGER => self::MANAGER_LEVEL,
+            self::DEVELOPER,
+            self::ANALYST,
+            self::DESIGNER,
+            self::TESTER => self::EXECUTOR_LEVEL,
+            self::VIEWER => self::SPECTATOR_LEVEL,
         };
     }
 }
