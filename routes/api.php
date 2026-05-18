@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MilestoneController;
 use App\Http\Controllers\Api\ProjectController;
@@ -7,7 +8,11 @@ use App\Http\Controllers\Api\ProjectUserController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:web', 'throttle:api'])->group(function () {
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+});
+
+Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
     Route::apiResource('projects', ProjectController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
