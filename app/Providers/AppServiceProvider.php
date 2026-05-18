@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\User;
 use App\Policies\MilestonePolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\TaskPolicy;
@@ -45,6 +46,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(Milestone::class, MilestonePolicy::class);
+
+        Gate::define('viewDashboard', function (User $user) {
+            return true;
+        });
 
         $this->configureDefaults();
     }
