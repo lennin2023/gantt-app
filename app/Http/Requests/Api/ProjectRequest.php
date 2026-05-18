@@ -2,13 +2,10 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Enums\ProjectStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Enum;
 
 class ProjectRequest extends FormRequest
 {
-    // Authorization is handled via Gates in the controller
     public function authorize(): bool
     {
         return true;
@@ -20,7 +17,9 @@ class ProjectRequest extends FormRequest
 
         return [
             'company_id' => $isUpdate ? 'sometimes|integer|exists:companies,id' : 'required|integer|exists:companies,id',
-            'project_status_id' => ['nullable', new Enum(ProjectStatusEnum::class)],
+            'project_status_id' => $isUpdate
+                ? 'sometimes|nullable|integer|exists:project_statuses,id'
+                : 'nullable|integer|exists:project_statuses,id',
             'name' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'description' => 'nullable|string',
             'color' => $isUpdate

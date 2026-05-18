@@ -44,12 +44,10 @@ class ProjectService
     public function updateProject(Project $project, ProjectDTO $dto): Project
     {
         return DB::transaction(function () use ($project, $dto) {
-            $previousStatusId = $project->project_status_id;
-
             $project = $this->projectRepository->update($project, $dto->toArray());
 
-            if ($project->project_status_id !== $previousStatusId) {
-                $this->logStatusChange($project, $project->project_status_id, $project->updated_by);
+            if ($project->wasChanged('project_status_id')) {
+                $this->logStatusChange($project, $project->project_status_id, $dto->updatedBy);
             }
 
             ProjectUpdated::dispatch($project);

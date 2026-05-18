@@ -7,11 +7,11 @@ use App\Models\Project;
 class ProjectDTO
 {
     public function __construct(
-        public readonly int $companyId,
+        public readonly ?int $companyId,
         public readonly ?int $projectStatusId,
-        public readonly string $name,
+        public readonly ?string $name,
         public readonly ?string $description,
-        public readonly string $color,
+        public readonly ?string $color,
         public readonly ?string $startDate,
         public readonly ?string $endDate,
         public readonly int $createdBy,
@@ -21,11 +21,11 @@ class ProjectDTO
     public static function fromArray(array $data, int $createdBy): self
     {
         return new self(
-            companyId: $data['company_id'],
-            projectStatusId: $data['project_status_id'] ?? null,
-            name: $data['name'],
+            companyId: $data['company_id'] ?? null,
+            projectStatusId: isset($data['project_status_id']) ? (int) $data['project_status_id'] : null,
+            name: $data['name'] ?? null,
             description: $data['description'] ?? null,
-            color: $data['color'],
+            color: $data['color'] ?? null,
             startDate: $data['start_date'] ?? null,
             endDate: $data['end_date'] ?? null,
             createdBy: $createdBy,
@@ -35,7 +35,7 @@ class ProjectDTO
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
             'company_id' => $this->companyId,
             'project_status_id' => $this->projectStatusId,
             'name' => $this->name,
@@ -45,7 +45,7 @@ class ProjectDTO
             'end_date' => $this->endDate,
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
-        ];
+        ], fn ($value) => $value !== null);
     }
 
     public static function fromEntity(Project $project): self
