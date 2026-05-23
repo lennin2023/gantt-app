@@ -29,16 +29,14 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/projects/{project}/tasks', [TaskController::class, 'index']);
     Route::post('/projects/{project}/tasks', [TaskController::class, 'store']);
     Route::get('/tasks/{task}', [TaskController::class, 'show']);
-    Route::put('/tasks/{task}', [TaskController::class, 'update']);
-    Route::patch('/tasks/{task}', [TaskController::class, 'update']);
+    Route::match(['put', 'patch'], '/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
     Route::post('/tasks/{task}/restore', [TaskController::class, 'restore']);
 
     Route::get('/projects/{project}/milestones', [MilestoneController::class, 'index']);
     Route::post('/projects/{project}/milestones', [MilestoneController::class, 'store']);
     Route::get('/projects/{project}/milestones/{milestone}', [MilestoneController::class, 'show']);
-    Route::put('/projects/{project}/milestones/{milestone}', [MilestoneController::class, 'update']);
-    Route::patch('/projects/{project}/milestones/{milestone}', [MilestoneController::class, 'update']);
+    Route::match(['put', 'patch'], '/projects/{project}/milestones/{milestone}', [MilestoneController::class, 'update']);
     Route::delete('/projects/{project}/milestones/{milestone}', [MilestoneController::class, 'destroy']);
     Route::post('/projects/{project}/milestones/{milestone}/restore', [MilestoneController::class, 'restore']);
 });
