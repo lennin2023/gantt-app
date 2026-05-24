@@ -28,16 +28,4 @@ trait HasProjectPermissions
             ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MANAGER_LEVEL))
             ->exists();
     }
-
-    private function canExecuteProjectTasks(User $user, Project $project): bool
-    {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
-        return $project->projectUsers()
-            ->where('user_id', $user->id)
-            ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::EXECUTOR_LEVEL))
-            ->exists();
-    }
 }
