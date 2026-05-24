@@ -9,6 +9,8 @@ use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
+use App\Exceptions\BulkOperationException;
+use App\Exceptions\CycleDetectionException;
 use App\Models\Task;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
@@ -80,6 +82,42 @@ class TaskService
         });
     }
 
+    public function validateAndGetTasksForBulkUpdate(array $taskIds, array $data): Collection
+    {
+        if (empty($taskIds)) {
+            throw BulkOperationException::noTaskIdsProvided();
+        }
+
+        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
+
+        if ($tasks->isEmpty()) {
+            throw BulkOperationException::tasksNotFound();
+        }
+
+        $projectIds = $tasks->pluck('projectUser.project_id')->unique();
+
+        if ($projectIds->count() > 1) {
+            throw BulkOperationException::tasksMustBelongToSameProject();
+        }
+
+        return $tasks;
+    }
+
+    public function validateAndGetTasksForBulkDelete(array $taskIds): Collection
+    {
+        if (empty($taskIds)) {
+            throw BulkOperationException::noTaskIdsProvided();
+        }
+
+        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
+
+        if ($tasks->isEmpty()) {
+            throw BulkOperationException::tasksNotFound();
+        }
+
+        return $tasks;
+    }
+
     public function bulkUpdate(Collection $tasks, array $data): Collection
     {
         $allowedFields = ['task_status_id', 'name', 'description', 'project_user_id', 'start_date', 'end_date', 'progress', 'order'];
@@ -119,6 +157,15 @@ class TaskService
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
     {
         return $this->taskRepository->wouldCreateCycle($task, $newDependencyId);
+    }
+
+    public function validateNoCycleWouldBeCreated(Task $task, array $dependencyIds): void
+    {
+        foreach ($dependencyIds as $depId) {
+            if ($this->wouldCreateCycle($task, $depId)) {
+                throw new CycleDetectionException;
+            }
+        }
     }
 
     public function restoreTask(Task $task): bool

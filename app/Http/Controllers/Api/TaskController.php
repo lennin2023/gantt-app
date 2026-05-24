@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\TaskDTO;
+use App\Exceptions\BulkOperationException;
+use App\Exceptions\CycleDetectionException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\BulkDeleteTaskRequest;
 use App\Http\Requests\Api\TaskRequest;
@@ -71,10 +73,10 @@ class TaskController extends Controller
         );
 
         if (! empty($dto->dependencyIds)) {
-            foreach ($dto->dependencyIds as $depId) {
-                if ($this->taskService->wouldCreateCycle($task, $depId)) {
-                    return $this->validationError('Adding this dependency would create a cycle');
-                }
+            try {
+                $this->taskService->validateNoCycleWouldBeCreated($task, $dto->dependencyIds);
+            } catch (CycleDetectionException $e) {
+                return $this->validationError($e->getMessage());
             }
         }
 
@@ -100,19 +102,10 @@ class TaskController extends Controller
         $taskIds = $validated['task_ids'] ?? [];
         $data = $validated['data'] ?? [];
 
-        if (empty($taskIds)) {
-            return $this->validationError('No task IDs provided');
-        }
-
-        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
-
-        if ($tasks->isEmpty()) {
-            return $this->notFound('No tasks found with the provided IDs');
-        }
-
-        $projectIds = $tasks->pluck('projectUser.project_id')->unique();
-        if ($projectIds->count() > 1) {
-            return $this->validationError('All tasks must belong to the same project');
+        try {
+            $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($taskIds, $data);
+        } catch (BulkOperationException $e) {
+            return $this->validationError($e->getMessage());
         }
 
         $project = $tasks->first()->projectUser?->project;
@@ -130,10 +123,10 @@ class TaskController extends Controller
         $validated = $request->validated();
         $taskIds = $validated['task_ids'];
 
-        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
-
-        if ($tasks->isEmpty()) {
-            return $this->notFound('No tasks found with the provided IDs');
+        try {
+            $tasks = $this->taskService->validateAndGetTasksForBulkDelete($taskIds);
+        } catch (BulkOperationException $e) {
+            return $this->validationError($e->getMessage());
         }
 
         $project = $tasks->first()->projectUser?->project;

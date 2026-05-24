@@ -4,15 +4,17 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
-use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(
+        private readonly AuthService $authService,
+    ) {}
 
     /**
      * Login: valida credenciales y devuelve un token Sanctum.
@@ -28,21 +30,13 @@ class AuthController extends Controller
             'device_name' => ['sometimes', 'string', 'max:255'],
         ]);
 
-        $user = User::with('role')->where('email', $request->email)->first();
+        $user = $this->authService->validateCredentials(
+            $request->input('email'),
+            $request->input('password'),
+        );
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Las credenciales son incorrectas.'],
-            ]);
-        }
-
-        // Nombre del dispositivo (útil para identificar tokens en la DB)
         $deviceName = $request->input('device_name', 'api-token');
-
-        // Definir abilities según el rol del usuario
-        $abilities = $this->resolveAbilities($user);
-
-        // Crear token Sanctum
+        $abilities = $this->authService->resolveAbilities($user);
         $token = $user->createToken($deviceName, $abilities)->plainTextToken;
 
         return $this->success([
@@ -65,7 +59,6 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        // Revocar solo el token usado en esta request
         $request->user()->currentAccessToken()->delete();
 
         return $this->success(null, 'Sesión cerrada correctamente');
@@ -100,26 +93,5 @@ class AuthController extends Controller
             'email' => $user->email,
             'role' => $user->role?->slug,
         ]);
-    }
-
-    /**
-     * Asigna abilities al token según el rol.
-     * Puedes expandir esto según tus necesidades.
-     */
-    private function resolveAbilities(User $user): array
-    {
-        return match (true) {
-            $user->isSuperAdmin() => ['*'],          // acceso total
-            $user->isAdmin() => ['*'],          // acceso total
-            $user->isStaff() => [               // acceso limitado
-                'projects:read',
-                // 'projects:write',
-                'tasks:read',
-                // 'tasks:write',
-                'milestones:read',
-                // 'milestones:write',
-            ],
-            default => ['projects:read', 'tasks:read'],
-        };
     }
 }
