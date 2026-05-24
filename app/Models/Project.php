@@ -83,32 +83,40 @@ class Project extends Model
             ', [TaskStatusEnum::COMPLETED->value])
             ->first();
 
+        $total = (int) $stats?->total;
+        $completed = (int) $stats?->completed;
+        $avgProgress = (int) $stats?->avg_progress;
+
         return [
-            'total_tasks' => (int) $stats->total,
-            'completed_tasks' => (int) $stats->completed,
-            'overall_progress' => $stats->total > 0 ? (int) $stats->avg_progress : 0,
+            'total_tasks' => $total,
+            'completed_tasks' => $completed,
+            'overall_progress' => $total > 0 ? $avgProgress : 0,
         ];
     }
 
     public function isAllTasksCompleted(): bool
     {
-        $result = Task::whereHas('projectUser', fn ($q) => $q->where('project_id', $this->id))
-            ->selectRaw('
-                COUNT(*) as total,
-                SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed
-            ', [TaskStatusEnum::COMPLETED->value]
-            )
-            ->first();
+        $stats = $this->getStats();
 
-        if (! $result || (int) $result->total === 0) {
+        if ($stats['total_tasks'] === 0) {
             return false;
         }
 
-        return (int) $result->total === (int) $result->completed;
+        return $stats['total_tasks'] === $stats['completed_tasks'];
     }
 
     public function refreshStatus(): void
     {
+        $protectedStatuses = [
+            ProjectStatusEnum::ON_HOLD->value,
+            ProjectStatusEnum::ARCHIVED->value,
+            ProjectStatusEnum::CANCELLED->value,
+        ];
+
+        if (in_array($this->project_status_id, $protectedStatuses)) {
+            return;
+        }
+
         $this->project_status_id = $this->isAllTasksCompleted()
             ? ProjectStatusEnum::COMPLETED->value
             : ProjectStatusEnum::ACTIVE->value;

@@ -2,34 +2,35 @@
 
 namespace App\Models;
 
-use App\Enums\RoleEnum;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
-    use HasFactory;
+    public $timestamps = false;
 
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = [
+        'name',
+        'slug',
+        'created_by',
+        'created_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+        ];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
-    }
-
-    public function isSuperAdmin(): bool
-    {
-        return $this->slug === RoleEnum::SUPER_ADMIN->slug();
-    }
-
-    public function isAdmin(): bool
-    {
-        return $this->slug === RoleEnum::ADMIN->slug();
-    }
-
-    public function isStaff(): bool
-    {
-        return $this->slug === RoleEnum::STAFF->slug();
     }
 }

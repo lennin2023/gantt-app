@@ -3,21 +3,33 @@
 namespace App\Models;
 
 use App\Enums\ProjectRoleEnum;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProjectRole extends Model
 {
-    use HasFactory;
+    public $timestamps = false;
 
-    protected $fillable = ['name', 'slug', 'level'];
+    protected $fillable = [
+        'name',
+        'slug',
+        'level',
+        'created_by',
+        'created_at',
+    ];
 
     protected function casts(): array
     {
         return [
-            'id' => ProjectRoleEnum::class,
+            'created_at' => 'datetime',
+            'level' => 'integer',
         ];
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function isManager(): bool
@@ -37,7 +49,7 @@ class ProjectRole extends Model
 
     public function isRole(ProjectRoleEnum $roleEnum): bool
     {
-        return $this->id === $roleEnum;
+        return $this->id === $roleEnum->value;
     }
 
     public function projectUsers(): HasMany

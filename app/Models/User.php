@@ -44,17 +44,17 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->role?->slug === RoleEnum::SUPER_ADMIN->slug();
+        return $this->hasRole(RoleEnum::SUPER_ADMIN);
     }
 
     public function isAdmin(): bool
     {
-        return $this->role?->slug === RoleEnum::ADMIN->slug();
+        return $this->hasRole(RoleEnum::ADMIN);
     }
 
     public function isStaff(): bool
     {
-        return $this->role?->slug === RoleEnum::STAFF->slug();
+        return $this->hasRole(RoleEnum::STAFF);
     }
 
     public function hasRole(RoleEnum $role): bool

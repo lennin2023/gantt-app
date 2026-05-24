@@ -12,9 +12,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->restrictOnDelete();
             $table->foreignId('user_id')->constrained()->restrictOnDelete();
-            $table->foreignId('project_role_id')->nullable()->constrained('project_roles')->nullOnDelete();
-            $table->foreignId('created_by')->nullable()->constrained('users')->restrictOnDelete();
-            $table->timestamps();
+            $table->foreignId('project_role_id')->constrained('project_roles')->restrictOnDelete();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->timestamp('created_at');
 
             $table->unique(['project_id', 'user_id']);
         });

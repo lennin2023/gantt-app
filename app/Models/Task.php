@@ -67,7 +67,7 @@ class Task extends Model
             'task_dependencies',
             'task_id',
             'depends_on_task_id'
-        )->withTimestamps();
+        );
     }
 
     public function dependents(): BelongsToMany
@@ -77,11 +77,26 @@ class Task extends Model
             'task_dependencies',
             'depends_on_task_id',
             'task_id'
-        )->withTimestamps();
+        );
+    }
+
+    public function isPending(): bool
+    {
+        return $this->task_status_id === TaskStatusEnum::PENDING->value;
+    }
+
+    public function isInProgress(): bool
+    {
+        return $this->task_status_id === TaskStatusEnum::IN_PROGRESS->value;
     }
 
     public function isCompleted(): bool
     {
         return $this->task_status_id === TaskStatusEnum::COMPLETED->value;
+    }
+
+    public function isDelayed(): bool
+    {
+        return $this->task_status_id === TaskStatusEnum::DELAYED->value;
     }
 }

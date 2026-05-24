@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('slug')->unique();
-            $table->timestamps();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->timestamp('created_at');
         });
     }
 

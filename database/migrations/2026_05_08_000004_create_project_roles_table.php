@@ -13,7 +13,8 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('slug')->unique();
             $table->integer('level')->default(1);
-            $table->timestamps();
+            $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->timestamp('created_at');
         });
     }
 
