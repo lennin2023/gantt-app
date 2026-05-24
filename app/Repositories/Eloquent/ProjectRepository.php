@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -13,7 +14,7 @@ class ProjectRepository implements ProjectRepositoryInterface
         return Project::with('status')
             ->where(function ($query) use ($userId) {
                 $query->where('created_by', $userId)
-                    ->orWhereHas('projectUsers', fn ($q) => $q->where('user_id', $userId));
+                    ->orWhereIn('id', ProjectUser::where('user_id', $userId)->select('project_id'));
             })
             ->orderByDesc('created_at')
             ->paginate($perPage);

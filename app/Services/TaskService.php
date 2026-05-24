@@ -63,8 +63,7 @@ class TaskService
 
             TaskUpdated::dispatch($task);
 
-            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value
-                && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
+            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
                 TaskCompleted::dispatch($task);
             }
 
@@ -86,9 +85,7 @@ class TaskService
         $allowedFields = ['task_status_id', 'name', 'description', 'project_user_id', 'start_date', 'end_date', 'progress', 'order'];
         $filteredData = array_intersect_key($data, array_flip($allowedFields));
 
-        $completedTasks = [];
-
-        $updated = DB::transaction(function () use ($tasks, $filteredData, &$completedTasks) {
+        return DB::transaction(function () use ($tasks, $filteredData) {
             $result = collect();
 
             foreach ($tasks as $task) {
@@ -98,39 +95,25 @@ class TaskService
 
                 $result->push($updatedTask);
 
-                if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value
-                    && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
-                    $completedTasks[] = $updatedTask;
+                TaskUpdated::dispatch($updatedTask);
+
+                if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
+                    TaskCompleted::dispatch($updatedTask);
                 }
             }
 
             return $result;
         });
-
-        foreach ($updated as $updatedTask) {
-            TaskUpdated::dispatch($updatedTask);
-        }
-
-        foreach ($completedTasks as $task) {
-            TaskCompleted::dispatch($task);
-        }
-
-        return $updated;
     }
 
     public function bulkDelete(Collection $tasks): void
     {
-        $tasksArray = $tasks->toArray();
-
-        DB::transaction(function () use ($tasksArray) {
-            foreach ($tasksArray as $task) {
+        DB::transaction(function () use ($tasks) {
+            foreach ($tasks as $task) {
+                TaskDeleted::dispatch($task);
                 $this->taskRepository->delete($task);
             }
         });
-
-        foreach ($tasksArray as $task) {
-            TaskDeleted::dispatch($task);
-        }
     }
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool

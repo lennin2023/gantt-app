@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\ProjectUserAssigned;
+use App\Events\ProjectUserRemoved;
 use App\Models\ProjectUser;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use Illuminate\Support\Collection;
@@ -26,25 +28,35 @@ class ProjectUserService
     public function assignUser(int $projectId, int $userId, int $projectRoleId, int $createdBy): ProjectUser
     {
         return DB::transaction(function () use ($projectId, $userId, $projectRoleId, $createdBy) {
-            return $this->projectUserRepository->create([
+            $projectUser = $this->projectUserRepository->create([
                 'project_id' => $projectId,
                 'user_id' => $userId,
                 'project_role_id' => $projectRoleId,
                 'created_by' => $createdBy,
             ]);
+
+            ProjectUserAssigned::dispatch($projectUser);
+
+            return $projectUser;
         });
     }
 
-    public function removeUser(int $projectId, int $userId): bool
+    public function removeUser(int $projectId, int $userId, int $removedBy): bool
     {
-        return DB::transaction(function () use ($projectId, $userId) {
+        return DB::transaction(function () use ($projectId, $userId, $removedBy) {
             $projectUser = $this->projectUserRepository->findByProjectAndUser($projectId, $userId);
 
             if (! $projectUser) {
                 return false;
             }
 
-            return $this->projectUserRepository->delete($projectUser);
+            $deleted = $this->projectUserRepository->delete($projectUser);
+
+            if ($deleted) {
+                ProjectUserRemoved::dispatch($projectId, $userId, $removedBy);
+            }
+
+            return $deleted;
         });
     }
 

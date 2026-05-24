@@ -60,7 +60,7 @@ class ProjectUserController extends Controller
     {
         abort_unless(Gate::allows('delete', $project), 403);
 
-        $this->projectUserService->removeUser($project->id, $user->id);
+        $this->projectUserService->removeUser($project->id, $user->id, Auth::id());
 
         return $this->deleted('User removed from project');
     }

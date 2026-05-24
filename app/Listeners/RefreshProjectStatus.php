@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class RefreshProjectStatus implements ShouldQueue
 {
-    public function handleTaskCompleted(TaskCompleted $event): void
+    public function handle(TaskCompleted $event): void
     {
         $task = $event->task;
         $project = $task->projectUser?->project;

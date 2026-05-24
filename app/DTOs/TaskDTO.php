@@ -39,7 +39,7 @@ class TaskDTO
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
             'project_user_id' => $this->projectUserId,
             'task_status_id' => $this->taskStatusId,
             'name' => $this->name,
@@ -50,7 +50,7 @@ class TaskDTO
             'order' => $this->order,
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
-        ];
+        ], fn ($value) => $value !== null);
     }
 
     public static function fromEntity(Task $task): self

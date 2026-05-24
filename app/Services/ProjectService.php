@@ -72,7 +72,7 @@ class ProjectService
         });
     }
 
-    private function logStatusChange(Project $project, int $statusId, int $userId): void
+    private function logStatusChange(Project $project, int $statusId, ?int $userId): void
     {
         ProjectHistory::create([
             'project_id' => $project->id,

@@ -29,14 +29,14 @@ class MilestoneDTO
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
             'project_id' => $this->projectId,
             'name' => $this->name,
             'date' => $this->date,
             'reached' => $this->reached,
             'created_by' => $this->createdBy,
             'updated_by' => $this->updatedBy,
-        ];
+        ], fn ($value) => $value !== null);
     }
 
     public static function fromEntity(Milestone $milestone): self
