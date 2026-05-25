@@ -17,7 +17,7 @@ class ProjectRequest extends FormRequest
 
         return [
             'company_id' => $isUpdate ? 'sometimes|integer|exists:companies,id' : 'required|integer|exists:companies,id',
-            'project_status_id' => $isUpdate ? 'sometimes|integer|exists:project_statuses,id' : 'required|integer|exists:project_statuses,id',
+            'project_status_id' => 'sometimes|integer|exists:project_statuses,id',
             'name' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'description' => 'nullable|string',
             'color' => $isUpdate ? ['sometimes', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'] : ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],

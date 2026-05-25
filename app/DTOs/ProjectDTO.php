@@ -3,63 +3,80 @@
 namespace App\DTOs;
 
 use App\Models\Project;
+use Illuminate\Contracts\Support\Arrayable;
 
-class ProjectDTO
+class ProjectDTO implements Arrayable
 {
     public function __construct(
-        public readonly ?int $companyId,
-        public readonly ?int $projectStatusId,
-        public readonly ?string $name,
-        public readonly ?string $description,
-        public readonly ?string $color,
-        public readonly ?string $startDate,
-        public readonly ?string $endDate,
         public readonly int $createdBy,
+        public readonly ?int $companyId = null,
+        public readonly ?int $projectStatusId = null,
+        public readonly ?string $name = null,
+        public readonly ?string $color = null,
         public readonly ?int $updatedBy = null,
+        public readonly ?string $description = null,
+        public readonly ?string $startDate = null,
+        public readonly ?string $endDate = null,
     ) {}
 
     public static function fromArray(array $data, int $createdBy): self
     {
         return new self(
+            createdBy: $createdBy,
             companyId: $data['company_id'] ?? null,
             projectStatusId: isset($data['project_status_id']) ? (int) $data['project_status_id'] : null,
             name: $data['name'] ?? null,
-            description: $data['description'] ?? null,
             color: $data['color'] ?? null,
-            startDate: $data['start_date'] ?? null,
-            endDate: $data['end_date'] ?? null,
-            createdBy: $createdBy,
             updatedBy: $data['updated_by'] ?? null,
+            description: array_key_exists('description', $data) ? $data['description'] : null,
+            startDate: array_key_exists('start_date', $data) ? $data['start_date'] : null,
+            endDate: array_key_exists('end_date', $data) ? $data['end_date'] : null,
         );
     }
 
     public function toArray(): array
     {
-        return array_filter([
-            'company_id' => $this->companyId,
-            'project_status_id' => $this->projectStatusId,
-            'name' => $this->name,
-            'description' => $this->description,
-            'color' => $this->color,
-            'start_date' => $this->startDate,
-            'end_date' => $this->endDate,
+        $data = [
             'created_by' => $this->createdBy,
-            'updated_by' => $this->updatedBy,
-        ], fn ($value) => $value !== null);
+        ];
+
+        // Campos que no pueden ser null
+        if ($this->companyId !== null) {
+            $data['company_id'] = $this->companyId;
+        }
+        if ($this->projectStatusId !== null) {
+            $data['project_status_id'] = $this->projectStatusId;
+        }
+        if ($this->name !== null) {
+            $data['name'] = $this->name;
+        }
+        if ($this->color !== null) {
+            $data['color'] = $this->color;
+        }
+        if ($this->updatedBy !== null) {
+            $data['updated_by'] = $this->updatedBy;
+        }
+
+        // Campos que sí pueden ser null explícitamente
+        $data['description'] = $this->description;
+        $data['start_date'] = $this->startDate;
+        $data['end_date'] = $this->endDate;
+
+        return $data;
     }
 
     public static function fromEntity(Project $project): self
     {
         return new self(
+            createdBy: $project->created_by,
             companyId: $project->company_id,
             projectStatusId: $project->project_status_id,
             name: $project->name,
-            description: $project->description,
             color: $project->color,
+            updatedBy: $project->updated_by,
+            description: $project->description,
             startDate: $project->start_date?->format('Y-m-d'),
             endDate: $project->end_date?->format('Y-m-d'),
-            createdBy: $project->created_by,
-            updatedBy: $project->updated_by,
         );
     }
 }

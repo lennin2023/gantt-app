@@ -12,7 +12,7 @@ class ProjectPolicy
 
     public function before(User $user): ?bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
+        if ($user->isSuperAdmin()) {
             return true;
         }
 
@@ -31,12 +31,12 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
-        return false;
+        return $user->isAdmin();
     }
 
     public function update(User $user, Project $project): bool
     {
-        return $this->canManageProjectResources($user, $project);
+        return $user->isAdmin() || $this->canManageProjectResources($user, $project);
     }
 
     public function delete(User $user, Project $project): bool

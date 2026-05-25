@@ -67,9 +67,25 @@ class ProjectService
 
     public function restoreProject(Project $project): bool
     {
-        return DB::transaction(function () use ($project) {
-            return $this->projectRepository->restore($project);
-        });
+        return $this->projectRepository->restore($project);
+    }
+
+    public function getProjectDetail(Project $project): Project
+    {
+        $project->load([
+            'tasks.status',
+            'tasks.projectUser.user',
+            'tasks.projectUser.projectRole',
+            'tasks.dependencies',
+            'milestones.creator',
+        ]);
+
+        return $project;
+    }
+
+    public function getProjectStats(Project $project): array
+    {
+        return $project->getStats();
     }
 
     private function logStatusChange(Project $project, int $statusId, ?int $userId): void

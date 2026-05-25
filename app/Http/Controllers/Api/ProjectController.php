@@ -13,7 +13,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class ProjectController extends Controller
 {
@@ -25,7 +24,7 @@ class ProjectController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        abort_unless(Gate::allows('viewAny', Project::class), 403);
+        $this->authorize('viewAny', Project::class);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
 
@@ -39,7 +38,7 @@ class ProjectController extends Controller
 
     public function store(ProjectRequest $request): JsonResponse
     {
-        abort_unless(Gate::allows('create', Project::class), 403);
+        $this->authorize('create', Project::class);
 
         $dto = ProjectDTO::fromArray($request->validated(), createdBy: Auth::id());
         $project = $this->projectService->createProject($dto);
@@ -49,22 +48,20 @@ class ProjectController extends Controller
 
     public function show(Project $project): JsonResponse
     {
-        abort_unless(Gate::allows('view', $project), 403);
+        $this->authorize('view', $project);
 
-        $project->load([
-            'tasks.status',
-            'tasks.projectUser.user',
-            'tasks.projectUser.projectRole',
-            'tasks.dependencies',
-            'milestones.creator',
-        ]);
+        $project = $this->projectService->getProjectDetail($project);
 
-        return $this->success(new ProjectResource($project));
+        $stats = request()->query('include_stats')
+            ? $this->projectService->getProjectStats($project)
+            : null;
+
+        return $this->success(new ProjectResource($project, $stats));
     }
 
     public function update(ProjectRequest $request, Project $project): JsonResponse
     {
-        abort_unless(Gate::allows('update', $project), 403);
+        $this->authorize('update', $project);
 
         $dto = ProjectDTO::fromArray(
             array_merge($request->validated(), ['updated_by' => Auth::id()]),
@@ -78,7 +75,7 @@ class ProjectController extends Controller
 
     public function destroy(Project $project): JsonResponse
     {
-        abort_unless(Gate::allows('delete', $project), 403);
+        $this->authorize('delete', $project);
 
         $this->projectService->deleteProject($project);
 
@@ -87,7 +84,7 @@ class ProjectController extends Controller
 
     public function restore(Project $project): JsonResponse
     {
-        abort_unless(Gate::allows('restore', $project), 403);
+        $this->authorize('restore', $project);
 
         $this->projectService->restoreProject($project);
 
