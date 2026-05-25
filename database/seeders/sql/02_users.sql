@@ -5,8 +5,7 @@ INSERT INTO
     `name`,
     `email`,
     `password`,
-    `created_at`,
-    `updated_at`
+    `created_at`
   )
 VALUES
   (
@@ -15,6 +14,5 @@ VALUES
     'Donny Arce',
     'darce@onnesta.pe',
     '$2a$12$ElybHZgZADNnNG0OHBPj9eUhL4lI58z3BkKOiJuSbRGGwwZGK6Q2q',
-    NOW(),
     NOW()
   );
