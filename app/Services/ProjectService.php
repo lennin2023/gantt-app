@@ -3,9 +3,10 @@
 namespace App\Services;
 
 use App\DTOs\ProjectDTO;
+use App\Enums\ProjectStatusEnum;
 use App\Events\ProjectCreated;
-use App\Events\ProjectDeleted;
 use App\Events\ProjectUpdated;
+use App\Exceptions\ProjectAlreadyInStatusException;
 use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
@@ -18,9 +19,9 @@ class ProjectService
         private readonly ProjectRepositoryInterface $projectRepository,
     ) {}
 
-    public function getUserProjects(int $userId, int $perPage = 10): LengthAwarePaginator
+    public function getUserProjects(int $userId, int $perPage = 10, ?int $statusId = null): LengthAwarePaginator
     {
-        return $this->projectRepository->getAllByUser($userId, $perPage);
+        return $this->projectRepository->getAllByUser($userId, $perPage, $statusId);
     }
 
     public function findById(int $id, array $with = []): ?Project
@@ -56,27 +57,30 @@ class ProjectService
         });
     }
 
-    public function deleteProject(Project $project): bool
+    public function changeStatus(Project $project, ProjectStatusEnum $status, int $userId): void
     {
-        return DB::transaction(function () use ($project) {
-            ProjectDeleted::dispatch($project);
+        if ($project->project_status_id === $status->value) {
+            throw new ProjectAlreadyInStatusException($status);
+        }
 
-            return $this->projectRepository->delete($project);
+        DB::transaction(function () use ($project, $status, $userId) {
+            $project->project_status_id = $status->value;
+            $project->updated_by = $userId;
+            $project->save();
+
+            $this->logStatusChange($project, $project->project_status_id, $userId);
+
+            ProjectUpdated::dispatch($project);
         });
-    }
-
-    public function restoreProject(Project $project): bool
-    {
-        return $this->projectRepository->restore($project);
     }
 
     public function getProjectDetail(Project $project): Project
     {
         $project->load([
-            'tasks.status',
-            'tasks.projectUser.user',
-            'tasks.projectUser.projectRole',
-            'tasks.dependencies',
+            'projectUsers.tasks.status',
+            'projectUsers.tasks.dependencies',
+            'projectUsers.user',
+            'projectUsers.projectRole',
             'milestones.creator',
         ]);
 

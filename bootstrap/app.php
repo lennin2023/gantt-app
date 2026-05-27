@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ProjectAlreadyInStatusException;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
@@ -44,5 +45,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (ProjectAlreadyInStatusException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        });
     })->create();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\ProjectDTO;
+use App\Enums\ProjectStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProjectRequest;
 use App\Http\Resources\ApiResponse;
@@ -27,10 +28,12 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
+        $statusId = $request->query('status_id') ? (int) $request->query('status_id') : null;
 
         $projects = $this->projectService->getUserProjects(
             userId: Auth::id(),
-            perPage: $perPage
+            perPage: $perPage,
+            statusId: $statusId,
         );
 
         return ProjectResource::collection($projects);
@@ -52,11 +55,15 @@ class ProjectController extends Controller
 
         $project = $this->projectService->getProjectDetail($project);
 
-        $stats = request()->query('include_stats')
-            ? $this->projectService->getProjectStats($project)
-            : null;
+        $resource = new ProjectResource($project);
 
-        return $this->success(new ProjectResource($project, $stats));
+        if (request()->query('include_stats')) {
+            $resource->additional([
+                'stats' => $this->projectService->getProjectStats($project),
+            ]);
+        }
+
+        return $this->success($resource);
     }
 
     public function update(ProjectRequest $request, Project $project): JsonResponse
@@ -77,16 +84,16 @@ class ProjectController extends Controller
     {
         $this->authorize('delete', $project);
 
-        $this->projectService->deleteProject($project);
+        $this->projectService->changeStatus($project, ProjectStatusEnum::ARCHIVED, Auth::id());
 
-        return $this->deleted('Project deleted successfully');
+        return $this->deleted('Project archived successfully');
     }
 
     public function restore(Project $project): JsonResponse
     {
         $this->authorize('restore', $project);
 
-        $this->projectService->restoreProject($project);
+        $this->projectService->changeStatus($project, ProjectStatusEnum::ACTIVE, Auth::id());
 
         return $this->success(null, 'Project restored successfully');
     }

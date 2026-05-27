@@ -9,13 +9,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ProjectRepository implements ProjectRepositoryInterface
 {
-    public function getAllByUser(int $userId, int $perPage = 10): LengthAwarePaginator
+    public function getAllByUser(int $userId, int $perPage = 10, ?int $statusId = null): LengthAwarePaginator
     {
         return Project::with('status')
             ->where(function ($query) use ($userId) {
                 $query->where('created_by', $userId)
                     ->orWhereIn('id', ProjectUser::where('user_id', $userId)->select('project_id'));
             })
+            ->when($statusId, fn ($q) => $q->where('project_status_id', $statusId))
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }
@@ -35,15 +36,5 @@ class ProjectRepository implements ProjectRepositoryInterface
         $project->update($data);
 
         return $project->fresh();
-    }
-
-    public function delete(Project $project): bool
-    {
-        return $project->delete();
-    }
-
-    public function restore(Project $project): bool
-    {
-        return $project->restore();
     }
 }

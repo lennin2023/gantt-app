@@ -2,19 +2,11 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ProjectResource extends JsonResource
 {
-    public function __construct(
-        Project $resource,
-        private readonly ?array $stats = null,
-    ) {
-        parent::__construct($resource);
-    }
-
     public function toArray(Request $request): array
     {
         return [
@@ -33,9 +25,9 @@ class ProjectResource extends JsonResource
             'end_date' => $this->end_date?->toDateString(),
             'created_by' => $this->created_by,
             'created_at' => $this->created_at?->toIso8601String(),
-            'tasks' => TaskResource::collection($this->whenLoaded('tasks')),
+            'project_users' => ProjectUserResource::collection($this->whenLoaded('projectUsers')),
+
             'milestones' => MilestoneResource::collection($this->whenLoaded('milestones')),
-            'stats' => $this->when($this->stats !== null, $this->stats),
         ];
     }
 }

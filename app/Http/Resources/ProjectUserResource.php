@@ -23,6 +23,7 @@ class ProjectUserResource extends JsonResource
                 'slug' => $this->projectRole->slug,
                 'level' => $this->projectRole->level,
             ]),
+            'tasks' => TaskResource::collection($this->whenLoaded('tasks')),
             'creator' => $this->whenLoaded('creator', fn () => [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,

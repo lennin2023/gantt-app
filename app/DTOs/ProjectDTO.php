@@ -7,6 +7,8 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class ProjectDTO implements Arrayable
 {
+    public const UNDEFINED = '__UNDEFINED__';
+
     public function __construct(
         public readonly int $createdBy,
         public readonly ?int $companyId = null,
@@ -14,9 +16,9 @@ class ProjectDTO implements Arrayable
         public readonly ?string $name = null,
         public readonly ?string $color = null,
         public readonly ?int $updatedBy = null,
-        public readonly ?string $description = null,
-        public readonly ?string $startDate = null,
-        public readonly ?string $endDate = null,
+        public readonly mixed $description = self::UNDEFINED,
+        public readonly mixed $startDate = self::UNDEFINED,
+        public readonly mixed $endDate = self::UNDEFINED,
     ) {}
 
     public static function fromArray(array $data, int $createdBy): self
@@ -28,9 +30,9 @@ class ProjectDTO implements Arrayable
             name: $data['name'] ?? null,
             color: $data['color'] ?? null,
             updatedBy: $data['updated_by'] ?? null,
-            description: array_key_exists('description', $data) ? $data['description'] : null,
-            startDate: array_key_exists('start_date', $data) ? $data['start_date'] : null,
-            endDate: array_key_exists('end_date', $data) ? $data['end_date'] : null,
+            description: array_key_exists('description', $data) ? $data['description'] : self::UNDEFINED,
+            startDate: array_key_exists('start_date', $data) ? $data['start_date'] : self::UNDEFINED,
+            endDate: array_key_exists('end_date', $data) ? $data['end_date'] : self::UNDEFINED,
         );
     }
 
@@ -40,7 +42,6 @@ class ProjectDTO implements Arrayable
             'created_by' => $this->createdBy,
         ];
 
-        // Campos que no pueden ser null
         if ($this->companyId !== null) {
             $data['company_id'] = $this->companyId;
         }
@@ -57,10 +58,16 @@ class ProjectDTO implements Arrayable
             $data['updated_by'] = $this->updatedBy;
         }
 
-        // Campos que sí pueden ser null explícitamente
-        $data['description'] = $this->description;
-        $data['start_date'] = $this->startDate;
-        $data['end_date'] = $this->endDate;
+        // Solo se incluyen si fueron enviados explícitamente
+        if ($this->description !== self::UNDEFINED) {
+            $data['description'] = $this->description;
+        }
+        if ($this->startDate !== self::UNDEFINED) {
+            $data['start_date'] = $this->startDate;
+        }
+        if ($this->endDate !== self::UNDEFINED) {
+            $data['end_date'] = $this->endDate;
+        }
 
         return $data;
     }
