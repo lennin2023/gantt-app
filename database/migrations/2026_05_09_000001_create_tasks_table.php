@@ -11,9 +11,10 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_user_id')->constrained('project_users')->restrictOnDelete();
-            $table->foreignId('task_status_id')->default(TaskStatusEnum::PENDING->value)->constrained('task_statuses')->restrictOnDelete();
-            $table->string('name');
+            $table->foreignId('project_id')->constrained()->restrictOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('tasks')->nullOnDelete();
+            $table->foreignId('task_status_id')->default(TaskStatusEnum::PENDING->value)->constrained()->restrictOnDelete();
+            $table->string('title');
             $table->text('description')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
@@ -22,7 +23,6 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

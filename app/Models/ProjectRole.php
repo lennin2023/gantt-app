@@ -14,7 +14,6 @@ class ProjectRole extends Model
     protected $fillable = [
         'name',
         'slug',
-        'level',
         'created_by',
         'created_at',
     ];
@@ -23,7 +22,6 @@ class ProjectRole extends Model
     {
         return [
             'created_at' => 'datetime',
-            'level' => 'integer',
         ];
     }
 
@@ -32,19 +30,19 @@ class ProjectRole extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function isManager(): bool
+    public function isProjectManager(): bool
     {
-        return $this->level >= ProjectRoleEnum::MANAGER_LEVEL;
+        return $this->id === ProjectRoleEnum::PROJECT_MANAGER->value;
     }
 
-    public function isExecutor(): bool
+    public function isTeamMember(): bool
     {
-        return $this->level === ProjectRoleEnum::EXECUTOR_LEVEL;
+        return $this->id === ProjectRoleEnum::TEAM_MEMBER->value;
     }
 
-    public function isSpectator(): bool
+    public function isViewer(): bool
     {
-        return $this->level === ProjectRoleEnum::SPECTATOR_LEVEL;
+        return $this->id === ProjectRoleEnum::VIEWER->value;
     }
 
     public function isRole(ProjectRoleEnum $roleEnum): bool

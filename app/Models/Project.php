@@ -72,9 +72,22 @@ class Project extends Model
         return $this->hasMany(ProjectUser::class);
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    public function rootTasks(): HasMany
+    {
+        return $this->hasMany(Task::class)
+            ->whereNull('parent_id')
+            ->orderBy('order');
+    }
+
     public function getStats(): array
     {
-        $stats = Task::whereHas('projectUser', fn ($q) => $q->where('project_id', $this->id))
+        $stats = Task::where('project_id', $this->id)
+            ->whereDoesntHave('children') // solo tareas hoja
             ->selectRaw('
                 COUNT(*) as total,
                 SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed,

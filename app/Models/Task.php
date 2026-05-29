@@ -7,16 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
-        'project_user_id',
+        'project_id',
+        'parent_id',
         'task_status_id',
-        'name',
+        'title',
         'description',
         'start_date',
         'end_date',
@@ -40,14 +41,29 @@ class Task extends Model
         ];
     }
 
-    public function projectUser(): BelongsTo
+    public function project(): BelongsTo
     {
-        return $this->belongsTo(ProjectUser::class);
+        return $this->belongsTo(Project::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Task::class, 'parent_id')->orderBy('order');
     }
 
     public function status(): BelongsTo
     {
         return $this->belongsTo(TaskStatus::class, 'task_status_id');
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(TaskAssignment::class);
     }
 
     public function creator(): BelongsTo
@@ -67,7 +83,7 @@ class Task extends Model
             'task_dependencies',
             'task_id',
             'depends_on_task_id'
-        );
+        )->withPivot('type');
     }
 
     public function dependents(): BelongsToMany
@@ -77,7 +93,12 @@ class Task extends Model
             'task_dependencies',
             'depends_on_task_id',
             'task_id'
-        );
+        )->withPivot('type');
+    }
+
+    public function isLeaf(): bool
+    {
+        return $this->children()->doesntExist();
     }
 
     public function isPending(): bool
