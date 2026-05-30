@@ -24,6 +24,7 @@ class TaskDTO implements Arrayable
         public readonly ?int $progress = null,
         public readonly ?int $order = null,
         public readonly mixed $dependencyIds = self::UNDEFINED_ARRAY,
+        public readonly ?string $dependencyType = null,
     ) {}
 
     public static function fromArray(array $data, int $createdBy): self
@@ -41,6 +42,7 @@ class TaskDTO implements Arrayable
             progress: $data['progress'] ?? null,
             order: $data['order'] ?? null,
             dependencyIds: array_key_exists('dependency_ids', $data) ? $data['dependency_ids'] : self::UNDEFINED_ARRAY,
+            dependencyType: $data['dependency_type'] ?? null,
         );
     }
 
