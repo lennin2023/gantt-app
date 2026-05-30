@@ -1,8 +1,12 @@
 <?php
 
+use App\Exceptions\BulkOperationException;
+use App\Exceptions\CycleDetectionException;
 use App\Exceptions\ProjectAlreadyInStatusException;
 use App\Exceptions\ProjectUserAlreadyAssignedException;
 use App\Exceptions\ProjectUserNotFoundException;
+use App\Exceptions\TaskAlreadyInStatusException;
+use App\Exceptions\TaskNotCancelledException;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
@@ -61,5 +65,25 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json([
                 'message' => $e->getMessage(),
             ], 404);
+        });
+        $exceptions->render(function (CycleDetectionException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+        $exceptions->render(function (BulkOperationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+        $exceptions->render(function (TaskAlreadyInStatusException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+        $exceptions->render(function (TaskNotCancelledException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
         });
     })->create();

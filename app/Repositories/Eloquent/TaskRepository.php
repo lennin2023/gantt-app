@@ -11,15 +11,30 @@ class TaskRepository implements TaskRepositoryInterface
 {
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
-        return Task::with(['status', 'dependencies', 'projectUser.user', 'projectUser.projectRole'])
-            ->whereHas('projectUser', fn ($q) => $q->where('project_id', $projectId))
+        return Task::with([
+            'status',
+            'assignments.projectUser.user',
+            'assignments.taskRole',
+            'dependencies',
+            'creator',
+        ])
+            ->where('project_id', $projectId)
+            ->orderBy('parent_id')
             ->orderBy('order')
             ->paginate($perPage);
     }
 
     public function findById(int $id): ?Task
     {
-        return Task::with(['status', 'dependencies', 'dependents', 'projectUser.user', 'projectUser.projectRole'])->find($id);
+        return Task::with([
+            'status',
+            'dependencies',
+            'dependents',
+            'assignments.projectUser.user',
+            'assignments.taskRole',
+            'parent',
+            'children.status',
+        ])->find($id);
     }
 
     public function create(array $data): Task
@@ -34,35 +49,28 @@ class TaskRepository implements TaskRepositoryInterface
         return $task->fresh();
     }
 
-    public function delete(Task $task): bool
+    public function syncDependencies(Task $task, array $dependencyIds, string $type): void
     {
-        return $task->delete();
-    }
+        $syncData = collect($dependencyIds)->mapWithKeys(fn ($id) => [
+            $id => ['type' => $type],
+        ])->toArray();
 
-    public function syncDependencies(Task $task, array $dependencyIds): void
-    {
-        $task->dependencies()->sync($dependencyIds);
+        $task->dependencies()->sync($syncData);
     }
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
     {
-        $projectId = $task->projectUser?->project_id;
-
-        if (! $projectId) {
-            return false;
-        }
-
-        $tasksInProject = Task::with('dependents')
-            ->whereHas('projectUser', fn ($q) => $q->where('project_id', $projectId))
+        $tasks = Task::with('dependents')
+            ->where('project_id', $task->project_id)
             ->get()
             ->keyBy('id');
 
         $visited = [];
 
-        return $this->hasPathInGraph($newDependencyId, $task->id, $visited, $tasksInProject);
+        return $this->hasPathInGraph($newDependencyId, $task->id, $visited, $tasks);
     }
 
-    private function hasPathInGraph(int $from, int $to, array &$visited, Collection $tasksInProject): bool
+    private function hasPathInGraph(int $from, int $to, array &$visited, Collection $tasks): bool
     {
         if ($from === $to) {
             return true;
@@ -74,23 +82,18 @@ class TaskRepository implements TaskRepositoryInterface
 
         $visited[$from] = true;
 
-        $taskNode = $tasksInProject->get($from);
+        $taskNode = $tasks->get($from);
 
         if (! $taskNode) {
             return false;
         }
 
         foreach ($taskNode->dependents as $dependent) {
-            if ($this->hasPathInGraph($dependent->id, $to, $visited, $tasksInProject)) {
+            if ($this->hasPathInGraph($dependent->id, $to, $visited, $tasks)) {
                 return true;
             }
         }
 
         return false;
-    }
-
-    public function restore(Task $task): bool
-    {
-        return $task->restore();
     }
 }

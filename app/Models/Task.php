@@ -120,4 +120,9 @@ class Task extends Model
     {
         return $this->task_status_id === TaskStatusEnum::DELAYED->value;
     }
+
+    public function isCancelled(): bool
+    {
+        return $this->task_status_id === TaskStatusEnum::CANCELLED->value;
+    }
 }

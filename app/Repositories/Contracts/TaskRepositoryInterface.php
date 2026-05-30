@@ -15,11 +15,7 @@ interface TaskRepositoryInterface
 
     public function update(Task $task, array $data): Task;
 
-    public function delete(Task $task): bool;
-
-    public function syncDependencies(Task $task, array $dependencyIds): void;
+    public function syncDependencies(Task $task, array $dependencyIds, string $type): void;
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool;
-
-    public function restore(Task $task): bool;
 }

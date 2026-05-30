@@ -3,16 +3,16 @@
 namespace App\Services;
 
 use App\DTOs\TaskDTO;
-use App\Enums\ProjectRoleEnum;
+use App\Enums\TaskDependencyTypeEnum;
 use App\Enums\TaskStatusEnum;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
-use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
 use App\Exceptions\BulkOperationException;
 use App\Exceptions\CycleDetectionException;
+use App\Exceptions\TaskAlreadyInStatusException;
+use App\Exceptions\TaskNotCancelledException;
 use App\Models\Task;
-use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -22,7 +22,6 @@ class TaskService
 {
     public function __construct(
         private readonly TaskRepositoryInterface $taskRepository,
-        private readonly ProjectUserRepositoryInterface $projectUserRepository,
     ) {}
 
     public function getProjectTasks(int $projectId, int $perPage = 10): LengthAwarePaginator
@@ -40,11 +39,16 @@ class TaskService
         return DB::transaction(function () use ($dto) {
             $task = $this->taskRepository->create($dto->toArray());
 
-            if (! empty($dto->dependencyIds)) {
-                $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
+            if ($dto->dependencyIds !== TaskDTO::UNDEFINED_ARRAY && ! empty($dto->dependencyIds)) {
+                $this->validateNoCycleWouldBeCreated($task, $dto->dependencyIds);
+                $this->taskRepository->syncDependencies(
+                    $task,
+                    $dto->dependencyIds,
+                    $dto->dependencyType ?? TaskDependencyTypeEnum::FINISH_TO_START->value,
+                );
             }
 
-            $task->load(['status', 'dependencies', 'projectUser.user', 'projectUser.projectRole']);
+            $task->load(['status', 'dependencies', 'assignments.projectUser.user', 'assignments.taskRole']);
 
             TaskCreated::dispatch($task);
 
@@ -59,13 +63,25 @@ class TaskService
 
             $task = $this->taskRepository->update($task, $dto->toArray());
 
-            if (! empty($dto->dependencyIds)) {
-                $this->taskRepository->syncDependencies($task, $dto->dependencyIds);
+            if ($dto->dependencyIds !== TaskDTO::UNDEFINED_ARRAY) {
+                $existingIds = $task->dependencies()->pluck('depends_on_task_id')->toArray();
+                $newIds = array_diff($dto->dependencyIds, $existingIds);
+
+                if (! empty($newIds)) {
+                    $this->validateNoCycleWouldBeCreated($task, $newIds);
+                }
+
+                $this->taskRepository->syncDependencies(
+                    $task,
+                    $dto->dependencyIds,
+                    $dto->dependencyType ?? TaskDependencyTypeEnum::FINISH_TO_START->value,
+                );
             }
 
             TaskUpdated::dispatch($task);
 
-            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
+            if ($task->task_status_id === TaskStatusEnum::COMPLETED->value
+                && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
                 TaskCompleted::dispatch($task);
             }
 
@@ -73,28 +89,49 @@ class TaskService
         });
     }
 
-    public function deleteTask(Task $task): bool
+    public function cancelTask(Task $task, int $userId): void
     {
-        return DB::transaction(function () use ($task) {
-            TaskDeleted::dispatch($task);
+        if ($task->task_status_id === TaskStatusEnum::CANCELLED->value) {
+            throw new TaskAlreadyInStatusException(TaskStatusEnum::CANCELLED);
+        }
 
-            return $this->taskRepository->delete($task);
+        DB::transaction(function () use ($task, $userId) {
+            $task->task_status_id = TaskStatusEnum::CANCELLED->value;
+            $task->updated_by = $userId;
+            $task->save();
+
+            TaskUpdated::dispatch($task);
         });
     }
 
-    public function validateAndGetTasksForBulkUpdate(array $taskIds, array $data): Collection
+    public function restoreTask(Task $task, int $userId): void
+    {
+        if ($task->task_status_id !== TaskStatusEnum::CANCELLED->value) {
+            throw new TaskNotCancelledException;
+        }
+
+        DB::transaction(function () use ($task, $userId) {
+            $task->task_status_id = TaskStatusEnum::PENDING->value;
+            $task->updated_by = $userId;
+            $task->save();
+
+            TaskUpdated::dispatch($task);
+        });
+    }
+
+    public function validateAndGetTasksForBulkUpdate(array $taskIds): Collection
     {
         if (empty($taskIds)) {
             throw BulkOperationException::noTaskIdsProvided();
         }
 
-        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
+        $tasks = Task::whereIn('id', $taskIds)->get();
 
         if ($tasks->isEmpty()) {
             throw BulkOperationException::tasksNotFound();
         }
 
-        $projectIds = $tasks->pluck('projectUser.project_id')->unique();
+        $projectIds = $tasks->pluck('project_id')->unique();
 
         if ($projectIds->count() > 1) {
             throw BulkOperationException::tasksMustBelongToSameProject();
@@ -109,7 +146,7 @@ class TaskService
             throw BulkOperationException::noTaskIdsProvided();
         }
 
-        $tasks = Task::with('projectUser.project')->whereIn('id', $taskIds)->get();
+        $tasks = Task::whereIn('id', $taskIds)->get();
 
         if ($tasks->isEmpty()) {
             throw BulkOperationException::tasksNotFound();
@@ -120,7 +157,11 @@ class TaskService
 
     public function bulkUpdate(Collection $tasks, array $data): Collection
     {
-        $allowedFields = ['task_status_id', 'name', 'description', 'project_user_id', 'start_date', 'end_date', 'progress', 'order'];
+        $allowedFields = [
+            'task_status_id', 'title', 'description',
+            'start_date', 'end_date', 'progress', 'order',
+        ];
+
         $filteredData = array_intersect_key($data, array_flip($allowedFields));
 
         return DB::transaction(function () use ($tasks, $filteredData) {
@@ -129,13 +170,14 @@ class TaskService
             foreach ($tasks as $task) {
                 $previousStatus = $task->task_status_id;
                 $updatedTask = $this->taskRepository->update($task, $filteredData);
-                $updatedTask->load(['status', 'dependencies', 'projectUser.user', 'projectUser.projectRole']);
+                $updatedTask->load(['status', 'assignments.projectUser.user', 'assignments.taskRole']);
 
                 $result->push($updatedTask);
 
                 TaskUpdated::dispatch($updatedTask);
 
-                if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
+                if ($updatedTask->task_status_id === TaskStatusEnum::COMPLETED->value
+                    && $previousStatus !== TaskStatusEnum::COMPLETED->value) {
                     TaskCompleted::dispatch($updatedTask);
                 }
             }
@@ -144,45 +186,27 @@ class TaskService
         });
     }
 
-    public function bulkDelete(Collection $tasks): void
+    public function bulkCancel(Collection $tasks, int $userId): void
     {
-        DB::transaction(function () use ($tasks) {
+        DB::transaction(function () use ($tasks, $userId) {
             foreach ($tasks as $task) {
-                TaskDeleted::dispatch($task);
-                $this->taskRepository->delete($task);
+                if ($task->task_status_id !== TaskStatusEnum::CANCELLED->value) {
+                    $task->task_status_id = TaskStatusEnum::CANCELLED->value;
+                    $task->updated_by = $userId;
+                    $task->save();
+
+                    TaskUpdated::dispatch($task);
+                }
             }
         });
-    }
-
-    public function wouldCreateCycle(Task $task, int $newDependencyId): bool
-    {
-        return $this->taskRepository->wouldCreateCycle($task, $newDependencyId);
     }
 
     public function validateNoCycleWouldBeCreated(Task $task, array $dependencyIds): void
     {
         foreach ($dependencyIds as $depId) {
-            if ($this->wouldCreateCycle($task, $depId)) {
+            if ($this->taskRepository->wouldCreateCycle($task, $depId)) {
                 throw new CycleDetectionException;
             }
-        }
-    }
-
-    public function restoreTask(Task $task): bool
-    {
-        return DB::transaction(function () use ($task) {
-            return $this->taskRepository->restore($task);
-        });
-    }
-
-    public function ensureUserInProject(int $projectId, int $userId): void
-    {
-        if (! $this->projectUserRepository->exists($projectId, $userId)) {
-            $this->projectUserRepository->create([
-                'project_id' => $projectId,
-                'user_id' => $userId,
-                'project_role_id' => ProjectRoleEnum::DEVELOPER->value,
-            ]);
         }
     }
 }

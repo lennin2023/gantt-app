@@ -8,6 +8,7 @@ enum TaskStatusEnum: int
     case IN_PROGRESS = 2;
     case COMPLETED = 3;
     case DELAYED = 4;
+    case CANCELLED = 5;
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum TaskStatusEnum: int
             self::IN_PROGRESS => 'En Progreso',
             self::COMPLETED => 'Completada',
             self::DELAYED => 'Atrasada',
+            self::CANCELLED => 'Cancelada',
         };
     }
 

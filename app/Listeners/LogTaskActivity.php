@@ -22,8 +22,8 @@ class LogTaskActivity implements ShouldQueue
 
         Log::info("Task {$action}", [
             'task_id' => $event->task->id,
-            'project_id' => $event->task->projectUser?->project_id,
-            'name' => $event->task->name,
+            'project_id' => $event->task->project_id,
+            'title' => $event->task->title,
         ]);
     }
 }

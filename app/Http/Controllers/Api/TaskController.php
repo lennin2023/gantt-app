@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\TaskDTO;
-use App\Exceptions\BulkOperationException;
-use App\Exceptions\CycleDetectionException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\BulkDeleteTaskRequest;
 use App\Http\Requests\Api\TaskRequest;
@@ -17,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
@@ -29,7 +26,7 @@ class TaskController extends Controller
 
     public function index(Request $request, Project $project): AnonymousResourceCollection
     {
-        abort_unless(Gate::allows('view', $project), 403);
+        $this->authorize('viewAny', [Task::class, $project]);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
 
@@ -40,10 +37,13 @@ class TaskController extends Controller
 
     public function store(TaskRequest $request, Project $project): JsonResponse
     {
-        abort_unless(Gate::allows('create', $project), 403);
+        $this->authorize('create', [Task::class, $project]);
 
         $dto = TaskDTO::fromArray(
-            array_merge($request->validated(), ['created_by' => Auth::id()]),
+            array_merge($request->validated(), [
+                'project_id' => $project->id,
+                'created_by' => Auth::id(),
+            ]),
             Auth::id(),
         );
 
@@ -54,31 +54,24 @@ class TaskController extends Controller
 
     public function show(Task $task): JsonResponse
     {
-        $task->load('projectUser.project');
+        $this->authorize('view', [Task::class, $task->project]);
 
-        abort_unless($task && Gate::allows('view', $task->projectUser?->project), 403);
+        $task = $this->taskService->findById($task->id);
 
         return $this->success(new TaskResource($task));
     }
 
     public function update(TaskRequest $request, Task $task): JsonResponse
     {
-        $task->load('projectUser.project');
-
-        abort_unless(Gate::allows('update', $task->projectUser?->project), 403);
+        $this->authorize('update', [Task::class, $task->project]);
 
         $dto = TaskDTO::fromArray(
-            array_merge($request->validated(), ['updated_by' => Auth::id()]),
+            array_merge($request->validated(), [
+                'project_id' => $task->project_id,
+                'updated_by' => Auth::id(),
+            ]),
             $task->created_by,
         );
-
-        if (! empty($dto->dependencyIds)) {
-            try {
-                $this->taskService->validateNoCycleWouldBeCreated($task, $dto->dependencyIds);
-            } catch (CycleDetectionException $e) {
-                return $this->validationError($e->getMessage());
-            }
-        }
 
         $task = $this->taskService->updateTask($task, $dto);
 
@@ -87,13 +80,20 @@ class TaskController extends Controller
 
     public function destroy(Task $task): JsonResponse
     {
-        $task->load('projectUser.project');
+        $this->authorize('delete', [Task::class, $task->project]);
 
-        abort_unless(Gate::allows('delete', $task->projectUser?->project), 403);
+        $this->taskService->cancelTask($task, Auth::id());
 
-        $this->taskService->deleteTask($task);
+        return $this->deleted('Task cancelled successfully');
+    }
 
-        return $this->deleted('Task deleted successfully');
+    public function restore(Task $task): JsonResponse
+    {
+        $this->authorize('restore', [Task::class, $task->project]);
+
+        $this->taskService->restoreTask($task, Auth::id());
+
+        return $this->success(null, 'Task restored successfully');
     }
 
     public function bulkUpdate(TaskRequest $request): JsonResponse
@@ -102,14 +102,10 @@ class TaskController extends Controller
         $taskIds = $validated['task_ids'] ?? [];
         $data = $validated['data'] ?? [];
 
-        try {
-            $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($taskIds, $data);
-        } catch (BulkOperationException $e) {
-            return $this->validationError($e->getMessage());
-        }
+        $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($taskIds);
 
-        $project = $tasks->first()->projectUser?->project;
-        abort_unless($project && Gate::allows('update', $project), 403);
+        $project = $tasks->first()->project;
+        $this->authorize('update', [Task::class, $project]);
 
         $updated = $this->taskService->bulkUpdate($tasks, $data);
 
@@ -123,28 +119,13 @@ class TaskController extends Controller
         $validated = $request->validated();
         $taskIds = $validated['task_ids'];
 
-        try {
-            $tasks = $this->taskService->validateAndGetTasksForBulkDelete($taskIds);
-        } catch (BulkOperationException $e) {
-            return $this->validationError($e->getMessage());
-        }
+        $tasks = $this->taskService->validateAndGetTasksForBulkDelete($taskIds);
 
-        $project = $tasks->first()->projectUser?->project;
-        abort_unless($project && Gate::allows('delete', $project), 403);
+        $project = $tasks->first()->project;
+        $this->authorize('delete', [Task::class, $project]);
 
-        $this->taskService->bulkDelete($tasks);
+        $this->taskService->bulkCancel($tasks, Auth::id());
 
-        return $this->deleted(count($taskIds).' tasks deleted successfully');
-    }
-
-    public function restore(Task $task): JsonResponse
-    {
-        $task->load('projectUser.project');
-
-        abort_unless(Gate::allows('restore', $task->projectUser?->project), 403);
-
-        $this->taskService->restoreTask($task);
-
-        return $this->success(null, 'Task restored successfully');
+        return $this->deleted(count($taskIds).' tasks cancelled successfully');
     }
 }
