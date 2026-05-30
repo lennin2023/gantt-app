@@ -17,7 +17,7 @@ interface ProjectUserRepositoryInterface
 
     public function create(array $data): ProjectUser;
 
-    public function delete(ProjectUser $projectUser): bool;
+    public function delete(ProjectUser $projectUser): void;
 
     public function exists(int $projectId, int $userId): bool;
 }

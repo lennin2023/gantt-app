@@ -17,15 +17,11 @@ trait HasProjectPermissions
         return $project->projectUsers()->where('user_id', $user->id)->exists();
     }
 
-    private function canManageProjectResources(User $user, Project $project): bool
+    private function isProjectManager(User $user, Project $project): bool
     {
-        if ($user->id === $project->created_by) {
-            return true;
-        }
-
         return $project->projectUsers()
             ->where('user_id', $user->id)
-            ->whereHas('projectRole', fn ($q) => $q->where('level', '>=', ProjectRoleEnum::MANAGER_LEVEL))
+            ->where('project_role_id', ProjectRoleEnum::PROJECT_MANAGER->value)
             ->exists();
     }
 }

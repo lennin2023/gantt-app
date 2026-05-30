@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Events\ProjectUserAssigned;
 use App\Events\ProjectUserRemoved;
+use App\Exceptions\ProjectUserAlreadyAssignedException;
+use App\Exceptions\ProjectUserNotFoundException;
 use App\Models\ProjectUser;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use Illuminate\Support\Collection;
@@ -27,12 +29,17 @@ class ProjectUserService
 
     public function assignUser(int $projectId, int $userId, int $projectRoleId, int $createdBy): ProjectUser
     {
+        if ($this->projectUserRepository->exists($projectId, $userId)) {
+            throw new ProjectUserAlreadyAssignedException;
+        }
+
         return DB::transaction(function () use ($projectId, $userId, $projectRoleId, $createdBy) {
             $projectUser = $this->projectUserRepository->create([
                 'project_id' => $projectId,
                 'user_id' => $userId,
                 'project_role_id' => $projectRoleId,
                 'created_by' => $createdBy,
+                'created_at' => now(),
             ]);
 
             ProjectUserAssigned::dispatch($projectUser);
@@ -41,28 +48,19 @@ class ProjectUserService
         });
     }
 
-    public function removeUser(int $projectId, int $userId, int $removedBy): bool
+    public function removeUser(int $projectId, int $userId): void
     {
-        return DB::transaction(function () use ($projectId, $userId, $removedBy) {
+        DB::transaction(function () use ($projectId, $userId) {
             $projectUser = $this->projectUserRepository->findByProjectAndUser($projectId, $userId);
 
             if (! $projectUser) {
-                return false;
+                throw new ProjectUserNotFoundException;
             }
 
-            $deleted = $this->projectUserRepository->delete($projectUser);
+            $this->projectUserRepository->delete($projectUser);
 
-            if ($deleted) {
-                ProjectUserRemoved::dispatch($projectId, $userId, $removedBy);
-            }
-
-            return $deleted;
+            ProjectUserRemoved::dispatch($projectUser);
         });
-    }
-
-    public function userAlreadyAssigned(int $projectId, int $userId): bool
-    {
-        return $this->projectUserRepository->exists($projectId, $userId);
     }
 
     public function findByProjectAndUser(int $projectId, int $userId): ?ProjectUser

@@ -40,9 +40,9 @@ class ProjectUserRepository implements ProjectUserRepositoryInterface
         return ProjectUser::create($data);
     }
 
-    public function delete(ProjectUser $projectUser): bool
+    public function delete(ProjectUser $projectUser): void
     {
-        return $projectUser->delete();
+        $projectUser->delete();
     }
 
     public function exists(int $projectId, int $userId): bool

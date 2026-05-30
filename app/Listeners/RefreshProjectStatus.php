@@ -11,7 +11,7 @@ class RefreshProjectStatus implements ShouldQueue
     public function handle(TaskCompleted $event): void
     {
         $task = $event->task;
-        $project = $task->projectUser?->project;
+        $project = $task->project;
 
         if (! $project) {
             return;

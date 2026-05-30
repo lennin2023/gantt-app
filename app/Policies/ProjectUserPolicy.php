@@ -6,7 +6,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Policies\Traits\HasProjectPermissions;
 
-class ProjectPolicy
+class ProjectUserPolicy
 {
     use HasProjectPermissions;
 
@@ -19,33 +19,18 @@ class ProjectPolicy
         return null;
     }
 
-    public function viewAny(User $user): bool
-    {
-        return true;
-    }
-
-    public function view(User $user, Project $project): bool
+    public function viewAny(User $user, Project $project): bool
     {
         return $this->isProjectMember($user, $project);
     }
 
-    public function create(User $user): bool
-    {
-        return $user->isAdmin();
-    }
-
-    public function update(User $user, Project $project): bool
+    public function create(User $user, Project $project): bool
     {
         return $user->isAdmin() || $this->isProjectManager($user, $project);
     }
 
     public function delete(User $user, Project $project): bool
     {
-        return $user->id === $project->created_by;
-    }
-
-    public function restore(User $user, Project $project): bool
-    {
-        return $user->id === $project->created_by;
+        return $user->isAdmin() || $this->isProjectManager($user, $project);
     }
 }

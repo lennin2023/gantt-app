@@ -1,6 +1,8 @@
 <?php
 
 use App\Exceptions\ProjectAlreadyInStatusException;
+use App\Exceptions\ProjectUserAlreadyAssignedException;
+use App\Exceptions\ProjectUserNotFoundException;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
@@ -49,5 +51,15 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json([
                 'message' => $e->getMessage(),
             ], 422);
+        });
+        $exceptions->render(function (ProjectUserAlreadyAssignedException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
+        });
+        $exceptions->render(function (ProjectUserNotFoundException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 404);
         });
     })->create();

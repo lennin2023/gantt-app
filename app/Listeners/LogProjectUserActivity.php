@@ -21,9 +21,8 @@ class LogProjectUserActivity implements ShouldQueue
 
         if ($event instanceof ProjectUserRemoved) {
             Log::info('Project user removed', [
-                'project_id' => $event->projectId,
-                'user_id' => $event->userId,
-                'removed_by' => $event->removedBy,
+                'project_id' => $event->projectUser->project_id,
+                'user_id' => $event->projectUser->user_id,
             ]);
         }
     }

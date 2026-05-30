@@ -31,21 +31,21 @@ class MilestonePolicy
 
     public function create(User $user, Project $project): bool
     {
-        return $this->canManageProjectResources($user, $project);
+        return $this->isProjectManager($user, $project);
     }
 
     public function update(User $user, Project $project): bool
     {
-        return $this->canManageProjectResources($user, $project);
+        return $this->isProjectManager($user, $project);
     }
 
     public function delete(User $user, Project $project): bool
     {
-        return $this->canManageProjectResources($user, $project);
+        return $this->isProjectManager($user, $project);
     }
 
     public function restore(User $user, Project $project): bool
     {
-        return $this->canManageProjectResources($user, $project);
+        return $this->isProjectManager($user, $project);
     }
 }
