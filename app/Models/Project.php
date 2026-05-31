@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProjectStatusEnum;
 use App\Enums\TaskStatusEnum;
+use App\Observers\ProjectObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,11 @@ class Project extends Model
             'start_date' => 'date',
             'end_date' => 'date',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::observe(ProjectObserver::class);
     }
 
     public function creator(): BelongsTo
@@ -87,7 +93,7 @@ class Project extends Model
     public function getStats(): array
     {
         $stats = Task::where('project_id', $this->id)
-            ->whereDoesntHave('children') // solo tareas hoja
+            ->whereDoesntHave('children')
             ->selectRaw('
                 COUNT(*) as total,
                 SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed,
@@ -117,7 +123,7 @@ class Project extends Model
         return $stats['total_tasks'] === $stats['completed_tasks'];
     }
 
-    public function refreshStatus(): void
+    public function refreshStatus(int $updatedBy): void
     {
         $protectedStatuses = [
             ProjectStatusEnum::ON_HOLD->value,
@@ -133,6 +139,7 @@ class Project extends Model
             ? ProjectStatusEnum::COMPLETED->value
             : ProjectStatusEnum::ACTIVE->value;
 
+        $this->updated_by = $updatedBy;
         $this->save();
     }
 }

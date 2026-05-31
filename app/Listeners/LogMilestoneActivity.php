@@ -6,18 +6,18 @@ use App\Events\MilestoneCreated;
 use App\Events\MilestoneDeleted;
 use App\Events\MilestoneRestored;
 use App\Events\MilestoneUpdated;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class LogMilestoneActivity implements ShouldQueue
+class LogMilestoneActivity
 {
-    public function handle(MilestoneCreated|MilestoneDeleted|MilestoneRestored|MilestoneUpdated $event): void
+    public function handle(object $event): void
     {
         $action = match (true) {
             $event instanceof MilestoneCreated => 'created',
             $event instanceof MilestoneUpdated => 'updated',
             $event instanceof MilestoneDeleted => 'deleted',
             $event instanceof MilestoneRestored => 'restored',
+            default => 'unknown',
         };
 
         Log::info("Milestone {$action}", [

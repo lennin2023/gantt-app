@@ -25,6 +25,13 @@ class ProjectHistory extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            $model->created_at ??= now();
+        });
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);

@@ -7,7 +7,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface MilestoneRepositoryInterface
 {
-    public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator;
+    public function getAllByProject(int $projectId, int $perPage = 10, array $filters = []): LengthAwarePaginator;
 
     public function findById(int $id): ?Milestone;
 

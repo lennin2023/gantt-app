@@ -8,11 +8,14 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class MilestoneRepository implements MilestoneRepositoryInterface
 {
-    public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
+    public function getAllByProject(int $projectId, int $perPage = 10, array $filters = []): LengthAwarePaginator
     {
         return Milestone::with(['creator', 'updater'])
             ->where('project_id', $projectId)
-            ->where('is_active', true)
+            ->when(
+                array_key_exists('is_active', $filters),
+                fn ($q) => $q->where('is_active', $filters['is_active'])
+            )
             ->orderBy('date')
             ->paginate($perPage);
     }

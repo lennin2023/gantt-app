@@ -29,7 +29,13 @@ class MilestoneController extends Controller
 
         $perPage = min((int) $request->query('per_page', 10), 100);
 
-        $milestones = $this->milestoneService->getProjectMilestones($project->id, $perPage);
+        $filters = [];
+
+        if ($request->has('is_active')) {
+            $filters['is_active'] = $request->boolean('is_active');
+        }
+
+        $milestones = $this->milestoneService->getProjectMilestones($project->id, $perPage, $filters);
 
         return MilestoneResource::collection($milestones);
     }

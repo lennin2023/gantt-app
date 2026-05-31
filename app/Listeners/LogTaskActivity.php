@@ -5,17 +5,17 @@ namespace App\Listeners;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class LogTaskActivity implements ShouldQueue
+class LogTaskActivity
 {
-    public function handle(TaskCompleted|TaskCreated|TaskUpdated $event): void
+    public function handle(object $event): void
     {
         $action = match (true) {
             $event instanceof TaskCreated => 'created',
             $event instanceof TaskUpdated => 'updated',
             $event instanceof TaskCompleted => 'completed',
+            default => 'unknown',
         };
 
         Log::info("Task {$action}", [

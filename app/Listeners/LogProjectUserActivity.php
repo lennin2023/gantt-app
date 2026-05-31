@@ -4,12 +4,11 @@ namespace App\Listeners;
 
 use App\Events\ProjectUserAssigned;
 use App\Events\ProjectUserRemoved;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class LogProjectUserActivity implements ShouldQueue
+class LogProjectUserActivity
 {
-    public function handle(ProjectUserAssigned|ProjectUserRemoved $event): void
+    public function handle(object $event): void
     {
         if ($event instanceof ProjectUserAssigned) {
             Log::info('Project user assigned', [

@@ -11,7 +11,6 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
-use App\Providers\EventServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -30,9 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/api.php'));
         },
     )
-    ->withProviders([
-        EventServiceProvider::class,
-    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => CheckRole::class,
@@ -52,38 +48,24 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (ProjectAlreadyInStatusException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (ProjectUserAlreadyAssignedException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (ProjectUserNotFoundException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 404);
+            return response()->json(['message' => $e->getMessage()], 404);
         });
         $exceptions->render(function (CycleDetectionException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (BulkOperationException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (TaskAlreadyInStatusException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (TaskNotCancelledException $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-            ], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         });
     })->create();

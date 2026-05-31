@@ -4,16 +4,16 @@ namespace App\Listeners;
 
 use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class LogProjectActivity implements ShouldQueue
+class LogProjectActivity
 {
-    public function handle(ProjectCreated|ProjectUpdated $event): void
+    public function handle(object $event): void
     {
         $action = match (true) {
             $event instanceof ProjectCreated => 'created',
             $event instanceof ProjectUpdated => 'updated',
+            default => 'unknown',
         };
 
         Log::info("Project {$action}", [

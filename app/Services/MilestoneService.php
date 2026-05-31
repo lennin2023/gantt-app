@@ -18,9 +18,9 @@ class MilestoneService
         private readonly MilestoneRepositoryInterface $milestoneRepository,
     ) {}
 
-    public function getProjectMilestones(int $projectId, int $perPage = 10): LengthAwarePaginator
+    public function getProjectMilestones(int $projectId, int $perPage = 10, array $filters = []): LengthAwarePaginator
     {
-        return $this->milestoneRepository->getAllByProject($projectId, $perPage);
+        return $this->milestoneRepository->getAllByProject($projectId, $perPage, $filters);
     }
 
     public function findById(int $id): ?Milestone

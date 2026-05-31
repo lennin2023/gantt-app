@@ -15,7 +15,6 @@ return new class extends Migration
             $table->foreignId('project_role_id')->constrained('project_roles')->restrictOnDelete();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->timestamp('created_at');
-
             $table->unique(['project_id', 'user_id']);
         });
     }

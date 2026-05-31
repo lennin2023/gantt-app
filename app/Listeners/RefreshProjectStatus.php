@@ -3,13 +3,16 @@
 namespace App\Listeners;
 
 use App\Events\TaskCompleted;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
-class RefreshProjectStatus implements ShouldQueue
+class RefreshProjectStatus
 {
-    public function handle(TaskCompleted $event): void
+    public function handle(object $event): void
     {
+        if (! $event instanceof TaskCompleted) {
+            return;
+        }
+
         $task = $event->task;
         $project = $task->project;
 
@@ -18,7 +21,9 @@ class RefreshProjectStatus implements ShouldQueue
         }
 
         $previousStatusId = $project->project_status_id;
-        $project->refreshStatus();
+        $updatedBy = $task->updated_by ?? $task->created_by;
+
+        $project->refreshStatus($updatedBy);
 
         Log::info('Project status refreshed from TaskCompleted', [
             'project_id' => $project->id,

@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Enums\ProjectStatusEnum;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -11,26 +12,24 @@ class DashboardRepository implements DashboardRepositoryInterface
 {
     public function getMetrics(int $userId): array
     {
-        $result = Project::whereHas('projectUsers', fn ($q) => $q->where('user_id', $userId))
+        $result = Project::leftJoin('tasks', 'projects.id', '=', 'tasks.project_id')
+            ->where($this->userProjectScope($userId))
             ->selectRaw('
-                COUNT(*) as total_projects,
-                SUM(CASE WHEN project_status_id = ? THEN 1 ELSE 0 END) as active_projects,
-                SUM(CASE WHEN project_status_id = ? THEN 1 ELSE 0 END) as completed_projects
+                COUNT(DISTINCT projects.id) AS total_projects,
+                COUNT(DISTINCT CASE WHEN projects.project_status_id = ? THEN projects.id END) AS active_projects,
+                COUNT(DISTINCT CASE WHEN projects.project_status_id = ? THEN projects.id END) AS completed_projects,
+                COALESCE(ROUND(AVG(tasks.progress)), 0) AS overall_progress
             ', [
                 ProjectStatusEnum::ACTIVE->value,
                 ProjectStatusEnum::COMPLETED->value,
             ])
             ->first();
 
-        $overallProgress = Project::whereHas('projectUsers', fn ($q) => $q->where('user_id', $userId))
-            ->join('tasks', 'projects.id', '=', 'tasks.project_id')
-            ->avg('tasks.progress');
-
         return [
             'total_projects' => (int) $result->total_projects,
             'active_projects' => (int) $result->active_projects,
             'completed_projects' => (int) $result->completed_projects,
-            'overall_progress' => (int) round($overallProgress ?? 0),
+            'overall_progress' => (int) $result->overall_progress,
         ];
     }
 
@@ -47,7 +46,7 @@ class DashboardRepository implements DashboardRepositoryInterface
         ])
             ->join('project_statuses', 'projects.project_status_id', '=', 'project_statuses.id')
             ->leftJoin('tasks', 'projects.id', '=', 'tasks.project_id')
-            ->whereHas('projectUsers', fn ($q) => $q->where('user_id', $userId))
+            ->where($this->userProjectScope($userId))
             ->groupBy(
                 'projects.id',
                 'projects.name',
@@ -68,5 +67,14 @@ class DashboardRepository implements DashboardRepositoryInterface
                 'total_tasks' => (int) $project->total_tasks,
             ])
             ->toArray();
+    }
+
+    private function userProjectScope(int $userId): \Closure
+    {
+        $memberOfIds = ProjectUser::where('user_id', $userId)->select('project_id');
+
+        return fn ($query) => $query
+            ->where('projects.created_by', $userId)
+            ->orWhereIn('projects.id', $memberOfIds);
     }
 }

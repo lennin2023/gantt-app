@@ -2,6 +2,22 @@
 
 namespace App\Providers;
 
+use App\Events\MilestoneCreated;
+use App\Events\MilestoneDeleted;
+use App\Events\MilestoneRestored;
+use App\Events\MilestoneUpdated;
+use App\Events\ProjectCreated;
+use App\Events\ProjectUpdated;
+use App\Events\ProjectUserAssigned;
+use App\Events\ProjectUserRemoved;
+use App\Events\TaskCompleted;
+use App\Events\TaskCreated;
+use App\Events\TaskUpdated;
+use App\Listeners\LogMilestoneActivity;
+use App\Listeners\LogProjectActivity;
+use App\Listeners\LogProjectUserActivity;
+use App\Listeners\LogTaskActivity;
+use App\Listeners\RefreshProjectStatus;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Task;
@@ -23,6 +39,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -41,20 +58,41 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->configurePolicies();
+        $this->configureEvents();
         $this->configureRateLimiting();
+        $this->configureDefaults();
+    }
 
+    private function configurePolicies(): void
+    {
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(Milestone::class, MilestonePolicy::class);
 
-        Gate::define('viewDashboard', function (User $user) {
-            return true;
-        });
-
-        $this->configureDefaults();
+        Gate::define('viewDashboard', fn (User $user) => true);
     }
 
-    protected function configureRateLimiting(): void
+    private function configureEvents(): void
+    {
+        Event::listen(TaskCreated::class, LogTaskActivity::class);
+        Event::listen(TaskUpdated::class, LogTaskActivity::class);
+        Event::listen(TaskCompleted::class, LogTaskActivity::class);
+        Event::listen(TaskCompleted::class, RefreshProjectStatus::class);
+
+        Event::listen(ProjectCreated::class, LogProjectActivity::class);
+        Event::listen(ProjectUpdated::class, LogProjectActivity::class);
+
+        Event::listen(MilestoneCreated::class, LogMilestoneActivity::class);
+        Event::listen(MilestoneUpdated::class, LogMilestoneActivity::class);
+        Event::listen(MilestoneDeleted::class, LogMilestoneActivity::class);
+        Event::listen(MilestoneRestored::class, LogMilestoneActivity::class);
+
+        Event::listen(ProjectUserAssigned::class, LogProjectUserActivity::class);
+        Event::listen(ProjectUserRemoved::class, LogProjectUserActivity::class);
+    }
+
+    private function configureRateLimiting(): void
     {
         RateLimiter::for('api', function ($request) {
             $user = $request->user();
@@ -63,7 +101,7 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
-    protected function configureDefaults(): void
+    private function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
 

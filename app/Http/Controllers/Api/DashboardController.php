@@ -22,6 +22,6 @@ class DashboardController extends Controller
 
         $stats = $this->dashboardService->getStats(Auth::id());
 
-        return $this->success($stats);
+        return $this->success($stats->toArray());
     }
 }

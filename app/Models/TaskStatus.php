@@ -25,6 +25,13 @@ class TaskStatus extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            $model->created_at ??= now();
+        });
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

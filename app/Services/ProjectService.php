@@ -8,7 +8,6 @@ use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
 use App\Exceptions\ProjectAlreadyInStatusException;
 use App\Models\Project;
-use App\Models\ProjectHistory;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -34,8 +33,6 @@ class ProjectService
         return DB::transaction(function () use ($dto) {
             $project = $this->projectRepository->create($dto->toArray());
 
-            $this->logStatusChange($project, $project->project_status_id, $project->created_by);
-
             ProjectCreated::dispatch($project);
 
             return $project;
@@ -46,10 +43,6 @@ class ProjectService
     {
         return DB::transaction(function () use ($project, $dto) {
             $project = $this->projectRepository->update($project, $dto->toArray());
-
-            if ($project->wasChanged('project_status_id')) {
-                $this->logStatusChange($project, $project->project_status_id, $dto->updatedBy);
-            }
 
             ProjectUpdated::dispatch($project);
 
@@ -67,8 +60,6 @@ class ProjectService
             $project->project_status_id = $status->value;
             $project->updated_by = $userId;
             $project->save();
-
-            $this->logStatusChange($project, $project->project_status_id, $userId);
 
             ProjectUpdated::dispatch($project);
         });
@@ -88,15 +79,5 @@ class ProjectService
     public function getProjectStats(Project $project): array
     {
         return $project->getStats();
-    }
-
-    private function logStatusChange(Project $project, int $statusId, ?int $userId): void
-    {
-        ProjectHistory::create([
-            'project_id' => $project->id,
-            'project_status_id' => $statusId,
-            'created_by' => $userId,
-            'created_at' => now(),
-        ]);
     }
 }
