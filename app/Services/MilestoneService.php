@@ -48,24 +48,24 @@ class MilestoneService
         });
     }
 
-    public function deactivate(Milestone $milestone): void
+    public function deactivate(Milestone $milestone, int $userId): void
     {
-        DB::transaction(function () use ($milestone) {
-            $this->milestoneRepository->deactivate($milestone);
+        DB::transaction(function () use ($milestone, $userId) {
+            $this->milestoneRepository->deactivate($milestone, $userId);
             MilestoneDeleted::dispatch($milestone);
         });
     }
 
-    public function activate(Milestone $milestone): void
+    public function activate(Milestone $milestone, int $userId): void
     {
-        DB::transaction(function () use ($milestone) {
-            $this->milestoneRepository->activate($milestone);
+        DB::transaction(function () use ($milestone, $userId) {
+            $this->milestoneRepository->activate($milestone, $userId);
             MilestoneRestored::dispatch($milestone);
         });
     }
 
-    public function toggleActive(Milestone $milestone): Milestone
+    public function toggleActive(Milestone $milestone, int $userId): Milestone
     {
-        return $this->milestoneRepository->toggleActive($milestone);
+        return $this->milestoneRepository->toggleActive($milestone, $userId);
     }
 }

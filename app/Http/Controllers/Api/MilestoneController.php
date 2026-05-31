@@ -76,7 +76,7 @@ class MilestoneController extends Controller
         $this->authorize('delete', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $this->milestoneService->deactivate($milestone);
+        $this->milestoneService->deactivate($milestone, Auth::id());
 
         return $this->deleted('Milestone deactivated successfully');
     }
@@ -86,7 +86,7 @@ class MilestoneController extends Controller
         $this->authorize('restore', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $this->milestoneService->activate($milestone);
+        $this->milestoneService->activate($milestone, Auth::id());
 
         return $this->success(null, 'Milestone activated successfully');
     }
