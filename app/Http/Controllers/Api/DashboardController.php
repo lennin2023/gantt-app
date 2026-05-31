@@ -7,7 +7,6 @@ use App\Http\Resources\ApiResponse;
 use App\Services\DashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
@@ -19,7 +18,7 @@ class DashboardController extends Controller
 
     public function stats(): JsonResponse
     {
-        abort_unless(Gate::allows('viewDashboard'), 403);
+        $this->authorize('viewDashboard');
 
         $stats = $this->dashboardService->getStats(Auth::id());
 

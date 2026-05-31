@@ -32,13 +32,13 @@ class MilestoneRepository implements MilestoneRepositoryInterface
         return $milestone->fresh();
     }
 
-    public function delete(Milestone $milestone): bool
+    public function delete(Milestone $milestone): void
     {
-        return $milestone->delete();
+        $milestone->delete();
     }
 
-    public function restore(Milestone $milestone): bool
+    public function restore(Milestone $milestone): void
     {
-        return $milestone->restore();
+        $milestone->restore();
     }
 }

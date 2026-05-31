@@ -15,7 +15,16 @@ class MilestoneResource extends JsonResource
             'name' => $this->name,
             'date' => $this->date?->toDateString(),
             'reached' => $this->reached,
+            'creator' => $this->whenLoaded('creator', fn () => [
+                'id' => $this->creator->id,
+                'name' => $this->creator->name,
+            ]),
+            'updater' => $this->whenLoaded('updater', fn () => [
+                'id' => $this->updater->id,
+                'name' => $this->updater->name,
+            ]),
             'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }
 }

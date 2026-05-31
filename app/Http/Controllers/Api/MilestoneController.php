@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class MilestoneController extends Controller
 {
@@ -26,7 +25,7 @@ class MilestoneController extends Controller
 
     public function index(Request $request, Project $project): AnonymousResourceCollection
     {
-        abort_unless(Gate::allows('view', $project), 403);
+        $this->authorize('viewAny', [Milestone::class, $project]);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
 
@@ -37,7 +36,7 @@ class MilestoneController extends Controller
 
     public function store(MilestoneRequest $request, Project $project): JsonResponse
     {
-        abort_unless(Gate::allows('create', $project), 403);
+        $this->authorize('create', [Milestone::class, $project]);
 
         $dto = MilestoneDTO::fromArray(
             array_merge($request->validated(), ['created_by' => Auth::id()]),
@@ -51,16 +50,16 @@ class MilestoneController extends Controller
 
     public function show(Project $project, Milestone $milestone): JsonResponse
     {
-        abort_unless(Gate::allows('view', $project), 403);
-        abort_if($milestone->project_id !== $project->id, 403);
+        $this->authorize('view', [Milestone::class, $project]);
+        abort_if($milestone->project_id !== $project->id, 404);
 
         return $this->success(new MilestoneResource($milestone));
     }
 
     public function update(MilestoneRequest $request, Project $project, Milestone $milestone): JsonResponse
     {
-        abort_unless(Gate::allows('update', $project), 403);
-        abort_if($milestone->project_id !== $project->id, 403);
+        $this->authorize('update', [Milestone::class, $project]);
+        abort_if($milestone->project_id !== $project->id, 404);
 
         $dto = MilestoneDTO::fromArray(
             array_merge($request->validated(), ['updated_by' => Auth::id()]),
@@ -74,8 +73,8 @@ class MilestoneController extends Controller
 
     public function destroy(Project $project, Milestone $milestone): JsonResponse
     {
-        abort_unless(Gate::allows('delete', $project), 403);
-        abort_if($milestone->project_id !== $project->id, 403);
+        $this->authorize('delete', [Milestone::class, $project]);
+        abort_if($milestone->project_id !== $project->id, 404);
 
         $this->milestoneService->deleteMilestone($milestone);
 
@@ -84,8 +83,8 @@ class MilestoneController extends Controller
 
     public function restore(Project $project, Milestone $milestone): JsonResponse
     {
-        abort_unless(Gate::allows('restore', $project), 403);
-        abort_if($milestone->project_id !== $project->id, 403);
+        $this->authorize('restore', [Milestone::class, $project]);
+        abort_if($milestone->project_id !== $project->id, 404);
 
         $this->milestoneService->restoreMilestone($milestone);
 

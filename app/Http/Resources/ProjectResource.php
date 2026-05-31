@@ -26,7 +26,6 @@ class ProjectResource extends JsonResource
             'created_by' => $this->created_by,
             'created_at' => $this->created_at?->toIso8601String(),
             'project_users' => ProjectUserResource::collection($this->whenLoaded('projectUsers')),
-
             'milestones' => MilestoneResource::collection($this->whenLoaded('milestones')),
         ];
     }

@@ -77,8 +77,6 @@ class ProjectService
     public function getProjectDetail(Project $project): Project
     {
         $project->load([
-            'projectUsers.tasks.status',
-            'projectUsers.tasks.dependencies',
             'projectUsers.user',
             'projectUsers.projectRole',
             'milestones.creator',

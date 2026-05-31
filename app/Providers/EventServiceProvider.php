@@ -7,13 +7,11 @@ use App\Events\MilestoneDeleted;
 use App\Events\MilestoneRestored;
 use App\Events\MilestoneUpdated;
 use App\Events\ProjectCreated;
-use App\Events\ProjectDeleted;
 use App\Events\ProjectUpdated;
 use App\Events\ProjectUserAssigned;
 use App\Events\ProjectUserRemoved;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
-use App\Events\TaskDeleted;
 use App\Events\TaskUpdated;
 use App\Listeners\LogMilestoneActivity;
 use App\Listeners\LogProjectActivity;
@@ -31,9 +29,6 @@ class EventServiceProvider extends ServiceProvider
         TaskUpdated::class => [
             LogTaskActivity::class,
         ],
-        TaskDeleted::class => [
-            LogTaskActivity::class,
-        ],
         TaskCompleted::class => [
             LogTaskActivity::class,
             RefreshProjectStatus::class,
@@ -43,9 +38,6 @@ class EventServiceProvider extends ServiceProvider
             LogProjectActivity::class,
         ],
         ProjectUpdated::class => [
-            LogProjectActivity::class,
-        ],
-        ProjectDeleted::class => [
             LogProjectActivity::class,
         ],
 

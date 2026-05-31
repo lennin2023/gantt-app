@@ -4,18 +4,11 @@ namespace App\Http\Requests\Api;
 
 use App\Enums\TaskDependencyTypeEnum;
 use App\Enums\TaskStatusEnum;
-use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
 class TaskRequest extends FormRequest
 {
-    public function __construct(
-        private readonly TaskRepositoryInterface $taskRepo,
-    ) {
-        parent::__construct();
-    }
-
     public function authorize(): bool
     {
         return true;
