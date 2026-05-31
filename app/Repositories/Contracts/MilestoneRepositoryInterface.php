@@ -15,7 +15,9 @@ interface MilestoneRepositoryInterface
 
     public function update(Milestone $milestone, array $data): Milestone;
 
-    public function delete(Milestone $milestone): void;
+    public function toggleActive(Milestone $milestone): Milestone;
 
-    public function restore(Milestone $milestone): void;
+    public function deactivate(Milestone $milestone): void;
+
+    public function activate(Milestone $milestone): void;
 }

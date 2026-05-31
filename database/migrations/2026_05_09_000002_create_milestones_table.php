@@ -14,10 +14,10 @@ return new class extends Migration
             $table->string('name');
             $table->date('date')->index();
             $table->boolean('reached')->default(false);
+            $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

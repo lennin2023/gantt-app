@@ -76,9 +76,9 @@ class MilestoneController extends Controller
         $this->authorize('delete', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $this->milestoneService->deleteMilestone($milestone);
+        $this->milestoneService->deactivate($milestone);
 
-        return $this->deleted('Milestone deleted successfully');
+        return $this->deleted('Milestone deactivated successfully');
     }
 
     public function restore(Project $project, Milestone $milestone): JsonResponse
@@ -86,8 +86,8 @@ class MilestoneController extends Controller
         $this->authorize('restore', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $this->milestoneService->restoreMilestone($milestone);
+        $this->milestoneService->activate($milestone);
 
-        return $this->success(null, 'Milestone restored successfully');
+        return $this->success(null, 'Milestone activated successfully');
     }
 }

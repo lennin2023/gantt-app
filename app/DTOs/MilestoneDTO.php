@@ -16,6 +16,7 @@ class MilestoneDTO implements Arrayable
         public readonly ?int $createdBy = null,
         public readonly ?int $updatedBy = null,
         public readonly mixed $reached = self::UNDEFINED,
+        public readonly mixed $isActive = self::UNDEFINED,
     ) {}
 
     public static function fromArray(array $data, int $projectId): self
@@ -27,6 +28,7 @@ class MilestoneDTO implements Arrayable
             createdBy: $data['created_by'] ?? null,
             updatedBy: $data['updated_by'] ?? null,
             reached: array_key_exists('reached', $data) ? $data['reached'] : self::UNDEFINED,
+            isActive: array_key_exists('is_active', $data) ? $data['is_active'] : self::UNDEFINED,
         );
     }
 
@@ -50,6 +52,9 @@ class MilestoneDTO implements Arrayable
         }
         if ($this->reached !== self::UNDEFINED) {
             $data['reached'] = $this->reached;
+        }
+        if ($this->isActive !== self::UNDEFINED) {
+            $data['is_active'] = $this->isActive;
         }
 
         return $data;

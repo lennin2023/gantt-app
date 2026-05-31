@@ -20,6 +20,7 @@ class MilestoneRequest extends FormRequest
             'name' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'date' => $isUpdate ? 'sometimes|date' : 'required|date',
             'reached' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
         ];
     }
 

@@ -12,6 +12,7 @@ class MilestoneRepository implements MilestoneRepositoryInterface
     {
         return Milestone::with(['creator', 'updater'])
             ->where('project_id', $projectId)
+            ->where('is_active', true)
             ->orderBy('date')
             ->paginate($perPage);
     }
@@ -33,13 +34,23 @@ class MilestoneRepository implements MilestoneRepositoryInterface
         return $milestone->fresh();
     }
 
-    public function delete(Milestone $milestone): void
+    public function toggleActive(Milestone $milestone): Milestone
     {
-        $milestone->delete();
+        $milestone->is_active = ! $milestone->is_active;
+        $milestone->save();
+
+        return $milestone;
     }
 
-    public function restore(Milestone $milestone): void
+    public function deactivate(Milestone $milestone): void
     {
-        $milestone->restore();
+        $milestone->is_active = false;
+        $milestone->save();
+    }
+
+    public function activate(Milestone $milestone): void
+    {
+        $milestone->is_active = true;
+        $milestone->save();
     }
 }
