@@ -121,26 +121,15 @@ class TaskService
 
     public function validateAndGetTasksForBulkUpdate(array $taskIds): Collection
     {
-        if (empty($taskIds)) {
-            throw BulkOperationException::noTaskIdsProvided();
-        }
-
-        $tasks = Task::whereIn('id', $taskIds)->get();
-
-        if ($tasks->isEmpty()) {
-            throw BulkOperationException::tasksNotFound();
-        }
-
-        $projectIds = $tasks->pluck('project_id')->unique();
-
-        if ($projectIds->count() > 1) {
-            throw BulkOperationException::tasksMustBelongToSameProject();
-        }
-
-        return $tasks;
+        return $this->validateAndGetTasksForBulkOperation($taskIds);
     }
 
     public function validateAndGetTasksForBulkDelete(array $taskIds): Collection
+    {
+        return $this->validateAndGetTasksForBulkOperation($taskIds);
+    }
+
+    private function validateAndGetTasksForBulkOperation(array $taskIds): Collection
     {
         if (empty($taskIds)) {
             throw BulkOperationException::noTaskIdsProvided();
