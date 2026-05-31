@@ -10,7 +10,8 @@ class MilestoneRepository implements MilestoneRepositoryInterface
 {
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
-        return Milestone::where('project_id', $projectId)
+        return Milestone::with(['creator', 'updater'])
+            ->where('project_id', $projectId)
             ->orderBy('date')
             ->paginate($perPage);
     }
