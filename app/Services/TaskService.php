@@ -152,6 +152,12 @@ class TaskService
             throw BulkOperationException::tasksNotFound();
         }
 
+        $projectIds = $tasks->pluck('project_id')->unique();
+
+        if ($projectIds->count() > 1) {
+            throw BulkOperationException::tasksMustBelongToSameProject();
+        }
+
         return $tasks;
     }
 

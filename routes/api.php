@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 });
 
 Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
