@@ -39,7 +39,7 @@ class AuthService
 
         if (! $user) {
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales son incorrectas.'],
+                'email' => [__('auth.failed')],
             ]);
         }
 

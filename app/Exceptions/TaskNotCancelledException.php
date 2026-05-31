@@ -6,6 +6,6 @@ class TaskNotCancelledException extends \RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Solo se pueden restaurar tareas canceladas.');
+        parent::__construct(__('exceptions.task.not_cancelled'));
     }
 }

@@ -8,6 +8,6 @@ class ProjectAlreadyInStatusException extends \RuntimeException
 {
     public function __construct(ProjectStatusEnum $status)
     {
-        parent::__construct("El proyecto ya se encuentra en estado {$status->label()}.");
+        parent::__construct(__('exceptions.project.already_in_status', ['status' => $status->label()]));
     }
 }

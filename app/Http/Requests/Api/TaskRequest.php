@@ -50,7 +50,7 @@ class TaskRequest extends FormRequest
                 function ($attribute, $value, $fail) {
                     $task = $this->route('task');
                     if ($task && (int) $value === $task->id) {
-                        $fail('Una tarea no puede depender de sí misma.');
+                        $fail(__('validation.task.self_dependency'));
                     }
                 },
             ],

@@ -8,6 +8,6 @@ class TaskAlreadyInStatusException extends \RuntimeException
 {
     public function __construct(TaskStatusEnum $status)
     {
-        parent::__construct("La tarea ya se encuentra en estado {$status->label()}.");
+        parent::__construct(__('exceptions.task.already_in_status', ['status' => $status->label()]));
     }
 }
