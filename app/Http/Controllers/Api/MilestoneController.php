@@ -13,7 +13,6 @@ use App\Services\MilestoneService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Auth;
 
 class MilestoneController extends Controller
 {
@@ -28,7 +27,6 @@ class MilestoneController extends Controller
         $this->authorize('viewAny', [Milestone::class, $project]);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
-
         $filters = [];
 
         if ($request->has('is_active')) {
@@ -44,11 +42,7 @@ class MilestoneController extends Controller
     {
         $this->authorize('create', [Milestone::class, $project]);
 
-        $dto = MilestoneDTO::fromArray(
-            array_merge($request->validated(), ['created_by' => Auth::id()]),
-            $project->id
-        );
-
+        $dto = MilestoneDTO::fromArray($request->validated(), $project->id);
         $milestone = $this->milestoneService->createMilestone($dto);
 
         return $this->created(new MilestoneResource($milestone));
@@ -67,11 +61,7 @@ class MilestoneController extends Controller
         $this->authorize('update', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $dto = MilestoneDTO::fromArray(
-            array_merge($request->validated(), ['updated_by' => Auth::id()]),
-            $project->id
-        );
-
+        $dto = MilestoneDTO::fromArray($request->validated(), $project->id);
         $milestone = $this->milestoneService->updateMilestone($milestone, $dto);
 
         return $this->success(new MilestoneResource($milestone));
@@ -82,7 +72,7 @@ class MilestoneController extends Controller
         $this->authorize('delete', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $this->milestoneService->deactivate($milestone, Auth::id());
+        $this->milestoneService->deactivate($milestone);
 
         return $this->deleted('Milestone deactivated successfully');
     }
@@ -92,7 +82,7 @@ class MilestoneController extends Controller
         $this->authorize('restore', [Milestone::class, $project]);
         abort_if($milestone->project_id !== $project->id, 404);
 
-        $this->milestoneService->activate($milestone, Auth::id());
+        $this->milestoneService->activate($milestone);
 
         return $this->success(null, 'Milestone activated successfully');
     }

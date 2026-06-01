@@ -43,7 +43,7 @@ class ProjectController extends Controller
     {
         $this->authorize('create', Project::class);
 
-        $dto = ProjectDTO::fromArray($request->validated(), createdBy: Auth::id());
+        $dto = ProjectDTO::fromArray($request->validated());
         $project = $this->projectService->createProject($dto);
 
         return $this->created(new ProjectResource($project));
@@ -54,7 +54,6 @@ class ProjectController extends Controller
         $this->authorize('view', $project);
 
         $project = $this->projectService->getProjectDetail($project);
-
         $resource = new ProjectResource($project);
 
         if (request()->query('include_stats')) {
@@ -70,11 +69,7 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        $dto = ProjectDTO::fromArray(
-            array_merge($request->validated(), ['updated_by' => Auth::id()]),
-            createdBy: $project->created_by,
-        );
-
+        $dto = ProjectDTO::fromArray($request->validated());
         $project = $this->projectService->updateProject($project, $dto);
 
         return $this->success(new ProjectResource($project));
@@ -84,7 +79,7 @@ class ProjectController extends Controller
     {
         $this->authorize('delete', $project);
 
-        $this->projectService->changeStatus($project, ProjectStatusEnum::ARCHIVED, Auth::id());
+        $this->projectService->changeStatus($project, ProjectStatusEnum::ARCHIVED);
 
         return $this->deleted('Project archived successfully');
     }
@@ -93,7 +88,7 @@ class ProjectController extends Controller
     {
         $this->authorize('restore', $project);
 
-        $this->projectService->changeStatus($project, ProjectStatusEnum::ACTIVE, Auth::id());
+        $this->projectService->changeStatus($project, ProjectStatusEnum::ACTIVE);
 
         return $this->success(null, 'Project restored successfully');
     }

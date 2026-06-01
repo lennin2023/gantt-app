@@ -37,26 +37,23 @@ class MilestoneRepository implements MilestoneRepositoryInterface
         return $milestone->fresh();
     }
 
-    public function toggleActive(Milestone $milestone, int $userId): Milestone
+    public function toggleActive(Milestone $milestone): Milestone
     {
         $milestone->is_active = ! $milestone->is_active;
-        $milestone->updated_by = $userId;
         $milestone->save();
 
         return $milestone;
     }
 
-    public function deactivate(Milestone $milestone, int $userId): void
+    public function deactivate(Milestone $milestone): void
     {
         $milestone->is_active = false;
-        $milestone->updated_by = $userId;
         $milestone->save();
     }
 
-    public function activate(Milestone $milestone, int $userId): void
+    public function activate(Milestone $milestone): void
     {
         $milestone->is_active = true;
-        $milestone->updated_by = $userId;
         $milestone->save();
     }
 }

@@ -14,7 +14,6 @@ use App\Services\TaskService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
@@ -29,7 +28,6 @@ class TaskController extends Controller
         $this->authorize('viewAny', [Task::class, $project]);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
-
         $tasks = $this->taskService->getProjectTasks($project->id, $perPage);
 
         return TaskResource::collection($tasks);
@@ -39,14 +37,7 @@ class TaskController extends Controller
     {
         $this->authorize('create', [Task::class, $project]);
 
-        $dto = TaskDTO::fromArray(
-            array_merge($request->validated(), [
-                'project_id' => $project->id,
-                'created_by' => Auth::id(),
-            ]),
-            Auth::id(),
-        );
-
+        $dto = TaskDTO::fromArray(array_merge($request->validated(), ['project_id' => $project->id]));
         $task = $this->taskService->createTask($dto);
 
         return $this->created(new TaskResource($task));
@@ -65,14 +56,7 @@ class TaskController extends Controller
     {
         $this->authorize('update', [Task::class, $task->project]);
 
-        $dto = TaskDTO::fromArray(
-            array_merge($request->validated(), [
-                'project_id' => $task->project_id,
-                'updated_by' => Auth::id(),
-            ]),
-            $task->created_by,
-        );
-
+        $dto = TaskDTO::fromArray(array_merge($request->validated(), ['project_id' => $task->project_id]));
         $task = $this->taskService->updateTask($task, $dto);
 
         return $this->success(new TaskResource($task));
@@ -82,7 +66,7 @@ class TaskController extends Controller
     {
         $this->authorize('delete', [Task::class, $task->project]);
 
-        $this->taskService->cancelTask($task, Auth::id());
+        $this->taskService->cancelTask($task);
 
         return $this->deleted('Task cancelled successfully');
     }
@@ -91,7 +75,7 @@ class TaskController extends Controller
     {
         $this->authorize('restore', [Task::class, $task->project]);
 
-        $this->taskService->restoreTask($task, Auth::id());
+        $this->taskService->restoreTask($task);
 
         return $this->success(null, 'Task restored successfully');
     }
@@ -103,8 +87,8 @@ class TaskController extends Controller
         $data = $validated['data'] ?? [];
 
         $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($taskIds);
-
         $project = $tasks->first()->project;
+
         $this->authorize('update', [Task::class, $project]);
 
         $updated = $this->taskService->bulkUpdate($tasks, $data);
@@ -116,15 +100,13 @@ class TaskController extends Controller
 
     public function bulkDelete(BulkDeleteTaskRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-        $taskIds = $validated['task_ids'];
-
+        $taskIds = $request->validated()['task_ids'];
         $tasks = $this->taskService->validateAndGetTasksForBulkDelete($taskIds);
-
         $project = $tasks->first()->project;
+
         $this->authorize('delete', [Task::class, $project]);
 
-        $this->taskService->bulkCancel($tasks, Auth::id());
+        $this->taskService->bulkCancel($tasks);
 
         return $this->deleted(count($taskIds).' tasks cancelled successfully');
     }

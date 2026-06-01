@@ -50,15 +50,14 @@ class ProjectService
         });
     }
 
-    public function changeStatus(Project $project, ProjectStatusEnum $status, int $userId): void
+    public function changeStatus(Project $project, ProjectStatusEnum $status): void
     {
         if ($project->project_status_id === $status->value) {
             throw new ProjectAlreadyInStatusException($status);
         }
 
-        DB::transaction(function () use ($project, $status, $userId) {
+        DB::transaction(function () use ($project, $status) {
             $project->project_status_id = $status->value;
-            $project->updated_by = $userId;
             $project->save();
 
             ProjectUpdated::dispatch($project);

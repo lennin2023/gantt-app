@@ -13,7 +13,6 @@ use App\Models\User;
 use App\Services\ProjectUserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Auth;
 
 class ProjectUserController extends Controller
 {
@@ -46,12 +45,10 @@ class ProjectUserController extends Controller
         $this->authorize('create', [ProjectUser::class, $project]);
 
         $validated = $request->validated();
-
         $projectUser = $this->projectUserService->assignUser(
             projectId: $project->id,
             userId: $validated['user_id'],
             projectRoleId: $validated['project_role_id'],
-            createdBy: Auth::id(),
         );
 
         return $this->created(new ProjectUserResource($projectUser));

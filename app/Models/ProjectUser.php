@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCreatedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectUser extends Model
 {
+    use HasCreatedBy;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -22,13 +25,6 @@ class ProjectUser extends Model
         return [
             'created_at' => 'datetime',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (self $model) {
-            $model->created_at ??= now();
-        });
     }
 
     public function project(): BelongsTo

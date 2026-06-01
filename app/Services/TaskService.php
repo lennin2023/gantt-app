@@ -89,30 +89,28 @@ class TaskService
         });
     }
 
-    public function cancelTask(Task $task, int $userId): void
+    public function cancelTask(Task $task): void
     {
         if ($task->task_status_id === TaskStatusEnum::CANCELLED->value) {
             throw new TaskAlreadyInStatusException(TaskStatusEnum::CANCELLED);
         }
 
-        DB::transaction(function () use ($task, $userId) {
+        DB::transaction(function () use ($task) {
             $task->task_status_id = TaskStatusEnum::CANCELLED->value;
-            $task->updated_by = $userId;
             $task->save();
 
             TaskUpdated::dispatch($task);
         });
     }
 
-    public function restoreTask(Task $task, int $userId): void
+    public function restoreTask(Task $task): void
     {
         if ($task->task_status_id !== TaskStatusEnum::CANCELLED->value) {
             throw new TaskNotCancelledException;
         }
 
-        DB::transaction(function () use ($task, $userId) {
+        DB::transaction(function () use ($task) {
             $task->task_status_id = TaskStatusEnum::PENDING->value;
-            $task->updated_by = $userId;
             $task->save();
 
             TaskUpdated::dispatch($task);
@@ -181,13 +179,12 @@ class TaskService
         });
     }
 
-    public function bulkCancel(Collection $tasks, int $userId): void
+    public function bulkCancel(Collection $tasks): void
     {
-        DB::transaction(function () use ($tasks, $userId) {
+        DB::transaction(function () use ($tasks) {
             foreach ($tasks as $task) {
                 if ($task->task_status_id !== TaskStatusEnum::CANCELLED->value) {
                     $task->task_status_id = TaskStatusEnum::CANCELLED->value;
-                    $task->updated_by = $userId;
                     $task->save();
 
                     TaskUpdated::dispatch($task);

@@ -13,11 +13,9 @@ class TaskDTO implements Arrayable
 
     public function __construct(
         public readonly int $projectId,
-        public readonly int $createdBy,
         public readonly ?int $parentId = null,
         public readonly ?int $taskStatusId = null,
         public readonly ?string $title = null,
-        public readonly ?int $updatedBy = null,
         public readonly mixed $description = self::UNDEFINED,
         public readonly mixed $startDate = self::UNDEFINED,
         public readonly mixed $endDate = self::UNDEFINED,
@@ -27,15 +25,13 @@ class TaskDTO implements Arrayable
         public readonly ?string $dependencyType = null,
     ) {}
 
-    public static function fromArray(array $data, int $createdBy): self
+    public static function fromArray(array $data): self
     {
         return new self(
             projectId: $data['project_id'],
-            createdBy: $createdBy,
             parentId: $data['parent_id'] ?? null,
             taskStatusId: $data['task_status_id'] ?? null,
             title: $data['title'] ?? null,
-            updatedBy: $data['updated_by'] ?? null,
             description: array_key_exists('description', $data) ? $data['description'] : self::UNDEFINED,
             startDate: array_key_exists('start_date', $data) ? $data['start_date'] : self::UNDEFINED,
             endDate: array_key_exists('end_date', $data) ? $data['end_date'] : self::UNDEFINED,
@@ -50,7 +46,6 @@ class TaskDTO implements Arrayable
     {
         $data = [
             'project_id' => $this->projectId,
-            'created_by' => $this->createdBy,
         ];
 
         if ($this->parentId !== null) {
@@ -62,17 +57,12 @@ class TaskDTO implements Arrayable
         if ($this->title !== null) {
             $data['title'] = $this->title;
         }
-        if ($this->updatedBy !== null) {
-            $data['updated_by'] = $this->updatedBy;
-        }
         if ($this->progress !== null) {
             $data['progress'] = $this->progress;
         }
         if ($this->order !== null) {
             $data['order'] = $this->order;
         }
-
-        // Campos que sí pueden ser null explícitamente
         if ($this->description !== self::UNDEFINED) {
             $data['description'] = $this->description;
         }
@@ -90,11 +80,9 @@ class TaskDTO implements Arrayable
     {
         return new self(
             projectId: $task->project_id,
-            createdBy: $task->created_by,
             parentId: $task->parent_id,
             taskStatusId: $task->task_status_id,
             title: $task->title,
-            updatedBy: $task->updated_by,
             description: $task->description,
             startDate: $task->start_date?->format('Y-m-d'),
             endDate: $task->end_date?->format('Y-m-d'),

@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\ProjectRoleEnum;
+use App\Models\Concerns\HasCreatedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProjectRole extends Model
 {
+    use HasCreatedBy;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -23,13 +26,6 @@ class ProjectRole extends Model
         return [
             'created_at' => 'datetime',
         ];
-    }
-
-    protected static function booted(): void
-    {
-        static::creating(function (self $model) {
-            $model->created_at ??= now();
-        });
     }
 
     public function creator(): BelongsTo

@@ -10,26 +10,22 @@ class ProjectDTO implements Arrayable
     public const UNDEFINED = '__UNDEFINED__';
 
     public function __construct(
-        public readonly int $createdBy,
         public readonly ?int $companyId = null,
         public readonly ?int $projectStatusId = null,
         public readonly ?string $name = null,
         public readonly ?string $color = null,
-        public readonly ?int $updatedBy = null,
         public readonly mixed $description = self::UNDEFINED,
         public readonly mixed $startDate = self::UNDEFINED,
         public readonly mixed $endDate = self::UNDEFINED,
     ) {}
 
-    public static function fromArray(array $data, int $createdBy): self
+    public static function fromArray(array $data): self
     {
         return new self(
-            createdBy: $createdBy,
             companyId: $data['company_id'] ?? null,
             projectStatusId: isset($data['project_status_id']) ? (int) $data['project_status_id'] : null,
             name: $data['name'] ?? null,
             color: $data['color'] ?? null,
-            updatedBy: $data['updated_by'] ?? null,
             description: array_key_exists('description', $data) ? $data['description'] : self::UNDEFINED,
             startDate: array_key_exists('start_date', $data) ? $data['start_date'] : self::UNDEFINED,
             endDate: array_key_exists('end_date', $data) ? $data['end_date'] : self::UNDEFINED,
@@ -38,9 +34,7 @@ class ProjectDTO implements Arrayable
 
     public function toArray(): array
     {
-        $data = [
-            'created_by' => $this->createdBy,
-        ];
+        $data = [];
 
         if ($this->companyId !== null) {
             $data['company_id'] = $this->companyId;
@@ -54,11 +48,6 @@ class ProjectDTO implements Arrayable
         if ($this->color !== null) {
             $data['color'] = $this->color;
         }
-        if ($this->updatedBy !== null) {
-            $data['updated_by'] = $this->updatedBy;
-        }
-
-        // Solo se incluyen si fueron enviados explícitamente
         if ($this->description !== self::UNDEFINED) {
             $data['description'] = $this->description;
         }
@@ -75,12 +64,10 @@ class ProjectDTO implements Arrayable
     public static function fromEntity(Project $project): self
     {
         return new self(
-            createdBy: $project->created_by,
             companyId: $project->company_id,
             projectStatusId: $project->project_status_id,
             name: $project->name,
             color: $project->color,
-            updatedBy: $project->updated_by,
             description: $project->description,
             startDate: $project->start_date?->format('Y-m-d'),
             endDate: $project->end_date?->format('Y-m-d'),

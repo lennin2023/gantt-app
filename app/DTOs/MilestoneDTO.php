@@ -13,8 +13,6 @@ class MilestoneDTO implements Arrayable
         public readonly int $projectId,
         public readonly ?string $name = null,
         public readonly ?string $date = null,
-        public readonly ?int $createdBy = null,
-        public readonly ?int $updatedBy = null,
         public readonly mixed $reached = self::UNDEFINED,
         public readonly mixed $isActive = self::UNDEFINED,
     ) {}
@@ -25,8 +23,6 @@ class MilestoneDTO implements Arrayable
             projectId: $projectId,
             name: $data['name'] ?? null,
             date: $data['date'] ?? null,
-            createdBy: $data['created_by'] ?? null,
-            updatedBy: $data['updated_by'] ?? null,
             reached: array_key_exists('reached', $data) ? $data['reached'] : self::UNDEFINED,
             isActive: array_key_exists('is_active', $data) ? $data['is_active'] : self::UNDEFINED,
         );
@@ -44,12 +40,6 @@ class MilestoneDTO implements Arrayable
         if ($this->date !== null) {
             $data['date'] = $this->date;
         }
-        if ($this->createdBy !== null) {
-            $data['created_by'] = $this->createdBy;
-        }
-        if ($this->updatedBy !== null) {
-            $data['updated_by'] = $this->updatedBy;
-        }
         if ($this->reached !== self::UNDEFINED) {
             $data['reached'] = $this->reached;
         }
@@ -66,8 +56,6 @@ class MilestoneDTO implements Arrayable
             projectId: $milestone->project_id,
             name: $milestone->name,
             date: $milestone->date?->format('Y-m-d'),
-            createdBy: $milestone->created_by,
-            updatedBy: $milestone->updated_by,
             reached: $milestone->reached,
         );
     }

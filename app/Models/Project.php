@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProjectStatusEnum;
 use App\Enums\TaskStatusEnum;
+use App\Models\Concerns\HasAuditFields;
 use App\Observers\ProjectObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasAuditFields, HasFactory;
 
     protected $fillable = [
         'company_id',

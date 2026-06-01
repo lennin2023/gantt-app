@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditFields;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Milestone extends Model
 {
-    use HasFactory;
+    use HasAuditFields, HasFactory;
 
     protected $fillable = [
         'project_id',
