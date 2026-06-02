@@ -2,14 +2,20 @@
 
 namespace App\Models\Concerns;
 
-use App\Observers\CreatedByObserver;
+use Illuminate\Support\Facades\Auth;
 
 trait HasCreatedBy
 {
-    abstract public static function observe(mixed $classes): void;
-
     public static function bootHasCreatedBy(): void
     {
-        static::observe(CreatedByObserver::class);
+        $class = get_called_class();
+
+        $class::creating(function ($model) {
+            $model->created_by ??= Auth::id();
+
+            if (! $model->usesTimestamps()) {
+                $model->created_at ??= now();
+            }
+        });
     }
 }

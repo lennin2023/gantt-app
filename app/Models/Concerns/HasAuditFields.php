@@ -2,14 +2,21 @@
 
 namespace App\Models\Concerns;
 
-use App\Observers\AuditFieldsObserver;
+use Illuminate\Support\Facades\Auth;
 
 trait HasAuditFields
 {
-    abstract public static function observe(mixed $classes): void;
-
     public static function bootHasAuditFields(): void
     {
-        static::observe(AuditFieldsObserver::class);
+        $class = get_called_class();
+
+        $class::creating(function ($model) {
+            $model->created_by ??= Auth::id();
+            $model->updated_by ??= Auth::id();
+        });
+
+        $class::updating(function ($model) {
+            $model->updated_by ??= Auth::id();
+        });
     }
 }
