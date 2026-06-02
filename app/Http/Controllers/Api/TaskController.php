@@ -45,15 +45,15 @@ class TaskController extends Controller
 
     public function show(Task $task): JsonResponse
     {
-        $this->authorize('view', [Task::class, $task->project]);
-
         $task = $this->taskService->findById($task->id);
+        $this->authorize('view', [Task::class, $task->project]);
 
         return $this->success(new TaskResource($task));
     }
 
     public function update(TaskRequest $request, Task $task): JsonResponse
     {
+        $task->loadMissing('project');
         $this->authorize('update', [Task::class, $task->project]);
 
         $dto = TaskDTO::fromArray(array_merge($request->validated(), ['project_id' => $task->project_id]));
@@ -64,6 +64,7 @@ class TaskController extends Controller
 
     public function destroy(Task $task): JsonResponse
     {
+        $task->loadMissing('project');
         $this->authorize('delete', [Task::class, $task->project]);
 
         $this->taskService->cancelTask($task);
@@ -73,6 +74,7 @@ class TaskController extends Controller
 
     public function restore(Task $task): JsonResponse
     {
+        $task->loadMissing('project');
         $this->authorize('restore', [Task::class, $task->project]);
 
         $this->taskService->restoreTask($task);
@@ -87,7 +89,7 @@ class TaskController extends Controller
         $data = $validated['data'] ?? [];
 
         $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($taskIds);
-        $project = $tasks->first()->project;
+        $project = $tasks->first()->project()->firstOrFail();
 
         $this->authorize('update', [Task::class, $project]);
 
@@ -102,7 +104,7 @@ class TaskController extends Controller
     {
         $taskIds = $request->validated()['task_ids'];
         $tasks = $this->taskService->validateAndGetTasksForBulkDelete($taskIds);
-        $project = $tasks->first()->project;
+        $project = $tasks->first()->project()->firstOrFail();
 
         $this->authorize('delete', [Task::class, $project]);
 

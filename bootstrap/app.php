@@ -11,12 +11,15 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -47,6 +50,21 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (NotFoundHttpException $_e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => __('exceptions.not_found'),
+                ], 404);
+            }
+        });
+
+        $exceptions->render(function (ModelNotFoundException $_e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => __('exceptions.not_found'),
+                ], 404);
+            }
+        });
         $exceptions->render(function (ProjectAlreadyInStatusException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         });

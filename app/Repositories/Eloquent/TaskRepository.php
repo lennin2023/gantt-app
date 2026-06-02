@@ -17,6 +17,7 @@ class TaskRepository implements TaskRepositoryInterface
             'assignments.taskRole',
             'dependencies',
             'creator',
+            'project',
         ])
             ->where('project_id', $projectId)
             ->orderBy('parent_id')
@@ -34,6 +35,7 @@ class TaskRepository implements TaskRepositoryInterface
             'assignments.taskRole',
             'parent',
             'children.status',
+            'project',
         ])->find($id);
     }
 

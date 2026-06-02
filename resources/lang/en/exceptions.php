@@ -12,4 +12,5 @@ return [
         'not_found' => 'The user is not assigned to this project.',
         'already_assigned' => 'The user is already assigned to this project.',
     ],
+    'not_found' => 'Resource not found.',
 ];
