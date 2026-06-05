@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\BulkTaskDTO;
 use App\DTOs\TaskDTO;
 use App\Enums\TaskDependencyTypeEnum;
 use App\Enums\TaskStatusEnum;
@@ -148,21 +149,14 @@ class TaskService
         return $tasks;
     }
 
-    public function bulkUpdate(Collection $tasks, array $data): Collection
+    public function bulkUpdate(Collection $tasks, BulkTaskDTO $dto): Collection
     {
-        $allowedFields = [
-            'task_status_id', 'title', 'description',
-            'start_date', 'end_date', 'progress', 'order',
-        ];
-
-        $filteredData = array_intersect_key($data, array_flip($allowedFields));
-
-        return DB::transaction(function () use ($tasks, $filteredData) {
+        return DB::transaction(function () use ($tasks, $dto) {
             $result = collect();
 
             foreach ($tasks as $task) {
                 $previousStatus = $task->task_status_id;
-                $updatedTask = $this->taskRepository->update($task, $filteredData);
+                $updatedTask = $this->taskRepository->update($task, $dto->toArray());
                 $updatedTask->load(['status', 'assignments.projectUser.user', 'assignments.taskRole']);
 
                 $result->push($updatedTask);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\BulkTaskDTO;
 use App\DTOs\TaskDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\BulkDeleteTaskRequest;
@@ -84,16 +85,13 @@ class TaskController extends Controller
 
     public function bulkUpdate(TaskRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-        $taskIds = $validated['task_ids'] ?? [];
-        $data = $validated['data'] ?? [];
-
-        $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($taskIds);
+        $dto = BulkTaskDTO::fromArray($request->validated());
+        $tasks = $this->taskService->validateAndGetTasksForBulkUpdate($dto->taskIds);
         $project = $tasks->first()->project()->firstOrFail();
 
         $this->authorize('update', [Task::class, $project]);
 
-        $updated = $this->taskService->bulkUpdate($tasks, $data);
+        $updated = $this->taskService->bulkUpdate($tasks, $dto);
 
         return $this->success([
             'tasks' => TaskResource::collection($updated),
