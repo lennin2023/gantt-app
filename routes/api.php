@@ -39,16 +39,19 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::prefix('/{project}/milestones')->name('milestones.')->group(function () {
             Route::get('/', [MilestoneController::class, 'index'])->name('index');
             Route::post('/', [MilestoneController::class, 'store'])->name('store');
-            Route::get('/{milestone}', [MilestoneController::class, 'show'])->name('show');
-            Route::patch('/{milestone}', [MilestoneController::class, 'update'])->name('update');
-            Route::delete('/{milestone}', [MilestoneController::class, 'destroy'])->name('destroy');
-            Route::post('/{milestone}/restore', [MilestoneController::class, 'restore'])->name('restore');
         });
 
         Route::prefix('/{project}/tasks')->name('tasks.')->group(function () {
             Route::get('/', [TaskController::class, 'index'])->name('index');
             Route::post('/', [TaskController::class, 'store'])->name('store');
         });
+    });
+
+    Route::prefix('milestones')->name('milestones.')->group(function () {
+        Route::get('/{milestone}', [MilestoneController::class, 'show'])->name('show');
+        Route::patch('/{milestone}', [MilestoneController::class, 'update'])->name('update');
+        Route::delete('/{milestone}', [MilestoneController::class, 'destroy'])->name('destroy');
+        Route::post('/{milestone}/restore', [MilestoneController::class, 'restore'])->name('restore');
     });
 
     Route::prefix('tasks')->name('tasks.')->group(function () {

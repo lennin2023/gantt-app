@@ -48,39 +48,39 @@ class MilestoneController extends Controller
         return $this->created(new MilestoneResource($milestone));
     }
 
-    public function show(Project $project, Milestone $milestone): JsonResponse
+    public function show(Milestone $milestone): JsonResponse
     {
-        $this->authorize('view', [Milestone::class, $project]);
-        abort_if($milestone->project_id !== $project->id, 404);
+        $milestone->loadMissing('project');
+        $this->authorize('view', [Milestone::class, $milestone->project]);
 
         return $this->success(new MilestoneResource($milestone));
     }
 
-    public function update(MilestoneRequest $request, Project $project, Milestone $milestone): JsonResponse
+    public function update(MilestoneRequest $request, Milestone $milestone): JsonResponse
     {
-        $this->authorize('update', [Milestone::class, $project]);
-        abort_if($milestone->project_id !== $project->id, 404);
+        $milestone->loadMissing('project');
+        $this->authorize('update', [Milestone::class, $milestone->project]);
 
-        $dto = MilestoneDTO::fromArray($request->validated(), $project->id);
+        $dto = MilestoneDTO::fromArray($request->validated(), $milestone->project_id);
         $milestone = $this->milestoneService->updateMilestone($milestone, $dto);
 
         return $this->success(new MilestoneResource($milestone));
     }
 
-    public function destroy(Project $project, Milestone $milestone): JsonResponse
+    public function destroy(Milestone $milestone): JsonResponse
     {
-        $this->authorize('delete', [Milestone::class, $project]);
-        abort_if($milestone->project_id !== $project->id, 404);
+        $milestone->loadMissing('project');
+        $this->authorize('delete', [Milestone::class, $milestone->project]);
 
         $this->milestoneService->deactivate($milestone);
 
         return $this->deleted('Milestone deactivated successfully');
     }
 
-    public function restore(Project $project, Milestone $milestone): JsonResponse
+    public function restore(Milestone $milestone): JsonResponse
     {
-        $this->authorize('restore', [Milestone::class, $project]);
-        abort_if($milestone->project_id !== $project->id, 404);
+        $milestone->loadMissing('project');
+        $this->authorize('restore', [Milestone::class, $milestone->project]);
 
         $this->milestoneService->activate($milestone);
 
