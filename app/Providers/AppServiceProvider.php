@@ -39,6 +39,7 @@ use App\Repositories\Eloquent\ProjectRepository;
 use App\Repositories\Eloquent\ProjectUserRepository;
 use App\Repositories\Eloquent\TaskAssignmentRepository;
 use App\Repositories\Eloquent\TaskRepository;
+use App\Services\TaskProgressService;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Date;
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProjectUserRepositoryInterface::class, ProjectUserRepository::class);
         $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
         $this->app->bind(TaskAssignmentRepositoryInterface::class, TaskAssignmentRepository::class);
+        $this->app->singleton(TaskProgressService::class);
     }
 
     public function boot(): void

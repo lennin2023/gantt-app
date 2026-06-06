@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TaskStatusEnum;
 use App\Models\Concerns\HasAuditFields;
+use App\Observers\TaskObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +41,11 @@ class Task extends Model
             'end_date' => 'date',
             'progress' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::observe(TaskObserver::class);
     }
 
     public function project(): BelongsTo
