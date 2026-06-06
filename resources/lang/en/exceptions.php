@@ -14,7 +14,6 @@ return [
     ],
     'task_assignment' => [
         'already_exists' => 'The user is already assigned to this task.',
-        'not_found' => 'Assignment not found.',
     ],
     'not_found' => 'Resource not found.',
 ];
