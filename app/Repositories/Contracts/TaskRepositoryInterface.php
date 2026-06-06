@@ -18,4 +18,6 @@ interface TaskRepositoryInterface
     public function syncDependencies(Task $task, array $dependencyIds, string $type): void;
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool;
+
+    public function getLeafTasksAvgProgress(int $parentId): int;
 }

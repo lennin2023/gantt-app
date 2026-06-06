@@ -4,10 +4,15 @@ namespace App\Services;
 
 use App\Enums\TaskStatusEnum;
 use App\Models\Task;
+use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Support\Collection;
 
 class TaskProgressService
 {
+    public function __construct(
+        private readonly TaskRepositoryInterface $taskRepository,
+    ) {}
+
     public function recalculateAncestors(Task $task): void
     {
         $parent = Task::find($task->parent_id);
@@ -33,7 +38,7 @@ class TaskProgressService
             return false;
         }
 
-        $newProgress = $this->calculateProgress($parent);
+        $newProgress = $this->taskRepository->getLeafTasksAvgProgress($parent->id);
         $newStatus = $this->calculateStatus($children);
         $newStartDate = $this->calculateStartDate($children);
         $newEndDate = $this->calculateEndDate($children);
@@ -52,29 +57,6 @@ class TaskProgressService
         }
 
         return $changed;
-    }
-
-    private function calculateProgress(Task $parent): int
-    {
-        $result = Task::whereRaw('id IN (
-            WITH RECURSIVE leaves AS (
-                SELECT id, parent_id, task_status_id, progress
-                FROM tasks
-                WHERE parent_id = ?
-                UNION ALL
-                SELECT t.id, t.parent_id, t.task_status_id, t.progress
-                FROM tasks t
-                INNER JOIN leaves l ON t.parent_id = l.id
-            )
-            SELECT id FROM leaves
-            WHERE id NOT IN (
-                SELECT DISTINCT parent_id FROM tasks WHERE parent_id IS NOT NULL
-            )
-        )', [$parent->id])
-            ->where('task_status_id', '!=', TaskStatusEnum::CANCELLED->value)
-            ->avg('progress');
-
-        return (int) round($result ?? 0);
     }
 
     private function calculateStatus(Collection $children): int

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\TaskStatusEnum;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -81,5 +82,28 @@ class TaskRepository implements TaskRepositoryInterface
         ]);
 
         return ! empty($result);
+    }
+
+    public function getLeafTasksAvgProgress(int $parentId): int
+    {
+        $result = Task::whereRaw('id IN (
+            WITH RECURSIVE leaves AS (
+                SELECT id, parent_id, task_status_id, progress
+                FROM tasks
+                WHERE parent_id = ?
+                UNION ALL
+                SELECT t.id, t.parent_id, t.task_status_id, t.progress
+                FROM tasks t
+                INNER JOIN leaves l ON t.parent_id = l.id
+            )
+            SELECT id FROM leaves
+            WHERE id NOT IN (
+                SELECT DISTINCT parent_id FROM tasks WHERE parent_id IS NOT NULL
+            )
+        )', [$parentId])
+            ->where('task_status_id', '!=', TaskStatusEnum::CANCELLED->value)
+            ->avg('progress');
+
+        return (int) round($result ?? 0);
     }
 }
