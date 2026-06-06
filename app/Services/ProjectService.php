@@ -77,6 +77,24 @@ class ProjectService
 
     public function getProjectStats(Project $project): array
     {
-        return $project->getStats();
+        return $this->projectRepository->getStats($project->id);
+    }
+
+    public function refreshStatus(Project $project, int $updatedBy): void
+    {
+        if ($project->isProtectedStatus()) {
+            return;
+        }
+
+        $stats = $this->projectRepository->getStats($project->id);
+        $completed = $stats['total_tasks'] > 0
+            && $stats['total_tasks'] === $stats['completed_tasks'];
+
+        $project->project_status_id = $completed
+            ? ProjectStatusEnum::COMPLETED->value
+            : ProjectStatusEnum::ACTIVE->value;
+
+        $project->updated_by = $updatedBy;
+        $project->save();
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\ProjectStatusEnum;
-use App\Enums\TaskStatusEnum;
 use App\Models\Concerns\HasAuditFields;
 use App\Observers\ProjectObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -91,56 +90,12 @@ class Project extends Model
             ->orderBy('order');
     }
 
-    public function getStats(): array
+    public function isProtectedStatus(): bool
     {
-        $stats = Task::where('project_id', $this->id)
-            ->whereDoesntHave('children')
-            ->selectRaw('
-                COUNT(*) as total,
-                SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed,
-                AVG(progress) as avg_progress
-            ', [TaskStatusEnum::COMPLETED->value])
-            ->first();
-
-        $total = (int) $stats?->total;
-        $completed = (int) $stats?->completed;
-        $avgProgress = (int) $stats?->avg_progress;
-
-        return [
-            'total_tasks' => $total,
-            'completed_tasks' => $completed,
-            'overall_progress' => $total > 0 ? $avgProgress : 0,
-        ];
-    }
-
-    public function isAllTasksCompleted(): bool
-    {
-        $stats = $this->getStats();
-
-        if ($stats['total_tasks'] === 0) {
-            return false;
-        }
-
-        return $stats['total_tasks'] === $stats['completed_tasks'];
-    }
-
-    public function refreshStatus(int $updatedBy): void
-    {
-        $protectedStatuses = [
+        return in_array($this->project_status_id, [
             ProjectStatusEnum::ON_HOLD->value,
             ProjectStatusEnum::ARCHIVED->value,
             ProjectStatusEnum::CANCELLED->value,
-        ];
-
-        if (in_array($this->project_status_id, $protectedStatuses)) {
-            return;
-        }
-
-        $this->project_status_id = $this->isAllTasksCompleted()
-            ? ProjectStatusEnum::COMPLETED->value
-            : ProjectStatusEnum::ACTIVE->value;
-
-        $this->updated_by = $updatedBy;
-        $this->save();
+        ]);
     }
 }

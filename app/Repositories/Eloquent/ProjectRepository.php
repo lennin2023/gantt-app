@@ -2,8 +2,10 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\TaskStatusEnum;
 use App\Models\Project;
 use App\Models\ProjectUser;
+use App\Models\Task;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -36,5 +38,27 @@ class ProjectRepository implements ProjectRepositoryInterface
         $project->update($data);
 
         return $project->fresh();
+    }
+
+    public function getStats(int $projectId): array
+    {
+        $stats = Task::where('project_id', $projectId)
+            ->whereDoesntHave('children')
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN task_status_id = ? THEN 1 ELSE 0 END) as completed,
+                AVG(progress) as avg_progress
+            ', [TaskStatusEnum::COMPLETED->value])
+            ->first();
+
+        $total = (int) $stats?->total;
+        $completed = (int) $stats?->completed;
+        $avgProgress = (int) $stats?->avg_progress;
+
+        return [
+            'total_tasks' => $total,
+            'completed_tasks' => $completed,
+            'overall_progress' => $total > 0 ? $avgProgress : 0,
+        ];
     }
 }

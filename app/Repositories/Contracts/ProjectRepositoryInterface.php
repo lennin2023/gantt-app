@@ -14,4 +14,6 @@ interface ProjectRepositoryInterface
     public function create(array $data): Project;
 
     public function update(Project $project, array $data): Project;
+
+    public function getStats(int $projectId): array;
 }

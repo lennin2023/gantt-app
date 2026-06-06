@@ -3,10 +3,15 @@
 namespace App\Listeners;
 
 use App\Events\TaskCompleted;
+use App\Services\ProjectService;
 use Illuminate\Support\Facades\Log;
 
 class RefreshProjectStatus
 {
+    public function __construct(
+        private readonly ProjectService $projectService,
+    ) {}
+
     public function handle(object $event): void
     {
         if (! $event instanceof TaskCompleted) {
@@ -23,7 +28,7 @@ class RefreshProjectStatus
         $previousStatusId = $project->project_status_id;
         $updatedBy = $task->updated_by ?? $task->created_by;
 
-        $project->refreshStatus($updatedBy);
+        $this->projectService->refreshStatus($project, $updatedBy);
 
         Log::info('Project status refreshed from TaskCompleted', [
             'project_id' => $project->id,
