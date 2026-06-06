@@ -5,7 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TaskRepository implements TaskRepositoryInterface
 {
@@ -62,40 +62,24 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool
     {
-        $tasks = Task::with('dependents')
-            ->where('project_id', $task->project_id)
-            ->get()
-            ->keyBy('id');
+        $result = DB::select('
+            WITH RECURSIVE dependency_chain AS (
+                SELECT depends_on_task_id AS task_id
+                FROM task_dependencies
+                WHERE task_id = :start_id
 
-        $visited = [];
+                UNION ALL
 
-        return $this->hasPathInGraph($newDependencyId, $task->id, $visited, $tasks);
-    }
+                SELECT td.depends_on_task_id
+                FROM task_dependencies td
+                INNER JOIN dependency_chain dc ON td.task_id = dc.task_id
+            )
+            SELECT 1 as found FROM dependency_chain WHERE task_id = :target_id LIMIT 1
+        ', [
+            'start_id' => $newDependencyId,
+            'target_id' => $task->id,
+        ]);
 
-    private function hasPathInGraph(int $from, int $to, array &$visited, Collection $tasks): bool
-    {
-        if ($from === $to) {
-            return true;
-        }
-
-        if (isset($visited[$from])) {
-            return false;
-        }
-
-        $visited[$from] = true;
-
-        $taskNode = $tasks->get($from);
-
-        if (! $taskNode) {
-            return false;
-        }
-
-        foreach ($taskNode->dependents as $dependent) {
-            if ($this->hasPathInGraph($dependent->id, $to, $visited, $tasks)) {
-                return true;
-            }
-        }
-
-        return false;
+        return ! empty($result);
     }
 }
