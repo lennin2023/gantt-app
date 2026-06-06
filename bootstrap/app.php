@@ -6,6 +6,8 @@ use App\Exceptions\ProjectAlreadyInStatusException;
 use App\Exceptions\ProjectUserAlreadyAssignedException;
 use App\Exceptions\ProjectUserNotFoundException;
 use App\Exceptions\TaskAlreadyInStatusException;
+use App\Exceptions\TaskAssignmentAlreadyExistsException;
+use App\Exceptions\TaskAssignmentNotFoundException;
 use App\Exceptions\TaskNotCancelledException;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
@@ -57,7 +59,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 404);
             }
         });
-
         $exceptions->render(function (ModelNotFoundException $_e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
@@ -85,5 +86,11 @@ return Application::configure(basePath: dirname(__DIR__))
         });
         $exceptions->render(function (TaskNotCancelledException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
+        });
+        $exceptions->render(function (TaskAssignmentAlreadyExistsException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        });
+        $exceptions->render(function (TaskAssignmentNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
         });
     })->create();

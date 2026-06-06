@@ -21,19 +21,23 @@ use App\Listeners\RefreshProjectStatus;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskAssignment;
 use App\Models\User;
 use App\Policies\MilestonePolicy;
 use App\Policies\ProjectPolicy;
+use App\Policies\TaskAssignmentPolicy;
 use App\Policies\TaskPolicy;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
 use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
+use App\Repositories\Contracts\TaskAssignmentRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use App\Repositories\Eloquent\DashboardRepository;
 use App\Repositories\Eloquent\MilestoneRepository;
 use App\Repositories\Eloquent\ProjectRepository;
 use App\Repositories\Eloquent\ProjectUserRepository;
+use App\Repositories\Eloquent\TaskAssignmentRepository;
 use App\Repositories\Eloquent\TaskRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -54,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MilestoneRepositoryInterface::class, MilestoneRepository::class);
         $this->app->bind(ProjectUserRepositoryInterface::class, ProjectUserRepository::class);
         $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
+        $this->app->bind(TaskAssignmentRepositoryInterface::class, TaskAssignmentRepository::class);
     }
 
     public function boot(): void
@@ -69,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(Milestone::class, MilestonePolicy::class);
+        Gate::policy(TaskAssignment::class, TaskAssignmentPolicy::class);
 
         Gate::define('viewDashboard', fn (User $user) => true);
     }

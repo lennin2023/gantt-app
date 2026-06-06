@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MilestoneController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ProjectUserController;
+use App\Http\Controllers\Api\TaskAssignmentController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,5 +62,12 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::patch('/{task}', [TaskController::class, 'update'])->name('update');
         Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
         Route::post('/{task}/restore', [TaskController::class, 'restore'])->name('restore');
+
+        Route::prefix('/{task}/assignments')->name('assignments.')->group(function () {
+            Route::get('/', [TaskAssignmentController::class, 'index'])->name('index');
+            Route::post('/', [TaskAssignmentController::class, 'store'])->name('store');
+            Route::patch('/{assignment}', [TaskAssignmentController::class, 'update'])->name('update');
+            Route::delete('/{assignment}', [TaskAssignmentController::class, 'destroy'])->name('destroy');
+        });
     });
 });
