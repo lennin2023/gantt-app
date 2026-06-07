@@ -68,9 +68,9 @@ class TaskController extends Controller
         $task->loadMissing('project');
         $this->authorize('delete', [Task::class, $task->project]);
 
-        $this->taskService->cancelTask($task);
+        $this->taskService->deleteTask($task);
 
-        return $this->deleted('Task cancelled successfully');
+        return $this->deleted('Task deleted successfully');
     }
 
     public function restore(Task $task): JsonResponse
@@ -108,6 +108,6 @@ class TaskController extends Controller
 
         $this->taskService->bulkCancel($tasks);
 
-        return $this->deleted(count($taskIds).' tasks cancelled successfully');
+        return $this->deleted(count($taskIds).' tasks deleted successfully');
     }
 }

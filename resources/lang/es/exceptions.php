@@ -2,8 +2,11 @@
 
 return [
     'task' => [
-        'not_cancelled' => 'Solo se pueden restaurar tareas canceladas.',
+        'not_cancelled' => 'Solo se pueden restaurar tareas canceladas o eliminadas.',
         'already_in_status' => 'La tarea ya se encuentra en estado :status.',
+        'deleted_cannot_be_updated' => 'Las tareas eliminadas no pueden ser actualizadas.',
+        'not_deleted' => 'Solo las tareas eliminadas pueden ser restauradas.',
+        'invalid_status_transition' => 'No se puede cambiar la tarea de :from a :to.',
     ],
     'project' => [
         'already_in_status' => 'El proyecto ya se encuentra en estado :status.',

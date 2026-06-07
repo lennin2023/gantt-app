@@ -10,7 +10,9 @@ use App\Exceptions\ProjectUserAlreadyAssignedException;
 use App\Exceptions\ProjectUserNotFoundException;
 use App\Exceptions\TaskAlreadyInStatusException;
 use App\Exceptions\TaskAssignmentAlreadyExistsException;
-use App\Exceptions\TaskNotCancelledException;
+use App\Exceptions\TaskDeletedCannotBeUpdatedException;
+use App\Exceptions\TaskInvalidStatusTransitionException;
+use App\Exceptions\TaskNotDeletedException;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\HandleAppearance;
@@ -95,7 +97,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (TaskAlreadyInStatusException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         });
-        $exceptions->render(function (TaskNotCancelledException $e) {
+        $exceptions->render(function (TaskDeletedCannotBeUpdatedException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        });
+        $exceptions->render(function (TaskNotDeletedException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        });
+        $exceptions->render(function (TaskInvalidStatusTransitionException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (TaskAssignmentAlreadyExistsException $e) {

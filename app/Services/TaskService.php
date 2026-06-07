@@ -12,7 +12,9 @@ use App\Events\TaskUpdated;
 use App\Exceptions\BulkOperationException;
 use App\Exceptions\CycleDetectionException;
 use App\Exceptions\TaskAlreadyInStatusException;
-use App\Exceptions\TaskNotCancelledException;
+use App\Exceptions\TaskDeletedCannotBeUpdatedException;
+use App\Exceptions\TaskInvalidStatusTransitionException;
+use App\Exceptions\TaskNotDeletedException;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -21,6 +23,39 @@ use Illuminate\Support\Facades\DB;
 
 class TaskService
 {
+    private array $allowedTransitions = [
+        TaskStatusEnum::PENDING->value => [
+            TaskStatusEnum::IN_PROGRESS->value,
+            TaskStatusEnum::ON_HOLD->value,
+            TaskStatusEnum::CANCELLED->value,
+        ],
+        TaskStatusEnum::IN_PROGRESS->value => [
+            TaskStatusEnum::PENDING->value,
+            TaskStatusEnum::COMPLETED->value,
+            TaskStatusEnum::ON_HOLD->value,
+            TaskStatusEnum::CANCELLED->value,
+        ],
+        TaskStatusEnum::COMPLETED->value => [
+            TaskStatusEnum::IN_PROGRESS->value,
+        ],
+        TaskStatusEnum::ON_HOLD->value => [
+            TaskStatusEnum::PENDING->value,
+            TaskStatusEnum::IN_PROGRESS->value,
+            TaskStatusEnum::CANCELLED->value,
+        ],
+        TaskStatusEnum::CANCELLED->value => [
+            TaskStatusEnum::PENDING->value,
+        ],
+        TaskStatusEnum::DELETED->value => [], // solo via restore
+    ];
+
+    private array $deletableStatuses = [
+        TaskStatusEnum::PENDING->value,
+        TaskStatusEnum::IN_PROGRESS->value,
+        TaskStatusEnum::ON_HOLD->value,
+        TaskStatusEnum::CANCELLED->value,
+    ];
+
     public function __construct(
         private readonly TaskRepositoryInterface $taskRepository,
     ) {}
@@ -59,10 +94,18 @@ class TaskService
 
     public function updateTask(Task $task, TaskDTO $dto): Task
     {
+        if ($task->task_status_id === TaskStatusEnum::DELETED->value) {
+            throw new TaskDeletedCannotBeUpdatedException;
+        }
+
         return DB::transaction(function () use ($task, $dto) {
             $previousStatus = $task->task_status_id;
+            $data = $dto->toArray();
 
-            $task = $this->taskRepository->update($task, $dto->toArray());
+            if (isset($data['task_status_id'])) {
+                $newStatus = TaskStatusEnum::from((int) $data['task_status_id']);
+                $this->validateTransition($task, $newStatus);
+            }
 
             if ($dto->dependencyIds !== TaskDTO::UNDEFINED_ARRAY) {
                 $existingIds = $task->dependencies()->pluck('depends_on_task_id')->toArray();
@@ -79,6 +122,8 @@ class TaskService
                 );
             }
 
+            $task = $this->taskRepository->update($task, $data);
+
             TaskUpdated::dispatch($task);
 
             if ($task->task_status_id === TaskStatusEnum::COMPLETED->value
@@ -90,14 +135,21 @@ class TaskService
         });
     }
 
-    public function cancelTask(Task $task): void
+    public function deleteTask(Task $task): void
     {
-        if ($task->task_status_id === TaskStatusEnum::CANCELLED->value) {
-            throw new TaskAlreadyInStatusException(TaskStatusEnum::CANCELLED);
+        if ($task->task_status_id === TaskStatusEnum::DELETED->value) {
+            throw new TaskAlreadyInStatusException(TaskStatusEnum::DELETED);
+        }
+
+        if (! in_array($task->task_status_id, $this->deletableStatuses)) {
+            throw new TaskInvalidStatusTransitionException(
+                TaskStatusEnum::from($task->task_status_id),
+                TaskStatusEnum::DELETED
+            );
         }
 
         DB::transaction(function () use ($task) {
-            $task->task_status_id = TaskStatusEnum::CANCELLED->value;
+            $task->task_status_id = TaskStatusEnum::DELETED->value;
             $task->save();
 
             TaskUpdated::dispatch($task);
@@ -106,8 +158,8 @@ class TaskService
 
     public function restoreTask(Task $task): void
     {
-        if ($task->task_status_id !== TaskStatusEnum::CANCELLED->value) {
-            throw new TaskNotCancelledException;
+        if ($task->task_status_id !== TaskStatusEnum::DELETED->value) {
+            throw new TaskNotDeletedException;
         }
 
         DB::transaction(function () use ($task) {
@@ -155,6 +207,10 @@ class TaskService
             $result = collect();
 
             foreach ($tasks as $task) {
+                if ($task->task_status_id === TaskStatusEnum::DELETED->value) {
+                    continue;
+                }
+
                 $previousStatus = $task->task_status_id;
                 $updatedTask = $this->taskRepository->update($task, $dto->toArray());
                 $updatedTask->load(['status', 'assignments.projectUser.user', 'assignments.taskRole']);
@@ -177,8 +233,12 @@ class TaskService
     {
         DB::transaction(function () use ($tasks) {
             foreach ($tasks as $task) {
-                if ($task->task_status_id !== TaskStatusEnum::CANCELLED->value) {
-                    $task->task_status_id = TaskStatusEnum::CANCELLED->value;
+                if (! in_array($task->task_status_id, [
+                    TaskStatusEnum::CANCELLED->value,
+                    TaskStatusEnum::DELETED->value,
+                    TaskStatusEnum::COMPLETED->value,
+                ])) {
+                    $task->task_status_id = TaskStatusEnum::DELETED->value;
                     $task->save();
 
                     TaskUpdated::dispatch($task);
@@ -193,6 +253,21 @@ class TaskService
             if ($this->taskRepository->wouldCreateCycle($task, $depId)) {
                 throw new CycleDetectionException;
             }
+        }
+    }
+
+    private function validateTransition(Task $task, TaskStatusEnum $newStatus): void
+    {
+        $currentStatus = TaskStatusEnum::from($task->task_status_id);
+
+        if ($task->task_status_id === $newStatus->value) {
+            throw new TaskAlreadyInStatusException($newStatus);
+        }
+
+        $allowed = $this->allowedTransitions[$currentStatus->value] ?? [];
+
+        if (! in_array($newStatus->value, $allowed)) {
+            throw new TaskInvalidStatusTransitionException($currentStatus, $newStatus);
         }
     }
 }

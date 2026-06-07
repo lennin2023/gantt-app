@@ -2,8 +2,11 @@
 
 return [
     'task' => [
-        'not_cancelled' => 'Only cancelled tasks can be restored.',
+        'not_cancelled' => 'Only cancelled or deleted tasks can be restored.',
         'already_in_status' => 'The task is already in status :status.',
+        'deleted_cannot_be_updated' => 'Deleted tasks cannot be updated.',
+        'not_deleted' => 'Only deleted tasks can be restored.',
+        'invalid_status_transition' => 'Cannot transition task from :from to :to.',
     ],
     'project' => [
         'already_in_status' => 'The project is already in status :status.',
