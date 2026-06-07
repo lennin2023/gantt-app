@@ -46,7 +46,7 @@ class TaskService
         TaskStatusEnum::CANCELLED->value => [
             TaskStatusEnum::PENDING->value,
         ],
-        TaskStatusEnum::DELETED->value => [], // solo via restore
+        TaskStatusEnum::DELETED->value => [],
     ];
 
     private array $deletableStatuses = [
@@ -172,16 +172,6 @@ class TaskService
 
     public function validateAndGetTasksForBulkUpdate(array $taskIds): Collection
     {
-        return $this->validateAndGetTasksForBulkOperation($taskIds);
-    }
-
-    public function validateAndGetTasksForBulkDelete(array $taskIds): Collection
-    {
-        return $this->validateAndGetTasksForBulkOperation($taskIds);
-    }
-
-    private function validateAndGetTasksForBulkOperation(array $taskIds): Collection
-    {
         if (empty($taskIds)) {
             throw BulkOperationException::noTaskIdsProvided();
         }
@@ -226,24 +216,6 @@ class TaskService
             }
 
             return $result;
-        });
-    }
-
-    public function bulkCancel(Collection $tasks): void
-    {
-        DB::transaction(function () use ($tasks) {
-            foreach ($tasks as $task) {
-                if (! in_array($task->task_status_id, [
-                    TaskStatusEnum::CANCELLED->value,
-                    TaskStatusEnum::DELETED->value,
-                    TaskStatusEnum::COMPLETED->value,
-                ])) {
-                    $task->task_status_id = TaskStatusEnum::DELETED->value;
-                    $task->save();
-
-                    TaskUpdated::dispatch($task);
-                }
-            }
         });
     }
 

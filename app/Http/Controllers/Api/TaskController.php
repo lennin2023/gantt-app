@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\DTOs\BulkTaskDTO;
 use App\DTOs\TaskDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\BulkDeleteTaskRequest;
 use App\Http\Requests\Api\TaskRequest;
 use App\Http\Resources\ApiResponse;
 use App\Http\Resources\TaskResource;
@@ -96,18 +95,5 @@ class TaskController extends Controller
         return $this->success([
             'tasks' => TaskResource::collection($updated),
         ], 'Tasks updated successfully');
-    }
-
-    public function bulkDelete(BulkDeleteTaskRequest $request): JsonResponse
-    {
-        $taskIds = $request->validated()['task_ids'];
-        $tasks = $this->taskService->validateAndGetTasksForBulkDelete($taskIds);
-        $project = $tasks->first()->project()->firstOrFail();
-
-        $this->authorize('delete', [Task::class, $project]);
-
-        $this->taskService->bulkCancel($tasks);
-
-        return $this->deleted(count($taskIds).' tasks deleted successfully');
     }
 }

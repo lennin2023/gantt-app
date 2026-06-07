@@ -57,7 +57,6 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
     Route::prefix('tasks')->name('tasks.')->group(function () {
         Route::patch('/bulk-update', [TaskController::class, 'bulkUpdate'])->name('bulk-update');
-        Route::delete('/bulk-delete', [TaskController::class, 'bulkDelete'])->name('bulk-delete');
         Route::get('/{task}', [TaskController::class, 'show'])->name('show');
         Route::patch('/{task}', [TaskController::class, 'update'])->name('update');
         Route::delete('/{task}', [TaskController::class, 'destroy'])->name('destroy');
