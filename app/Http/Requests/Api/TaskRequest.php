@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api;
 
 use App\Enums\TaskDependencyTypeEnum;
 use App\Enums\TaskStatusEnum;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -35,7 +36,26 @@ class TaskRequest extends FormRequest
         }
 
         return [
-            'parent_id' => 'nullable|exists:tasks,id',
+            'parent_id' => [
+                'nullable',
+                'exists:tasks,id',
+                function ($attribute, $value, $fail) {
+                    $task = $this->route('task');
+
+                    if ($task && (int) $value === $task->id) {
+                        $fail(__('validation.task.self_parent'));
+                    }
+
+                    $projectId = $this->route('project')?->id
+                        ?? $this->route('task')?->project_id;
+
+                    if ($projectId && Task::where('id', $value)
+                        ->where('project_id', '!=', $projectId)
+                        ->exists()) {
+                        $fail(__('validation.task.parent_different_project'));
+                    }
+                },
+            ],
             'task_status_id' => ['nullable', new Enum(TaskStatusEnum::class)],
             'title' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'description' => 'nullable|string',
@@ -48,6 +68,15 @@ class TaskRequest extends FormRequest
                 'integer',
                 'exists:tasks,id',
                 function ($attribute, $value, $fail) {
+                    $projectId = $this->route('project')?->id
+                        ?? $this->route('task')?->project_id;
+
+                    if ($projectId && Task::where('id', $value)
+                        ->where('project_id', '!=', $projectId)
+                        ->exists()) {
+                        $fail(__('validation.task.dependency_different_project'));
+                    }
+
                     $task = $this->route('task');
                     if ($task && (int) $value === $task->id) {
                         $fail(__('validation.task.self_dependency'));
