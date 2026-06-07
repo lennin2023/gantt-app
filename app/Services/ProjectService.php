@@ -7,6 +7,9 @@ use App\Enums\ProjectStatusEnum;
 use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
 use App\Exceptions\ProjectAlreadyInStatusException;
+use App\Exceptions\ProjectArchivedCannotBeUpdatedException;
+use App\Exceptions\ProjectInvalidStatusTransitionException;
+use App\Exceptions\ProjectNotArchivedException;
 use App\Models\Project;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -14,6 +17,25 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
+    private array $allowedTransitions = [
+        ProjectStatusEnum::ACTIVE->value => [
+            ProjectStatusEnum::ON_HOLD->value,
+            ProjectStatusEnum::COMPLETED->value,
+            ProjectStatusEnum::CANCELLED->value,
+        ],
+        ProjectStatusEnum::ON_HOLD->value => [
+            ProjectStatusEnum::ACTIVE->value,
+            ProjectStatusEnum::CANCELLED->value,
+        ],
+        ProjectStatusEnum::COMPLETED->value => [
+            ProjectStatusEnum::ACTIVE->value,
+        ],
+        ProjectStatusEnum::CANCELLED->value => [
+            ProjectStatusEnum::ACTIVE->value,
+        ],
+        ProjectStatusEnum::ARCHIVED->value => [], // ninguna via update
+    ];
+
     public function __construct(
         private readonly ProjectRepositoryInterface $projectRepository,
     ) {}
@@ -41,8 +63,19 @@ class ProjectService
 
     public function updateProject(Project $project, ProjectDTO $dto): Project
     {
+        if ($project->project_status_id === ProjectStatusEnum::ARCHIVED->value) {
+            throw new ProjectArchivedCannotBeUpdatedException;
+        }
+
         return DB::transaction(function () use ($project, $dto) {
-            $project = $this->projectRepository->update($project, $dto->toArray());
+            $data = $dto->toArray();
+
+            if (isset($data['project_status_id'])) {
+                $newStatus = ProjectStatusEnum::from((int) $data['project_status_id']);
+                $this->validateTransition($project, $newStatus);
+            }
+
+            $project = $this->projectRepository->update($project, $data);
 
             ProjectUpdated::dispatch($project);
 
@@ -50,14 +83,28 @@ class ProjectService
         });
     }
 
-    public function changeStatus(Project $project, ProjectStatusEnum $status): void
+    public function archive(Project $project): void
     {
-        if ($project->project_status_id === $status->value) {
-            throw new ProjectAlreadyInStatusException($status);
+        if ($project->project_status_id === ProjectStatusEnum::ARCHIVED->value) {
+            throw new ProjectAlreadyInStatusException(ProjectStatusEnum::ARCHIVED);
         }
 
-        DB::transaction(function () use ($project, $status) {
-            $project->project_status_id = $status->value;
+        DB::transaction(function () use ($project) {
+            $project->project_status_id = ProjectStatusEnum::ARCHIVED->value;
+            $project->save();
+
+            ProjectUpdated::dispatch($project);
+        });
+    }
+
+    public function restore(Project $project): void
+    {
+        if ($project->project_status_id !== ProjectStatusEnum::ARCHIVED->value) {
+            throw new ProjectNotArchivedException;
+        }
+
+        DB::transaction(function () use ($project) {
+            $project->project_status_id = ProjectStatusEnum::ACTIVE->value;
             $project->save();
 
             ProjectUpdated::dispatch($project);
@@ -96,5 +143,20 @@ class ProjectService
 
         $project->updated_by = $updatedBy;
         $project->save();
+    }
+
+    private function validateTransition(Project $project, ProjectStatusEnum $newStatus): void
+    {
+        $currentStatus = ProjectStatusEnum::from($project->project_status_id);
+
+        if ($project->project_status_id === $newStatus->value) {
+            throw new ProjectAlreadyInStatusException($newStatus);
+        }
+
+        $allowed = $this->allowedTransitions[$currentStatus->value] ?? [];
+
+        if (! in_array($newStatus->value, $allowed)) {
+            throw new ProjectInvalidStatusTransitionException($currentStatus, $newStatus);
+        }
     }
 }

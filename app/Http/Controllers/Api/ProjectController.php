@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\DTOs\ProjectDTO;
-use App\Enums\ProjectStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProjectRequest;
 use App\Http\Resources\ApiResponse;
@@ -79,7 +78,7 @@ class ProjectController extends Controller
     {
         $this->authorize('delete', $project);
 
-        $this->projectService->changeStatus($project, ProjectStatusEnum::ARCHIVED);
+        $this->projectService->archive($project);
 
         return $this->deleted('Project archived successfully');
     }
@@ -88,7 +87,7 @@ class ProjectController extends Controller
     {
         $this->authorize('restore', $project);
 
-        $this->projectService->changeStatus($project, ProjectStatusEnum::ACTIVE);
+        $this->projectService->restore($project);
 
         return $this->success(null, 'Project restored successfully');
     }
