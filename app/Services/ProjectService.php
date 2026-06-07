@@ -7,9 +7,9 @@ use App\Enums\ProjectStatusEnum;
 use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
 use App\Exceptions\ProjectAlreadyInStatusException;
-use App\Exceptions\ProjectArchivedCannotBeUpdatedException;
+use App\Exceptions\ProjectDeletedCannotBeUpdatedException;
 use App\Exceptions\ProjectInvalidStatusTransitionException;
-use App\Exceptions\ProjectNotArchivedException;
+use App\Exceptions\ProjectNotDeletedException;
 use App\Models\Project;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -33,7 +33,7 @@ class ProjectService
         ProjectStatusEnum::CANCELLED->value => [
             ProjectStatusEnum::ACTIVE->value,
         ],
-        ProjectStatusEnum::ARCHIVED->value => [], // ninguna via update
+        ProjectStatusEnum::DELETED->value => [], // solo via restore
     ];
 
     public function __construct(
@@ -63,8 +63,8 @@ class ProjectService
 
     public function updateProject(Project $project, ProjectDTO $dto): Project
     {
-        if ($project->project_status_id === ProjectStatusEnum::ARCHIVED->value) {
-            throw new ProjectArchivedCannotBeUpdatedException;
+        if ($project->project_status_id === ProjectStatusEnum::DELETED->value) {
+            throw new ProjectDeletedCannotBeUpdatedException;
         }
 
         return DB::transaction(function () use ($project, $dto) {
@@ -83,14 +83,14 @@ class ProjectService
         });
     }
 
-    public function archive(Project $project): void
+    public function delete(Project $project): void
     {
-        if ($project->project_status_id === ProjectStatusEnum::ARCHIVED->value) {
-            throw new ProjectAlreadyInStatusException(ProjectStatusEnum::ARCHIVED);
+        if ($project->project_status_id === ProjectStatusEnum::DELETED->value) {
+            throw new ProjectAlreadyInStatusException(ProjectStatusEnum::DELETED);
         }
 
         DB::transaction(function () use ($project) {
-            $project->project_status_id = ProjectStatusEnum::ARCHIVED->value;
+            $project->project_status_id = ProjectStatusEnum::DELETED->value;
             $project->save();
 
             ProjectUpdated::dispatch($project);
@@ -99,8 +99,8 @@ class ProjectService
 
     public function restore(Project $project): void
     {
-        if ($project->project_status_id !== ProjectStatusEnum::ARCHIVED->value) {
-            throw new ProjectNotArchivedException;
+        if ($project->project_status_id !== ProjectStatusEnum::DELETED->value) {
+            throw new ProjectNotDeletedException;
         }
 
         DB::transaction(function () use ($project) {

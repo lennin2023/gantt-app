@@ -94,8 +94,8 @@ class Project extends Model
     {
         return in_array($this->project_status_id, [
             ProjectStatusEnum::ON_HOLD->value,
-            ProjectStatusEnum::ARCHIVED->value,
             ProjectStatusEnum::CANCELLED->value,
+            ProjectStatusEnum::DELETED->value,
         ]);
     }
 }

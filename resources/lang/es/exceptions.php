@@ -7,8 +7,8 @@ return [
     ],
     'project' => [
         'already_in_status' => 'El proyecto ya se encuentra en estado :status.',
-        'archived_cannot_be_updated' => 'Los proyectos archivados no pueden ser actualizados.',
-        'not_archived' => 'Solo los proyectos archivados pueden ser restaurados.',
+        'deleted_cannot_be_updated' => 'Los proyectos eliminados no pueden ser actualizados.',
+        'not_deleted' => 'Solo los proyectos eliminados pueden ser restaurados.',
         'invalid_status_transition' => 'No se puede cambiar el proyecto de :from a :to.',
     ],
     'project_user' => [

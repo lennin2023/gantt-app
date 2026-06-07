@@ -78,9 +78,9 @@ class ProjectController extends Controller
     {
         $this->authorize('delete', $project);
 
-        $this->projectService->archive($project);
+        $this->projectService->delete($project);
 
-        return $this->deleted('Project archived successfully');
+        return $this->deleted('Project deleted successfully');
     }
 
     public function restore(Project $project): JsonResponse

@@ -3,9 +3,9 @@
 use App\Exceptions\BulkOperationException;
 use App\Exceptions\CycleDetectionException;
 use App\Exceptions\ProjectAlreadyInStatusException;
-use App\Exceptions\ProjectArchivedCannotBeUpdatedException;
+use App\Exceptions\ProjectDeletedCannotBeUpdatedException;
 use App\Exceptions\ProjectInvalidStatusTransitionException;
-use App\Exceptions\ProjectNotArchivedException;
+use App\Exceptions\ProjectNotDeletedException;
 use App\Exceptions\ProjectUserAlreadyAssignedException;
 use App\Exceptions\ProjectUserNotFoundException;
 use App\Exceptions\TaskAlreadyInStatusException;
@@ -71,10 +71,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ProjectAlreadyInStatusException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         });
-        $exceptions->render(function (ProjectArchivedCannotBeUpdatedException $e) {
+        $exceptions->render(function (ProjectDeletedCannotBeUpdatedException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         });
-        $exceptions->render(function (ProjectNotArchivedException $e) {
+        $exceptions->render(function (ProjectNotDeletedException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         });
         $exceptions->render(function (ProjectInvalidStatusTransitionException $e) {

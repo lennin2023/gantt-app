@@ -7,8 +7,8 @@ return [
     ],
     'project' => [
         'already_in_status' => 'The project is already in status :status.',
-        'archived_cannot_be_updated' => 'Archived projects cannot be updated.',
-        'not_archived' => 'Only archived projects can be restored.',
+        'deleted_cannot_be_updated' => 'Deleted projects cannot be updated.',
+        'not_deleted' => 'Only deleted projects can be restored.',
         'invalid_status_transition' => 'Cannot transition project from :from to :to.',
     ],
     'project_user' => [
