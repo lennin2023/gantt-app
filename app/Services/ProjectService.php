@@ -36,6 +36,12 @@ class ProjectService
         ProjectStatusEnum::DELETED->value => [], // solo via restore
     ];
 
+    private array $deletableStatuses = [
+        ProjectStatusEnum::ACTIVE->value,
+        ProjectStatusEnum::ON_HOLD->value,
+        ProjectStatusEnum::CANCELLED->value,
+    ];
+
     public function __construct(
         private readonly ProjectRepositoryInterface $projectRepository,
     ) {}
@@ -87,6 +93,13 @@ class ProjectService
     {
         if ($project->project_status_id === ProjectStatusEnum::DELETED->value) {
             throw new ProjectAlreadyInStatusException(ProjectStatusEnum::DELETED);
+        }
+
+        if (! in_array($project->project_status_id, $this->deletableStatuses)) {
+            throw new ProjectInvalidStatusTransitionException(
+                ProjectStatusEnum::from($project->project_status_id),
+                ProjectStatusEnum::DELETED
+            );
         }
 
         DB::transaction(function () use ($project) {
