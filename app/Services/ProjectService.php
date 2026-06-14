@@ -33,7 +33,7 @@ class ProjectService
         ProjectStatusEnum::CANCELLED->value => [
             ProjectStatusEnum::ACTIVE->value,
         ],
-        ProjectStatusEnum::DELETED->value => [], // solo via restore
+        ProjectStatusEnum::DELETED->value => [],
     ];
 
     private array $deletableStatuses = [
@@ -129,7 +129,6 @@ class ProjectService
         $project->load([
             'projectUsers.user',
             'projectUsers.projectRole',
-            'milestones.creator',
         ]);
 
         return $project;

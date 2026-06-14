@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Enums\TaskTypeEnum;
 use App\Models\Task;
 use App\Services\TaskProgressService;
 
@@ -11,22 +12,48 @@ class TaskObserver
         private readonly TaskProgressService $taskProgressService,
     ) {}
 
-    public function updated(Task $task): void
+    public function creating(Task $task): void
     {
-        if (! $task->parent_id) {
-            return;
-        }
+        $parentPath = $task->parent_id
+            ? Task::findOrFail($task->parent_id)->path
+            : null;
 
-        if (! $task->wasChanged(['task_status_id', 'progress', 'start_date', 'end_date'])) {
+        // Path temporal — se actualizará con el id real en created
+        $task->path = $parentPath ? "{$parentPath}/0" : '0';
+    }
+
+    public function created(Task $task): void
+    {
+        // Asignar path real ahora que tenemos el id
+        $parentPath = $task->parent_id
+            ? Task::findOrFail($task->parent_id)->path
+            : null;
+
+        $task->path = $parentPath
+            ? "{$parentPath}/{$task->id}"
+            : (string) $task->id;
+
+        $task->saveQuietly();
+
+        // Propagar a ancestros solo si no es container
+        if (! $task->parent_id || $task->type === TaskTypeEnum::CONTAINER) {
             return;
         }
 
         $this->taskProgressService->recalculateAncestors($task);
     }
 
-    public function created(Task $task): void
+    public function updated(Task $task): void
     {
         if (! $task->parent_id) {
+            return;
+        }
+
+        if ($task->type === TaskTypeEnum::CONTAINER) {
+            return;
+        }
+
+        if (! $task->wasChanged(['task_status_id', 'progress', 'start_date', 'end_date'])) {
             return;
         }
 

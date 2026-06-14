@@ -2,10 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\MilestoneCreated;
-use App\Events\MilestoneDeleted;
-use App\Events\MilestoneRestored;
-use App\Events\MilestoneUpdated;
 use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
 use App\Events\ProjectUserAssigned;
@@ -13,28 +9,23 @@ use App\Events\ProjectUserRemoved;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
-use App\Listeners\LogMilestoneActivity;
 use App\Listeners\LogProjectActivity;
 use App\Listeners\LogProjectUserActivity;
 use App\Listeners\LogTaskActivity;
 use App\Listeners\RefreshProjectStatus;
-use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskAssignment;
 use App\Models\User;
-use App\Policies\MilestonePolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\TaskAssignmentPolicy;
 use App\Policies\TaskPolicy;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
-use App\Repositories\Contracts\MilestoneRepositoryInterface;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use App\Repositories\Contracts\ProjectUserRepositoryInterface;
 use App\Repositories\Contracts\TaskAssignmentRepositoryInterface;
 use App\Repositories\Contracts\TaskRepositoryInterface;
 use App\Repositories\Eloquent\DashboardRepository;
-use App\Repositories\Eloquent\MilestoneRepository;
 use App\Repositories\Eloquent\ProjectRepository;
 use App\Repositories\Eloquent\ProjectUserRepository;
 use App\Repositories\Eloquent\TaskAssignmentRepository;
@@ -56,7 +47,6 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(ProjectRepositoryInterface::class, ProjectRepository::class);
         $this->app->bind(TaskRepositoryInterface::class, TaskRepository::class);
-        $this->app->bind(MilestoneRepositoryInterface::class, MilestoneRepository::class);
         $this->app->bind(ProjectUserRepositoryInterface::class, ProjectUserRepository::class);
         $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
         $this->app->bind(TaskAssignmentRepositoryInterface::class, TaskAssignmentRepository::class);
@@ -75,7 +65,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Project::class, ProjectPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
-        Gate::policy(Milestone::class, MilestonePolicy::class);
         Gate::policy(TaskAssignment::class, TaskAssignmentPolicy::class);
 
         Gate::define('viewDashboard', fn (User $user) => true);
@@ -90,11 +79,6 @@ class AppServiceProvider extends ServiceProvider
 
         Event::listen(ProjectCreated::class, LogProjectActivity::class);
         Event::listen(ProjectUpdated::class, LogProjectActivity::class);
-
-        Event::listen(MilestoneCreated::class, LogMilestoneActivity::class);
-        Event::listen(MilestoneUpdated::class, LogMilestoneActivity::class);
-        Event::listen(MilestoneDeleted::class, LogMilestoneActivity::class);
-        Event::listen(MilestoneRestored::class, LogMilestoneActivity::class);
 
         Event::listen(ProjectUserAssigned::class, LogProjectUserActivity::class);
         Event::listen(ProjectUserRemoved::class, LogProjectUserActivity::class);

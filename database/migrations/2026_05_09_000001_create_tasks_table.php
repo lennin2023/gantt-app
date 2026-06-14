@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\TaskStatusEnum;
+use App\Enums\TaskTypeEnum;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +14,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->restrictOnDelete();
             $table->foreignId('parent_id')->nullable()->constrained('tasks')->nullOnDelete();
+            $table->string('path')->index();
             $table->foreignId('task_status_id')->default(TaskStatusEnum::PENDING->value)->constrained()->restrictOnDelete();
+            $table->string('type')->default(TaskTypeEnum::TASK->value);
             $table->string('title');
             $table->text('description')->nullable();
             $table->date('start_date')->nullable();
@@ -23,7 +26,9 @@ return new class extends Migration
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamps();
+
             $table->index(['project_id', 'task_status_id']);
+            $table->index(['project_id', 'type']);
         });
     }
 

@@ -16,7 +16,6 @@ class AuthService
             $user->isStaff() => [
                 'projects:read',
                 'tasks:read',
-                'milestones:read',
             ],
             default => ['projects:read', 'tasks:read'],
         };

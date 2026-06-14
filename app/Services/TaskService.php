@@ -6,6 +6,7 @@ use App\DTOs\BulkTaskDTO;
 use App\DTOs\TaskDTO;
 use App\Enums\TaskDependencyTypeEnum;
 use App\Enums\TaskStatusEnum;
+use App\Enums\TaskTypeEnum;
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
 use App\Events\TaskUpdated;
@@ -105,6 +106,21 @@ class TaskService
             if (isset($data['task_status_id'])) {
                 $newStatus = TaskStatusEnum::from((int) $data['task_status_id']);
                 $this->validateTransition($task, $newStatus);
+
+                // Containers no permiten cambio manual de status
+                if ($task->type === TaskTypeEnum::CONTAINER) {
+                    unset($data['task_status_id']);
+                }
+            }
+
+            // Containers no permiten cambio manual de progress
+            if ($task->type === TaskTypeEnum::CONTAINER && isset($data['progress'])) {
+                unset($data['progress']);
+            }
+
+            // Milestone: sincronizar start_date y end_date
+            if ($task->type === TaskTypeEnum::MILESTONE && isset($data['start_date'])) {
+                $data['end_date'] = $data['start_date'];
             }
 
             if ($dto->dependencyIds !== TaskDTO::UNDEFINED_ARRAY) {
@@ -149,6 +165,17 @@ class TaskService
         }
 
         DB::transaction(function () use ($task) {
+            // Cascadear DELETED a todos los descendientes
+            Task::where('path', 'LIKE', "{$task->path}/%")
+                ->whereNotIn('task_status_id', [
+                    TaskStatusEnum::DELETED->value,
+                    TaskStatusEnum::COMPLETED->value,
+                ])
+                ->each(function (Task $descendant) {
+                    $descendant->task_status_id = TaskStatusEnum::DELETED->value;
+                    $descendant->saveQuietly();
+                });
+
             $task->task_status_id = TaskStatusEnum::DELETED->value;
             $task->save();
 
@@ -163,6 +190,14 @@ class TaskService
         }
 
         DB::transaction(function () use ($task) {
+            // Restaurar descendientes eliminados
+            Task::where('path', 'LIKE', "{$task->path}/%")
+                ->where('task_status_id', TaskStatusEnum::DELETED->value)
+                ->each(function (Task $descendant) {
+                    $descendant->task_status_id = TaskStatusEnum::PENDING->value;
+                    $descendant->saveQuietly();
+                });
+
             $task->task_status_id = TaskStatusEnum::PENDING->value;
             $task->save();
 

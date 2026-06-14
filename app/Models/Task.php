@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TaskStatusEnum;
+use App\Enums\TaskTypeEnum;
 use App\Models\Concerns\HasAuditFields;
 use App\Observers\TaskObserver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,9 @@ class Task extends Model
     protected $fillable = [
         'project_id',
         'parent_id',
+        'path',
         'task_status_id',
+        'type',
         'title',
         'description',
         'start_date',
@@ -31,6 +34,7 @@ class Task extends Model
 
     protected $attributes = [
         'task_status_id' => TaskStatusEnum::PENDING->value,
+        'type' => TaskTypeEnum::TASK->value,
         'progress' => 0,
     ];
 
@@ -40,6 +44,7 @@ class Task extends Model
             'start_date' => 'date',
             'end_date' => 'date',
             'progress' => 'integer',
+            'type' => TaskTypeEnum::class,
         ];
     }
 
@@ -103,11 +108,23 @@ class Task extends Model
         )->withPivot('type');
     }
 
-    public function isLeaf(): bool
+    // Helpers de tipo
+    public function isContainer(): bool
     {
-        return $this->children()->doesntExist();
+        return $this->type === TaskTypeEnum::CONTAINER;
     }
 
+    public function isTask(): bool
+    {
+        return $this->type === TaskTypeEnum::TASK;
+    }
+
+    public function isMilestone(): bool
+    {
+        return $this->type === TaskTypeEnum::MILESTONE;
+    }
+
+    // Helpers de estado
     public function isPending(): bool
     {
         return $this->task_status_id === TaskStatusEnum::PENDING->value;
@@ -123,13 +140,32 @@ class Task extends Model
         return $this->task_status_id === TaskStatusEnum::COMPLETED->value;
     }
 
-    public function isDelayed(): bool
+    public function isOnHold(): bool
     {
-        return $this->task_status_id === TaskStatusEnum::DELAYED->value;
+        return $this->task_status_id === TaskStatusEnum::ON_HOLD->value;
     }
 
     public function isCancelled(): bool
     {
         return $this->task_status_id === TaskStatusEnum::CANCELLED->value;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->task_status_id === TaskStatusEnum::DELETED->value;
+    }
+
+    // Helpers de path
+    public function getDepth(): int
+    {
+        return substr_count($this->path, '/');
+    }
+
+    public function getAncestorIds(): array
+    {
+        $parts = explode('/', $this->path);
+        array_pop($parts); // quitar el id propio
+
+        return array_map('intval', array_filter($parts));
     }
 }

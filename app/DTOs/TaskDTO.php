@@ -13,6 +13,7 @@ class TaskDTO implements Arrayable
 
     public function __construct(
         public readonly int $projectId,
+        public readonly ?string $type = null,
         public readonly ?int $parentId = null,
         public readonly ?int $taskStatusId = null,
         public readonly ?string $title = null,
@@ -29,6 +30,7 @@ class TaskDTO implements Arrayable
     {
         return new self(
             projectId: $data['project_id'],
+            type: $data['type'] ?? null,
             parentId: $data['parent_id'] ?? null,
             taskStatusId: $data['task_status_id'] ?? null,
             title: $data['title'] ?? null,
@@ -48,6 +50,9 @@ class TaskDTO implements Arrayable
             'project_id' => $this->projectId,
         ];
 
+        if ($this->type !== null) {
+            $data['type'] = $this->type;
+        }
         if ($this->parentId !== null) {
             $data['parent_id'] = $this->parentId;
         }
@@ -80,6 +85,7 @@ class TaskDTO implements Arrayable
     {
         return new self(
             projectId: $task->project_id,
+            type: $task->type->value,
             parentId: $task->parent_id,
             taskStatusId: $task->task_status_id,
             title: $task->title,

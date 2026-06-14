@@ -63,11 +63,6 @@ class Project extends Model
         return $this->belongsTo(ProjectStatus::class, 'project_status_id');
     }
 
-    public function milestones(): HasMany
-    {
-        return $this->hasMany(Milestone::class)->orderBy('date');
-    }
-
     public function histories(): HasMany
     {
         return $this->hasMany(ProjectHistory::class)->orderByDesc('created_at');

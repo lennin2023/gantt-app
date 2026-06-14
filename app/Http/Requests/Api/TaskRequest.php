@@ -4,6 +4,7 @@ namespace App\Http\Requests\Api;
 
 use App\Enums\TaskDependencyTypeEnum;
 use App\Enums\TaskStatusEnum;
+use App\Enums\TaskTypeEnum;
 use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
@@ -35,13 +36,20 @@ class TaskRequest extends FormRequest
             ];
         }
 
+        $type = $this->input('type')
+            ?? $this->route('task')?->type?->value
+            ?? TaskTypeEnum::TASK->value;
+
         return [
+            'type' => [
+                $isUpdate ? 'sometimes' : 'required',
+                new Enum(TaskTypeEnum::class),
+            ],
             'parent_id' => [
                 'nullable',
                 'exists:tasks,id',
                 function ($attribute, $value, $fail) {
                     $task = $this->route('task');
-
                     if ($task && (int) $value === $task->id) {
                         $fail(__('validation.task.self_parent'));
                     }
@@ -56,12 +64,27 @@ class TaskRequest extends FormRequest
                     }
                 },
             ],
-            'task_status_id' => ['nullable', new Enum(TaskStatusEnum::class)],
+            'task_status_id' => $type === TaskTypeEnum::CONTAINER->value
+                ? 'prohibited'
+                : ['nullable', new Enum(TaskStatusEnum::class)],
+
             'title' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'progress' => 'nullable|integer|min:0|max:100',
+            'description' => $type === TaskTypeEnum::MILESTONE->value
+                ? 'prohibited'
+                : 'nullable|string',
+
+            'start_date' => $type === TaskTypeEnum::MILESTONE->value
+                ? ($isUpdate ? 'sometimes|date' : 'required|date')
+                : 'nullable|date',
+
+            'end_date' => $type === TaskTypeEnum::MILESTONE->value
+                ? 'prohibited'  // se auto-asigna igual a start_date
+                : 'nullable|date|after_or_equal:start_date',
+
+            'progress' => $type === TaskTypeEnum::CONTAINER->value
+                ? 'prohibited'
+                : 'nullable|integer|min:0|max:100',
+
             'order' => 'nullable|integer|min:0',
             'dependency_ids' => 'nullable|array',
             'dependency_ids.*' => [
