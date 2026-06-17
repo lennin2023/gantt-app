@@ -14,7 +14,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->restrictOnDelete();
             $table->foreignId('parent_id')->nullable()->constrained('tasks')->nullOnDelete();
-            $table->string('path')->index();
+            $table->string('path', 255)->index();
             $table->foreignId('task_status_id')->default(TaskStatusEnum::PENDING->value)->constrained()->restrictOnDelete();
             $table->string('type')->default(TaskTypeEnum::TASK->value);
             $table->string('title');
@@ -22,7 +22,6 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->unsignedTinyInteger('progress')->default(0);
-            $table->integer('order')->default(0)->index();
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->timestamps();

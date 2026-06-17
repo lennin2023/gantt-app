@@ -21,7 +21,6 @@ class TaskDTO implements Arrayable
         public readonly mixed $startDate = self::UNDEFINED,
         public readonly mixed $endDate = self::UNDEFINED,
         public readonly ?int $progress = null,
-        public readonly ?int $order = null,
         public readonly mixed $dependencyIds = self::UNDEFINED_ARRAY,
         public readonly ?string $dependencyType = null,
     ) {}
@@ -38,7 +37,6 @@ class TaskDTO implements Arrayable
             startDate: array_key_exists('start_date', $data) ? $data['start_date'] : self::UNDEFINED,
             endDate: array_key_exists('end_date', $data) ? $data['end_date'] : self::UNDEFINED,
             progress: $data['progress'] ?? null,
-            order: $data['order'] ?? null,
             dependencyIds: array_key_exists('dependency_ids', $data) ? $data['dependency_ids'] : self::UNDEFINED_ARRAY,
             dependencyType: $data['dependency_type'] ?? null,
         );
@@ -65,9 +63,6 @@ class TaskDTO implements Arrayable
         if ($this->progress !== null) {
             $data['progress'] = $this->progress;
         }
-        if ($this->order !== null) {
-            $data['order'] = $this->order;
-        }
         if ($this->description !== self::UNDEFINED) {
             $data['description'] = $this->description;
         }
@@ -93,7 +88,6 @@ class TaskDTO implements Arrayable
             startDate: $task->start_date?->format('Y-m-d'),
             endDate: $task->end_date?->format('Y-m-d'),
             progress: $task->progress,
-            order: $task->order,
             dependencyIds: $task->relationLoaded('dependencies')
                 ? $task->dependencies->pluck('id')->toArray()
                 : [],

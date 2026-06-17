@@ -2,12 +2,13 @@
 
 namespace App\Observers;
 
-use App\Enums\TaskTypeEnum;
 use App\Models\Task;
 use App\Services\TaskProgressService;
 
 class TaskObserver
 {
+    private const PAD_LENGTH = 4;
+
     public function __construct(
         private readonly TaskProgressService $taskProgressService,
     ) {}
@@ -18,25 +19,27 @@ class TaskObserver
             ? Task::findOrFail($task->parent_id)->path
             : null;
 
-        // Path temporal — se actualizará con el id real en created
-        $task->path = $parentPath ? "{$parentPath}/0" : '0';
+        // Path temporal con placeholder — se corrige en created()
+        $task->path = $parentPath
+            ? "{$parentPath}/".str_pad('0', self::PAD_LENGTH, '0', STR_PAD_LEFT)
+            : str_pad('0', self::PAD_LENGTH, '0', STR_PAD_LEFT);
     }
 
     public function created(Task $task): void
     {
-        // Asignar path real ahora que tenemos el id
         $parentPath = $task->parent_id
             ? Task::findOrFail($task->parent_id)->path
             : null;
 
+        $segment = $this->nextSegment($task->parent_id);
+
         $task->path = $parentPath
-            ? "{$parentPath}/{$task->id}"
-            : (string) $task->id;
+            ? "{$parentPath}/{$segment}"
+            : $segment;
 
         $task->saveQuietly();
 
-        // Propagar a ancestros solo si no es container
-        if (! $task->parent_id || $task->type === TaskTypeEnum::CONTAINER) {
+        if (! $task->parent_id) {
             return;
         }
 
@@ -49,14 +52,18 @@ class TaskObserver
             return;
         }
 
-        if ($task->type === TaskTypeEnum::CONTAINER) {
-            return;
-        }
-
         if (! $task->wasChanged(['task_status_id', 'progress', 'start_date', 'end_date'])) {
             return;
         }
 
         $this->taskProgressService->recalculateAncestors($task);
+    }
+
+    private function nextSegment(?int $parentId): string
+    {
+        $count = Task::where('parent_id', $parentId)->count();
+
+        // count incluye el registro recién insertado, así que el número de orden es count (1-indexed)
+        return str_pad((string) $count, self::PAD_LENGTH, '0', STR_PAD_LEFT);
     }
 }

@@ -3,16 +3,12 @@
 namespace App\Services;
 
 use App\Enums\TaskStatusEnum;
+use App\Enums\TaskTypeEnum;
 use App\Models\Task;
-use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Support\Collection;
 
 class TaskProgressService
 {
-    public function __construct(
-        private readonly TaskRepositoryInterface $taskRepository,
-    ) {}
-
     public function recalculateAncestors(Task $task): void
     {
         $ancestorIds = $task->getAncestorIds();
@@ -21,7 +17,6 @@ class TaskProgressService
             return;
         }
 
-        // Recalcular de más cercano a más lejano
         $ancestors = Task::whereIn('id', $ancestorIds)
             ->orderByDesc('path')
             ->get();
@@ -32,6 +27,21 @@ class TaskProgressService
             if (! $changed) {
                 break;
             }
+        }
+    }
+
+    public function recalculateById(int $taskId): void
+    {
+        $task = Task::find($taskId);
+
+        if (! $task) {
+            return;
+        }
+
+        $this->recalculate($task);
+
+        if ($task->parent_id) {
+            $this->recalculateAncestors($task);
         }
     }
 
@@ -46,13 +56,14 @@ class TaskProgressService
                 TaskStatusEnum::CANCELLED->value,
                 TaskStatusEnum::DELETED->value,
             ])
+            ->where('type', '!=', TaskTypeEnum::MILESTONE->value)
             ->get();
 
         if ($children->isEmpty()) {
             return false;
         }
 
-        $newProgress = $this->taskRepository->getLeafTasksAvgProgress($parent->id, $parent->path);
+        $newProgress = (int) round($children->avg('progress'));
         $newStatus = $this->calculateStatus($children);
         $newStartDate = $this->calculateStartDate($children);
         $newEndDate = $this->calculateEndDate($children);
@@ -75,7 +86,6 @@ class TaskProgressService
 
     private function calculateStatus(Collection $children): int
     {
-        // Todos cancelados o eliminados
         if ($children->every(fn ($c) => in_array($c->task_status_id, [
             TaskStatusEnum::CANCELLED->value,
             TaskStatusEnum::DELETED->value,
@@ -88,12 +98,10 @@ class TaskProgressService
             TaskStatusEnum::DELETED->value,
         ]));
 
-        // Todos completados
         if ($active->every(fn ($c) => $c->task_status_id === TaskStatusEnum::COMPLETED->value)) {
             return TaskStatusEnum::COMPLETED->value;
         }
 
-        // Alguno en progreso o en pausa
         if ($active->contains(fn ($c) => in_array($c->task_status_id, [
             TaskStatusEnum::IN_PROGRESS->value,
             TaskStatusEnum::ON_HOLD->value,
@@ -101,7 +109,6 @@ class TaskProgressService
             return TaskStatusEnum::IN_PROGRESS->value;
         }
 
-        // Alguno completado pero no todos
         if ($active->contains(fn ($c) => $c->task_status_id === TaskStatusEnum::COMPLETED->value)) {
             return TaskStatusEnum::IN_PROGRESS->value;
         }

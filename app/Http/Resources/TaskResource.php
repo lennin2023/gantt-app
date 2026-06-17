@@ -15,6 +15,7 @@ class TaskResource extends JsonResource
             'project_id' => $this->project_id,
             'parent_id' => $this->parent_id,
             'path' => $this->path,
+            'display_path' => $this->getDisplayPath(),
             'type' => $this->type,
             'task_status_id' => $this->task_status_id,
             'status' => $this->whenLoaded('status', fn () => [
@@ -24,7 +25,6 @@ class TaskResource extends JsonResource
                 'color' => $this->status->color,
             ]),
             'title' => $this->title,
-            'order' => $this->order,
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
             'dependencies' => $this->whenLoaded('dependencies', fn () => $this->dependencies->map(fn ($dep) => [
@@ -43,7 +43,6 @@ class TaskResource extends JsonResource
             ]),
         ];
 
-        // Campos exclusivos de task
         if ($this->type === TaskTypeEnum::TASK) {
             $base['description'] = $this->description;
             $base['progress'] = $this->progress;
@@ -61,7 +60,6 @@ class TaskResource extends JsonResource
             ]));
         }
 
-        // Campos exclusivos de container
         if ($this->type === TaskTypeEnum::CONTAINER) {
             $base['progress'] = $this->progress;
             $base['children'] = $this->whenLoaded('children', fn () => TaskResource::collection($this->children));

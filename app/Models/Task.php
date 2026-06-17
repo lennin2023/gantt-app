@@ -27,7 +27,6 @@ class Task extends Model
         'start_date',
         'end_date',
         'progress',
-        'order',
         'created_by',
         'updated_by',
     ];
@@ -65,7 +64,7 @@ class Task extends Model
 
     public function children(): HasMany
     {
-        return $this->hasMany(Task::class, 'parent_id')->orderBy('order');
+        return $this->hasMany(Task::class, 'parent_id')->orderBy('path');
     }
 
     public function status(): BelongsTo
@@ -108,7 +107,6 @@ class Task extends Model
         )->withPivot('type');
     }
 
-    // Helpers de tipo
     public function isContainer(): bool
     {
         return $this->type === TaskTypeEnum::CONTAINER;
@@ -124,7 +122,6 @@ class Task extends Model
         return $this->type === TaskTypeEnum::MILESTONE;
     }
 
-    // Helpers de estado
     public function isPending(): bool
     {
         return $this->task_status_id === TaskStatusEnum::PENDING->value;
@@ -155,7 +152,6 @@ class Task extends Model
         return $this->task_status_id === TaskStatusEnum::DELETED->value;
     }
 
-    // Helpers de path
     public function getDepth(): int
     {
         return substr_count($this->path, '/');
@@ -164,8 +160,15 @@ class Task extends Model
     public function getAncestorIds(): array
     {
         $parts = explode('/', $this->path);
-        array_pop($parts); // quitar el id propio
+        array_pop($parts);
 
         return array_map('intval', array_filter($parts));
+    }
+
+    public function getDisplayPath(): string
+    {
+        $segments = explode('/', $this->path);
+
+        return implode('.', array_map(fn ($segment) => (int) $segment, $segments));
     }
 }

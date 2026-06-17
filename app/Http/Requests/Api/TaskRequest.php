@@ -32,13 +32,15 @@ class TaskRequest extends FormRequest
                 'data.start_date' => 'nullable|date',
                 'data.end_date' => 'nullable|date|after_or_equal:data.start_date',
                 'data.progress' => 'nullable|integer|min:0|max:100',
-                'data.order' => 'nullable|integer|min:0',
             ];
         }
 
         $type = $this->input('type')
             ?? $this->route('task')?->type?->value
             ?? TaskTypeEnum::TASK->value;
+
+        $isContainer = $type === TaskTypeEnum::CONTAINER->value;
+        $isMilestone = $type === TaskTypeEnum::MILESTONE->value;
 
         return [
             'type' => [
@@ -50,6 +52,7 @@ class TaskRequest extends FormRequest
                 'exists:tasks,id',
                 function ($attribute, $value, $fail) {
                     $task = $this->route('task');
+
                     if ($task && (int) $value === $task->id) {
                         $fail(__('validation.task.self_parent'));
                     }
@@ -62,30 +65,32 @@ class TaskRequest extends FormRequest
                         ->exists()) {
                         $fail(__('validation.task.parent_different_project'));
                     }
+
+                    $parent = Task::find($value);
+                    if ($parent && $parent->type !== TaskTypeEnum::CONTAINER) {
+                        $fail(__('validation.task.parent_must_be_container'));
+                    }
                 },
             ],
-            'task_status_id' => $type === TaskTypeEnum::CONTAINER->value
-                ? 'prohibited'
-                : ['nullable', new Enum(TaskStatusEnum::class)],
 
+            'task_status_id' => $isContainer ? 'prohibited' : ['nullable', new Enum(TaskStatusEnum::class)],
             'title' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
-            'description' => $type === TaskTypeEnum::MILESTONE->value
-                ? 'prohibited'
-                : 'nullable|string',
+            'description' => $isMilestone || $isContainer ? 'prohibited' : 'nullable|string',
 
-            'start_date' => $type === TaskTypeEnum::MILESTONE->value
-                ? ($isUpdate ? 'sometimes|date' : 'required|date')
-                : 'nullable|date',
+            'start_date' => match (true) {
+                $isContainer => 'prohibited',
+                $isMilestone => $isUpdate ? 'sometimes|date' : 'required|date',
+                default => 'nullable|date',
+            },
 
-            'end_date' => $type === TaskTypeEnum::MILESTONE->value
-                ? 'prohibited'  // se auto-asigna igual a start_date
-                : 'nullable|date|after_or_equal:start_date',
+            'end_date' => match (true) {
+                $isContainer => 'prohibited',
+                $isMilestone => 'prohibited',
+                default => 'nullable|date|after_or_equal:start_date',
+            },
 
-            'progress' => $type === TaskTypeEnum::CONTAINER->value
-                ? 'prohibited'
-                : 'nullable|integer|min:0|max:100',
+            'progress' => $isContainer ? 'prohibited' : 'nullable|integer|min:0|max:100',
 
-            'order' => 'nullable|integer|min:0',
             'dependency_ids' => 'nullable|array',
             'dependency_ids.*' => [
                 'integer',

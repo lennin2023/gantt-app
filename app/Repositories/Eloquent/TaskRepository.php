@@ -2,15 +2,20 @@
 
 namespace App\Repositories\Eloquent;
 
-use App\Enums\TaskStatusEnum;
-use App\Enums\TaskTypeEnum;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use App\Services\TaskProgressService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class TaskRepository implements TaskRepositoryInterface
 {
+    private const PAD_LENGTH = 4;
+
+    public function __construct(
+        private readonly TaskProgressService $taskProgressService,
+    ) {}
+
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
         return Task::with([
@@ -23,7 +28,6 @@ class TaskRepository implements TaskRepositoryInterface
         ])
             ->where('project_id', $projectId)
             ->orderBy('path')
-            ->orderBy('order')
             ->paginate($perPage);
     }
 
@@ -43,15 +47,15 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function create(array $data): Task
     {
-        // El path se asigna automáticamente en TaskObserver::creating/created
         return Task::create($data);
     }
 
     public function update(Task $task, array $data): Task
     {
+        $oldParentId = $task->parent_id;
         $oldPath = $task->path;
         $parentChanged = isset($data['parent_id'])
-            && $data['parent_id'] !== $task->parent_id;
+            && (int) $data['parent_id'] !== (int) $task->parent_id;
 
         $task->update($data);
 
@@ -60,14 +64,27 @@ class TaskRepository implements TaskRepositoryInterface
                 ? Task::findOrFail($task->parent_id)->path
                 : null;
 
+            $segment = $this->nextSegment($task->parent_id, $task->id);
+
             $newPath = $newParentPath
-                ? "{$newParentPath}/{$task->id}"
-                : (string) $task->id;
+                ? "{$newParentPath}/{$segment}"
+                : $segment;
 
             $task->path = $newPath;
             $task->saveQuietly();
 
             $this->updateDescendantPaths($oldPath, $newPath);
+
+            // Renumerar hermanos del container de origen (cerrar el hueco dejado)
+            $this->renumberSiblings($oldParentId);
+
+            if ($oldParentId) {
+                $this->taskProgressService->recalculateById($oldParentId);
+            }
+
+            if ($task->parent_id) {
+                $this->taskProgressService->recalculateById($task->parent_id);
+            }
         }
 
         return $task->fresh();
@@ -105,20 +122,6 @@ class TaskRepository implements TaskRepositoryInterface
         return ! empty($result);
     }
 
-    public function getLeafTasksAvgProgress(int $parentId, string $path): int
-    {
-        $result = Task::where('path', 'LIKE', "{$path}/%")
-            ->where('type', TaskTypeEnum::TASK->value)
-            ->whereNotIn('task_status_id', [
-                TaskStatusEnum::CANCELLED->value,
-                TaskStatusEnum::DELETED->value,
-            ])
-            ->whereDoesntHave('children', fn ($q) => $q->where('type', TaskTypeEnum::TASK->value))
-            ->avg('progress');
-
-        return (int) round($result ?? 0);
-    }
-
     public function updateDescendantPaths(string $oldPath, string $newPath): void
     {
         Task::where('path', 'LIKE', "{$oldPath}/%")
@@ -126,5 +129,41 @@ class TaskRepository implements TaskRepositoryInterface
                 $task->path = str_replace($oldPath.'/', $newPath.'/', $task->path);
                 $task->saveQuietly();
             });
+    }
+
+    /**
+     * Renumera los hermanos de un parent para cerrar huecos dejados
+     * tras mover/eliminar un nodo (ej: 0001, 0003 → 0001, 0002).
+     */
+    private function renumberSiblings(?int $parentId): void
+    {
+        $siblings = Task::where('parent_id', $parentId)
+            ->orderBy('path')
+            ->get();
+
+        $parentPath = $parentId ? Task::find($parentId)?->path : null;
+
+        foreach ($siblings as $index => $sibling) {
+            $segment = str_pad((string) ($index + 1), self::PAD_LENGTH, '0', STR_PAD_LEFT);
+            $newPath = $parentPath ? "{$parentPath}/{$segment}" : $segment;
+
+            if ($sibling->path !== $newPath) {
+                $oldSiblingPath = $sibling->path;
+
+                $sibling->path = $newPath;
+                $sibling->saveQuietly();
+
+                $this->updateDescendantPaths($oldSiblingPath, $newPath);
+            }
+        }
+    }
+
+    private function nextSegment(?int $parentId, int $excludeTaskId): string
+    {
+        $count = Task::where('parent_id', $parentId)
+            ->where('id', '!=', $excludeTaskId)
+            ->count();
+
+        return str_pad((string) ($count + 1), self::PAD_LENGTH, '0', STR_PAD_LEFT);
     }
 }

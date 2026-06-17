@@ -19,7 +19,5 @@ interface TaskRepositoryInterface
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool;
 
-    public function getLeafTasksAvgProgress(int $parentId, string $path): int;
-
     public function updateDescendantPaths(string $oldPath, string $newPath): void;
 }
