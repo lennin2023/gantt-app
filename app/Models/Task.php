@@ -152,19 +152,6 @@ class Task extends Model
         return $this->task_status_id === TaskStatusEnum::DELETED->value;
     }
 
-    public function getDepth(): int
-    {
-        return substr_count($this->path, '/');
-    }
-
-    public function getAncestorIds(): array
-    {
-        $parts = explode('/', $this->path);
-        array_pop($parts);
-
-        return array_map('intval', array_filter($parts));
-    }
-
     public function getDisplayPath(): string
     {
         $segments = explode('/', $this->path);

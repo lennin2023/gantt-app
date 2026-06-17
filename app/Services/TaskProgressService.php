@@ -11,22 +11,16 @@ class TaskProgressService
 {
     public function recalculateAncestors(Task $task): void
     {
-        $ancestorIds = $task->getAncestorIds();
+        $parent = $task->parent_id ? Task::find($task->parent_id) : null;
 
-        if (empty($ancestorIds)) {
-            return;
-        }
-
-        $ancestors = Task::whereIn('id', $ancestorIds)
-            ->orderByDesc('path')
-            ->get();
-
-        foreach ($ancestors as $ancestor) {
-            $changed = $this->recalculate($ancestor);
+        while ($parent) {
+            $changed = $this->recalculate($parent);
 
             if (! $changed) {
                 break;
             }
+
+            $parent = $parent->parent_id ? Task::find($parent->parent_id) : null;
         }
     }
 
