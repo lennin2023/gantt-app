@@ -54,7 +54,7 @@ class TaskProgressService
             ->get();
 
         if ($children->isEmpty()) {
-            return false;
+            return $this->clear($parent);
         }
 
         $newProgress = (int) round($children->avg('progress'));
@@ -72,6 +72,28 @@ class TaskProgressService
             $parent->task_status_id = $newStatus;
             $parent->start_date = $newStartDate;
             $parent->end_date = $newEndDate;
+            $parent->saveQuietly();
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Limpia progress, status y fechas cuando el container se queda sin
+     * hijos válidos (todos movidos, eliminados o cancelados).
+     */
+    private function clear(Task $parent): bool
+    {
+        $changed = $parent->progress !== 0
+            || $parent->task_status_id !== TaskStatusEnum::PENDING->value
+            || $parent->start_date !== null
+            || $parent->end_date !== null;
+
+        if ($changed) {
+            $parent->progress = 0;
+            $parent->task_status_id = TaskStatusEnum::PENDING->value;
+            $parent->start_date = null;
+            $parent->end_date = null;
             $parent->saveQuietly();
         }
 
