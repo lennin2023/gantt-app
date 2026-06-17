@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Task;
+use App\Services\ProjectService;
 use App\Services\TaskProgressService;
 
 class TaskObserver
@@ -11,6 +12,7 @@ class TaskObserver
 
     public function __construct(
         private readonly TaskProgressService $taskProgressService,
+        private readonly ProjectService $projectService,
     ) {}
 
     public function creating(Task $task): void
@@ -19,7 +21,6 @@ class TaskObserver
             ? Task::findOrFail($task->parent_id)->path
             : null;
 
-        // Path temporal con placeholder — se corrige en created()
         $task->path = $parentPath
             ? "{$parentPath}/".str_pad('0', self::PAD_LENGTH, '0', STR_PAD_LEFT)
             : str_pad('0', self::PAD_LENGTH, '0', STR_PAD_LEFT);
@@ -39,31 +40,34 @@ class TaskObserver
 
         $task->saveQuietly();
 
-        if (! $task->parent_id) {
-            return;
+        if ($task->parent_id) {
+            $this->taskProgressService->recalculateAncestors($task);
+        } else {
+            $this->projectService->refreshDates($task->project_id);
         }
-
-        $this->taskProgressService->recalculateAncestors($task);
     }
 
     public function updated(Task $task): void
     {
-        if (! $task->parent_id) {
-            return;
-        }
-
         if (! $task->wasChanged(['task_status_id', 'progress', 'start_date', 'end_date'])) {
             return;
         }
 
-        $this->taskProgressService->recalculateAncestors($task);
+        if ($task->parent_id) {
+            $this->taskProgressService->recalculateAncestors($task);
+
+            return;
+        }
+
+        if ($task->wasChanged(['start_date', 'end_date'])) {
+            $this->projectService->refreshDates($task->project_id);
+        }
     }
 
     private function nextSegment(?int $parentId): string
     {
         $count = Task::where('parent_id', $parentId)->count();
 
-        // count incluye el registro recién insertado, así que el número de orden es count (1-indexed)
         return str_pad((string) $count, self::PAD_LENGTH, '0', STR_PAD_LEFT);
     }
 }

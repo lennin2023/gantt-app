@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
+use App\Services\ProjectService;
 use App\Services\TaskProgressService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function __construct(
         private readonly TaskProgressService $taskProgressService,
+        private readonly ProjectService $projectService,
     ) {}
 
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
@@ -74,16 +76,18 @@ class TaskRepository implements TaskRepositoryInterface
             $task->saveQuietly();
 
             $this->updateDescendantPaths($oldPath, $newPath);
-
-            // Renumerar hermanos del container de origen (cerrar el hueco dejado)
             $this->renumberSiblings($oldParentId);
 
             if ($oldParentId) {
                 $this->taskProgressService->recalculateById($oldParentId);
+            } else {
+                $this->projectService->refreshDates($task->project_id);
             }
 
             if ($task->parent_id) {
                 $this->taskProgressService->recalculateById($task->parent_id);
+            } else {
+                $this->projectService->refreshDates($task->project_id);
             }
         }
 
@@ -131,10 +135,6 @@ class TaskRepository implements TaskRepositoryInterface
             });
     }
 
-    /**
-     * Renumera los hermanos de un parent para cerrar huecos dejados
-     * tras mover/eliminar un nodo (ej: 0001, 0003 → 0001, 0002).
-     */
     private function renumberSiblings(?int $parentId): void
     {
         $siblings = Task::where('parent_id', $parentId)

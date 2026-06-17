@@ -9,18 +9,30 @@ use Illuminate\Support\Collection;
 
 class TaskProgressService
 {
+    public function __construct(
+        private readonly ProjectService $projectService,
+    ) {}
+
     public function recalculateAncestors(Task $task): void
     {
         $parent = $task->parent_id ? Task::find($task->parent_id) : null;
+        $lastProcessed = null;
 
         while ($parent) {
             $changed = $this->recalculate($parent);
+            $lastProcessed = $parent;
 
             if (! $changed) {
                 break;
             }
 
             $parent = $parent->parent_id ? Task::find($parent->parent_id) : null;
+        }
+
+        // Si el último container procesado (cambiado o no) es de nivel raíz,
+        // sincronizar las fechas del proyecto.
+        if ($lastProcessed && ! $lastProcessed->parent_id) {
+            $this->projectService->refreshDates($lastProcessed->project_id);
         }
     }
 
@@ -36,6 +48,8 @@ class TaskProgressService
 
         if ($task->parent_id) {
             $this->recalculateAncestors($task);
+        } else {
+            $this->projectService->refreshDates($task->project_id);
         }
     }
 
@@ -78,10 +92,6 @@ class TaskProgressService
         return $changed;
     }
 
-    /**
-     * Limpia progress, status y fechas cuando el container se queda sin
-     * hijos válidos (todos movidos, eliminados o cancelados).
-     */
     private function clear(Task $parent): bool
     {
         $changed = $parent->progress !== 0

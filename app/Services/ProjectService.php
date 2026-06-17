@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\ProjectDTO;
 use App\Enums\ProjectStatusEnum;
+use App\Enums\TaskStatusEnum;
 use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
 use App\Exceptions\ProjectAlreadyInStatusException;
@@ -11,6 +12,7 @@ use App\Exceptions\ProjectDeletedCannotBeUpdatedException;
 use App\Exceptions\ProjectInvalidStatusTransitionException;
 use App\Exceptions\ProjectNotDeletedException;
 use App\Models\Project;
+use App\Models\Task;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -155,6 +157,47 @@ class ProjectService
 
         $project->updated_by = $updatedBy;
         $project->save();
+    }
+
+    /**
+     * Recalcula start_date/end_date del proyecto en base a sus tareas
+     * y containers de nivel raíz, igual que un container deriva de sus hijos.
+     */
+    public function refreshDates(int $projectId): void
+    {
+        $rootTasks = Task::where('project_id', $projectId)
+            ->whereNull('parent_id')
+            ->whereNotIn('task_status_id', [
+                TaskStatusEnum::CANCELLED->value,
+                TaskStatusEnum::DELETED->value,
+            ])
+            ->get();
+
+        $project = Project::find($projectId);
+
+        if (! $project) {
+            return;
+        }
+
+        if ($rootTasks->isEmpty()) {
+            $project->start_date = null;
+            $project->end_date = null;
+            $project->saveQuietly();
+
+            return;
+        }
+
+        $newStartDate = $rootTasks
+            ->filter(fn ($t) => $t->start_date !== null)
+            ->min(fn ($t) => $t->start_date?->toDateString());
+
+        $newEndDate = $rootTasks
+            ->filter(fn ($t) => $t->end_date !== null)
+            ->max(fn ($t) => $t->end_date?->toDateString());
+
+        $project->start_date = $newStartDate;
+        $project->end_date = $newEndDate;
+        $project->saveQuietly();
     }
 
     private function validateTransition(Project $project, ProjectStatusEnum $newStatus): void
