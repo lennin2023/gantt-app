@@ -18,6 +18,9 @@ pest()->extend(TestCase::class)
  // ->use(RefreshDatabase::class)
     ->in('Feature');
 
+uses()->group('api')->in('Feature/Api');
+uses()->group('web')->in('Feature/Auth', 'Feature/Settings');
+
 /*
 |--------------------------------------------------------------------------
 | Expectations
