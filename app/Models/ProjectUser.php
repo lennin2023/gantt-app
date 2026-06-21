@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasCreatedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProjectUser extends Model
 {
-    use HasCreatedBy;
+    use HasCreatedBy, HasFactory;
 
     public $timestamps = false;
 

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RoleEnum;
 use App\Models\Company;
 use App\Models\ProjectRole;
 use App\Models\ProjectStatus;
@@ -15,7 +16,22 @@ class AuditFieldsUpdaterSeeder extends Seeder
 {
     public function run(): void
     {
-        $masterUserId = 1;
+        // Buscamos al primer Super Admin real que exista en la base de datos
+        $masterUser = User::where('role_id', RoleEnum::SUPER_ADMIN->value)->first();
+
+        // Si por alguna razón rarísima en el test no hay ninguno, usamos el primero que haya
+        if (! $masterUser) {
+            $masterUser = User::first();
+        }
+
+        // Si la tabla está absolutamente vacía, creamos uno de emergencia
+        if (! $masterUser) {
+            $masterUser = User::factory()->create([
+                'role_id' => RoleEnum::SUPER_ADMIN->value,
+            ]);
+        }
+
+        $masterUserId = $masterUser->id;
 
         User::where('id', '!=', $masterUserId)->update([
             'created_by' => $masterUserId,

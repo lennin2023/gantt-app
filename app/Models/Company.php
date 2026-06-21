@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasAuditFields;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
-    use HasAuditFields;
+    use HasAuditFields, HasFactory;
 
     protected $fillable = [
         'name',
