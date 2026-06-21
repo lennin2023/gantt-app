@@ -29,7 +29,9 @@ class TaskAssignmentRepository implements TaskAssignmentRepositoryInterface
 
     public function create(array $data): TaskAssignment
     {
-        return TaskAssignment::create($data);
+        $assignment = TaskAssignment::create($data);
+
+        return $assignment->fresh(['projectUser.user', 'taskRole']);
     }
 
     public function update(TaskAssignment $assignment, array $data): TaskAssignment

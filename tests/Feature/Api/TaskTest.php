@@ -46,7 +46,7 @@ it('creates a container', function () {
         'type' => TaskTypeEnum::CONTAINER->value,
         'title' => 'Fase 1',
     ])->assertCreated()
-        ->assertJsonPath('data.type.value', TaskTypeEnum::CONTAINER->value)
+        ->assertJsonPath('data.type', TaskTypeEnum::CONTAINER->value)
         ->assertJsonPath('data.path', '0001');
 });
 
@@ -59,7 +59,7 @@ it('creates a task', function () {
         'end_date' => '2026-03-31',
         'progress' => 0,
     ])->assertCreated()
-        ->assertJsonPath('data.type.value', TaskTypeEnum::TASK->value);
+        ->assertJsonPath('data.type', TaskTypeEnum::TASK->value);
 });
 
 it('creates a milestone inside container', function () {
@@ -71,7 +71,7 @@ it('creates a milestone inside container', function () {
         'parent_id' => $container->id,
         'start_date' => '2026-06-30',
     ])->assertCreated()
-        ->assertJsonPath('data.type.value', TaskTypeEnum::MILESTONE->value);
+        ->assertJsonPath('data.type', TaskTypeEnum::MILESTONE->value);
 });
 
 it('auto-syncs milestone end_date to start_date on create', function () {

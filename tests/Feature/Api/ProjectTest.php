@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 uses(RefreshDatabase::class);
 
@@ -52,8 +51,9 @@ it('filters projects by status', function () {
 });
 
 it('returns 401 without token', function () {
+    $this->app['auth']->forgetGuards();
     $this->getJson('/api/projects')->assertStatus(401);
-})->withoutMiddleware(EnsureFrontendRequestsAreStateful::class);
+});
 
 // ─── Store ─────────────────────────────────────────────────────────────────
 

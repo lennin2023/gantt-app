@@ -74,7 +74,15 @@ class TaskService
     public function createTask(TaskDTO $dto): Task
     {
         return DB::transaction(function () use ($dto) {
-            $task = $this->taskRepository->create($dto->toArray());
+            $data = $dto->toArray();
+
+            if (($data['type'] ?? null) === TaskTypeEnum::MILESTONE->value
+                && isset($data['start_date'])
+                && ! isset($data['end_date'])) {
+                $data['end_date'] = $data['start_date'];
+            }
+
+            $task = $this->taskRepository->create($data);
 
             if ($dto->dependencyIds !== TaskDTO::UNDEFINED_ARRAY && ! empty($dto->dependencyIds)) {
                 $this->validateNoCycleWouldBeCreated($task, $dto->dependencyIds);
@@ -269,6 +277,22 @@ class TaskService
 
         if ($task->task_status_id === $newStatus->value) {
             throw new TaskAlreadyInStatusException($newStatus);
+        }
+
+        if ($task->type === TaskTypeEnum::MILESTONE) {
+            $milestoneAllowed = [
+                TaskStatusEnum::PENDING->value => [TaskStatusEnum::COMPLETED->value, TaskStatusEnum::CANCELLED->value],
+                TaskStatusEnum::COMPLETED->value => [TaskStatusEnum::PENDING->value],
+                TaskStatusEnum::CANCELLED->value => [TaskStatusEnum::PENDING->value],
+            ];
+
+            $allowed = $milestoneAllowed[$currentStatus->value] ?? [];
+
+            if (! in_array($newStatus->value, $allowed)) {
+                throw new TaskInvalidStatusTransitionException($currentStatus, $newStatus);
+            }
+
+            return;
         }
 
         $allowed = $this->allowedTransitions[$currentStatus->value] ?? [];

@@ -4,7 +4,6 @@ use App\Models\Company;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 uses(RefreshDatabase::class);
 
@@ -19,18 +18,20 @@ it('returns dashboard stats', function () {
     $this->getJson('/api/dashboard/stats')
         ->assertOk()
         ->assertJsonStructure(['data' => [
-            'total_projects',
-            'active_projects',
-            'completed_projects',
-            'total_tasks',
-            'completed_tasks',
+            'metrics' => [
+                'total_projects',
+                'active_projects',
+                'completed_projects',
+                'overall_progress',
+            ],
+            'projects',
         ]]);
 });
 
 it('returns zero stats when no projects exist', function () {
     $response = $this->getJson('/api/dashboard/stats');
 
-    expect($response->json('data.total_projects'))->toBe(0);
+    expect($response->json('data.metrics.total_projects'))->toBe(0);
 });
 
 it('counts projects correctly', function () {
@@ -41,9 +42,10 @@ it('counts projects correctly', function () {
 
     $response = $this->getJson('/api/dashboard/stats');
 
-    expect($response->json('data.total_projects'))->toBe(3);
+    expect($response->json('data.metrics.total_projects'))->toBe(3);
 });
 
 it('returns 401 without token', function () {
+    $this->app['auth']->forgetGuards();
     $this->getJson('/api/dashboard/stats')->assertStatus(401);
-})->withoutMiddleware(EnsureFrontendRequestsAreStateful::class);
+});

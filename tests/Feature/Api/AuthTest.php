@@ -47,14 +47,18 @@ it('rejects me without token', function () {
 
 it('allows logout', function () {
     $user = User::where('email', 'superadmin@example.com')->first();
-    $this->actingAs($user, 'sanctum');
+    $token = $user->createToken('test-device')->plainTextToken;
 
-    $this->postJson('/api/auth/logout')->assertOk();
+    $this->withHeader('Authorization', 'Bearer '.$token)
+        ->postJson('/api/auth/logout')
+        ->assertOk();
 });
 
 it('allows logout all', function () {
     $user = User::where('email', 'superadmin@example.com')->first();
-    $this->actingAs($user, 'sanctum');
+    $token = $user->createToken('test-device')->plainTextToken;
 
-    $this->postJson('/api/auth/logout-all')->assertOk();
+    $this->withHeader('Authorization', 'Bearer '.$token)
+        ->postJson('/api/auth/logout-all')
+        ->assertOk();
 });

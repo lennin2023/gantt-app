@@ -59,6 +59,10 @@ class TaskProgressService
             return false;
         }
 
+        if ($parent->task_status_id === TaskStatusEnum::DELETED->value) {
+            return false;
+        }
+
         $children = Task::where('parent_id', $parent->id)
             ->whereNotIn('task_status_id', [
                 TaskStatusEnum::CANCELLED->value,
