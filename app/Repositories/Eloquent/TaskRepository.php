@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
 
 class TaskRepository implements TaskRepositoryInterface
 {
-    public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
+    public function getAllByProject(int $projectId, int $perPage = 10, array $filters = []): LengthAwarePaginator
     {
-        return Task::with([
+        $query = Task::with([
             'status',
             'assignments.projectUser.user',
             'assignments.taskRole',
@@ -22,9 +22,35 @@ class TaskRepository implements TaskRepositoryInterface
             'creator',
             'project',
         ])
-            ->where('project_id', $projectId)
-            ->orderBy('path')
-            ->paginate($perPage);
+            ->where('project_id', $projectId);
+
+        if (isset($filters['status_id'])) {
+            $query->where('task_status_id', (int) $filters['status_id']);
+        }
+
+        if (isset($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (isset($filters['search'])) {
+            $query->where('title', 'LIKE', "%{$filters['search']}%");
+        }
+
+        if (isset($filters['start_date_from'])) {
+            $query->where('start_date', '>=', $filters['start_date_from']);
+        }
+
+        if (isset($filters['start_date_to'])) {
+            $query->where('start_date', '<=', $filters['start_date_to']);
+        }
+
+        if (isset($filters['assignee_id'])) {
+            $query->whereHas('assignments', function ($q) use ($filters) {
+                $q->where('project_user_id', (int) $filters['assignee_id']);
+            });
+        }
+
+        return $query->orderBy('path')->paginate($perPage);
     }
 
     public function findById(int $id): ?Task

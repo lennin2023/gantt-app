@@ -3,11 +3,11 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\TaskAssignment;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface TaskAssignmentRepositoryInterface
 {
-    public function getAllByTask(int $taskId): Collection;
+    public function getAllByTask(int $taskId, int $perPage = 10): LengthAwarePaginator;
 
     public function findById(int $id): ?TaskAssignment;
 

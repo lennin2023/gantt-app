@@ -18,6 +18,10 @@ pest()->extend(TestCase::class)
  // ->use(RefreshDatabase::class)
     ->in('Feature');
 
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->in('Unit');
+
 uses()->group('api')->in('Feature/Api');
 uses()->group('web')->in('Feature/Auth', 'Feature/Settings');
 

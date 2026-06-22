@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 interface TaskRepositoryInterface
 {
-    public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator;
+    public function getAllByProject(int $projectId, int $perPage = 10, array $filters = []): LengthAwarePaginator;
 
     public function findById(int $id): ?Task;
 

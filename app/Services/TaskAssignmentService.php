@@ -6,7 +6,7 @@ use App\DTOs\TaskAssignmentDTO;
 use App\Exceptions\TaskAssignmentAlreadyExistsException;
 use App\Models\TaskAssignment;
 use App\Repositories\Contracts\TaskAssignmentRepositoryInterface;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class TaskAssignmentService
@@ -15,9 +15,9 @@ class TaskAssignmentService
         private readonly TaskAssignmentRepositoryInterface $assignmentRepository,
     ) {}
 
-    public function getTaskAssignments(int $taskId): Collection
+    public function getTaskAssignments(int $taskId, int $perPage = 10): LengthAwarePaginator
     {
-        return $this->assignmentRepository->getAllByTask($taskId);
+        return $this->assignmentRepository->getAllByTask($taskId, $perPage);
     }
 
     public function assign(TaskAssignmentDTO $dto): TaskAssignment

@@ -28,7 +28,17 @@ class TaskController extends Controller
         $this->authorize('viewAny', [Task::class, $project]);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
-        $tasks = $this->taskService->getProjectTasks($project->id, $perPage);
+
+        $filters = array_filter([
+            'status_id' => $request->query('status_id'),
+            'type' => $request->query('type'),
+            'search' => $request->query('search'),
+            'start_date_from' => $request->query('start_date_from'),
+            'start_date_to' => $request->query('start_date_to'),
+            'assignee_id' => $request->query('assignee_id'),
+        ]);
+
+        $tasks = $this->taskService->getProjectTasks($project->id, $perPage, $filters);
 
         return TaskResource::collection($tasks);
     }

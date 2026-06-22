@@ -4,15 +4,15 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\TaskAssignment;
 use App\Repositories\Contracts\TaskAssignmentRepositoryInterface;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class TaskAssignmentRepository implements TaskAssignmentRepositoryInterface
 {
-    public function getAllByTask(int $taskId): Collection
+    public function getAllByTask(int $taskId, int $perPage = 10): LengthAwarePaginator
     {
         return TaskAssignment::with(['projectUser.user', 'taskRole'])
             ->where('task_id', $taskId)
-            ->get();
+            ->paginate($perPage);
     }
 
     public function findById(int $id): ?TaskAssignment

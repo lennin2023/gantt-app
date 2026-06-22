@@ -61,9 +61,9 @@ class TaskService
         private readonly TaskRepositoryInterface $taskRepository,
     ) {}
 
-    public function getProjectTasks(int $projectId, int $perPage = 10): LengthAwarePaginator
+    public function getProjectTasks(int $projectId, int $perPage = 10, array $filters = []): LengthAwarePaginator
     {
-        return $this->taskRepository->getAllByProject($projectId, $perPage);
+        return $this->taskRepository->getAllByProject($projectId, $perPage, $filters);
     }
 
     public function findById(int $id): ?Task

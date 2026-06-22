@@ -11,6 +11,7 @@ use App\Models\Task;
 use App\Models\TaskAssignment;
 use App\Services\TaskAssignmentService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TaskAssignmentController extends Controller
@@ -21,12 +22,13 @@ class TaskAssignmentController extends Controller
         private readonly TaskAssignmentService $assignmentService,
     ) {}
 
-    public function index(Task $task): AnonymousResourceCollection
+    public function index(Request $request, Task $task): AnonymousResourceCollection
     {
         $task->loadMissing('project');
         $this->authorize('viewAny', [TaskAssignment::class, $task->project]);
 
-        $assignments = $this->assignmentService->getTaskAssignments($task->id);
+        $perPage = min((int) $request->query('per_page', 10), 100);
+        $assignments = $this->assignmentService->getTaskAssignments($task->id, $perPage);
 
         return TaskAssignmentResource::collection($assignments);
     }
