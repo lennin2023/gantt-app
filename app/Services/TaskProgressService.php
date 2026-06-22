@@ -16,45 +16,62 @@ class TaskProgressService
 
     public function recalculateAncestors(Task $task): void
     {
-        $parent = $task->parent_id ? Task::find($task->parent_id) : null;
+        $ancestorPaths = $this->getAncestorPaths($task);
+
+        if ($ancestorPaths->isEmpty()) {
+            return;
+        }
+
+        $ancestors = Task::whereIn('path', $ancestorPaths)
+            ->where('type', 'container')
+            ->where('task_status_id', '!=', TaskStatusEnum::DELETED->value)
+            ->orderBy('path', 'asc')
+            ->get();
+
         $lastProcessed = null;
 
-        while ($parent) {
-            $changed = $this->recalculate($parent);
-            $lastProcessed = $parent;
+        foreach ($ancestors->reverse() as $ancestor) {
+            $changed = $this->recalculate($ancestor);
+            $lastProcessed = $ancestor;
 
             if (! $changed) {
                 break;
             }
-
-            $parent = $parent->parent_id ? Task::find($parent->parent_id) : null;
         }
 
-        // Si el último container procesado (cambiado o no) es de nivel raíz,
-        // sincronizar las fechas del proyecto.
         if ($lastProcessed && ! $lastProcessed->parent_id) {
-            $this->projectService->refreshDates($lastProcessed->project_id);
-        }
-    }
-
-    public function recalculateById(int $taskId): void
-    {
-        $task = Task::find($taskId);
-
-        if (! $task) {
-            return;
-        }
-
-        $this->recalculate($task);
-
-        if ($task->parent_id) {
-            $this->recalculateAncestors($task);
-        } else {
             $this->projectService->refreshDates($task->project_id);
         }
     }
 
-    private function recalculate(Task $parent): bool
+    /**
+     * Extracts all ancestor paths from the task's materialized path.
+     *
+     * For path "0001/0002/0003" returns ["0001", "0001/0002"].
+     */
+    private function getAncestorPaths(Task $task): Collection
+    {
+        if (! $task->path || ! str_contains($task->path, '/')) {
+            return collect();
+        }
+
+        $segments = explode('/', $task->path);
+        $paths = collect();
+        $current = '';
+
+        foreach ($segments as $index => $segment) {
+            if ($index === count($segments) - 1) {
+                break;
+            }
+
+            $current = $current === '' ? $segment : "{$current}/{$segment}";
+            $paths->push($current);
+        }
+
+        return $paths;
+    }
+
+    public function recalculate(Task $parent): bool
     {
         if (! $parent->isContainer()) {
             return false;

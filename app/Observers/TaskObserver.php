@@ -2,17 +2,14 @@
 
 namespace App\Observers;
 
+use App\Jobs\RecalculateTaskHierarchyJob;
 use App\Models\Task;
-use App\Services\ProjectService;
 use App\Services\TaskPathService;
-use App\Services\TaskProgressService;
 
 class TaskObserver
 {
     public function __construct(
         private readonly TaskPathService $taskPathService,
-        private readonly TaskProgressService $taskProgressService,
-        private readonly ProjectService $projectService,
     ) {}
 
     public function creating(Task $task): void
@@ -30,11 +27,12 @@ class TaskObserver
     {
         $this->taskPathService->applyPathOnCreate($task);
 
-        if ($task->parent_id) {
-            $this->taskProgressService->recalculateAncestors($task);
-        } else {
-            $this->projectService->refreshDates($task->project_id);
-        }
+        RecalculateTaskHierarchyJob::dispatch(
+            $task->id,
+            $task->project_id,
+            recalculateAncestors: (bool) $task->parent_id,
+            refreshProjectDates: true,
+        );
     }
 
     public function updated(Task $task): void
@@ -46,16 +44,21 @@ class TaskObserver
             $this->taskPathService->handleParentChange($task, $oldParentId, $oldPath);
 
             if ($oldParentId) {
-                $this->taskProgressService->recalculateById($oldParentId);
-            } else {
-                $this->projectService->refreshDates($task->project_id);
+                RecalculateTaskHierarchyJob::dispatch(
+                    $oldParentId,
+                    $task->project_id,
+                    recalculateAncestors: true,
+                    refreshProjectDates: false,
+                );
             }
 
-            if ($task->parent_id) {
-                $this->taskProgressService->recalculateById($task->parent_id);
-            } else {
-                $this->projectService->refreshDates($task->project_id);
-            }
+            $targetId = $task->parent_id ?? $task->id;
+            RecalculateTaskHierarchyJob::dispatch(
+                $targetId,
+                $task->project_id,
+                recalculateAncestors: (bool) $task->parent_id,
+                refreshProjectDates: true,
+            );
 
             return;
         }
@@ -64,14 +67,11 @@ class TaskObserver
             return;
         }
 
-        if ($task->parent_id) {
-            $this->taskProgressService->recalculateAncestors($task);
-
-            return;
-        }
-
-        if ($task->wasChanged(['start_date', 'end_date'])) {
-            $this->projectService->refreshDates($task->project_id);
-        }
+        RecalculateTaskHierarchyJob::dispatch(
+            $task->id,
+            $task->project_id,
+            recalculateAncestors: (bool) $task->parent_id,
+            refreshProjectDates: ! $task->parent_id || $task->wasChanged(['start_date', 'end_date']),
+        );
     }
 }
