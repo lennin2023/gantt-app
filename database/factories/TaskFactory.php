@@ -78,4 +78,26 @@ class TaskFactory extends Factory
     {
         return $this->state(['task_status_id' => TaskStatusEnum::DELETED->value]);
     }
+
+    public function withDates(): static
+    {
+        $start = fake()->dateTimeBetween('-30 days', '+30 days');
+
+        return $this->state([
+            'start_date' => $start->format('Y-m-d'),
+            'end_date' => (clone $start)->modify('+'.fake()->numberBetween(1, 30).' days')->format('Y-m-d'),
+        ]);
+    }
+
+    public function withProgress(?int $progress = null): static
+    {
+        $progress ??= fake()->numberBetween(0, 100);
+
+        return $this->state([
+            'progress' => $progress,
+            'task_status_id' => $progress === 0
+                ? TaskStatusEnum::PENDING->value
+                : ($progress === 100 ? TaskStatusEnum::COMPLETED->value : TaskStatusEnum::IN_PROGRESS->value),
+        ]);
+    }
 }
