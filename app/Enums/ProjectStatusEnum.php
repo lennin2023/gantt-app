@@ -12,13 +12,7 @@ enum ProjectStatusEnum: int
 
     public function label(): string
     {
-        return match ($this) {
-            self::ACTIVE => 'Activo',
-            self::COMPLETED => 'Completado',
-            self::ON_HOLD => 'En Pausa',
-            self::CANCELLED => 'Cancelado',
-            self::DELETED => 'Eliminado',
-        };
+        return __('enums.project_status.'.$this->name);
     }
 
     public function slug(): string

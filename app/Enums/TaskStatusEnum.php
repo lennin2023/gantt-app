@@ -13,14 +13,7 @@ enum TaskStatusEnum: int
 
     public function label(): string
     {
-        return match ($this) {
-            self::PENDING => 'Pendiente',
-            self::IN_PROGRESS => 'En Progreso',
-            self::COMPLETED => 'Completada',
-            self::ON_HOLD => 'En Pausa',
-            self::CANCELLED => 'Cancelada',
-            self::DELETED => 'Eliminada',
-        };
+        return __('enums.task_status.'.$this->name);
     }
 
     public function slug(): string
