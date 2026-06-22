@@ -1,0 +1,889 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Gantt App API",
+    "description": "API REST para gestión de proyectos y tareas con diagramas Gantt",
+    "contact": {
+      "name": "Gantt App Team"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "API base URL"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Autenticación"],
+        "summary": "Iniciar sesión",
+        "description": "Valida credenciales y devuelve un token Sanctum",
+        "operationId": "99d66635c4992aeaa6aa44ff653d0563",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "admin@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password"
+                  },
+                  "device_name": {
+                    "type": "string",
+                    "example": "postman"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login exitoso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "token": {
+                          "type": "string"
+                        },
+                        "token_type": {
+                          "type": "string"
+                        },
+                        "user": {
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error de validación"
+          },
+          "429": {
+            "description": "Rate limit excedido"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Autenticación"],
+        "summary": "Cerrar sesión",
+        "description": "Revoca el token actual",
+        "operationId": "6abf3b64a4bc7838d56346f05a5153af",
+        "responses": {
+          "200": {
+            "description": "Sesión cerrada"
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "tags": ["Autenticación"],
+        "summary": "Cerrar todas las sesiones",
+        "description": "Revoca todos los tokens del usuario",
+        "operationId": "8a0e47e08fb7ff4a767e76fd65943833",
+        "responses": {
+          "200": {
+            "description": "Sesiones cerradas"
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Autenticación"],
+        "summary": "Obtener usuario actual",
+        "description": "Devuelve el usuario autenticado",
+        "operationId": "7edae2cdbaafc10dff8c9c4198b320a2",
+        "responses": {
+          "200": {
+            "description": "Usuario autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "tags": ["Dashboard"],
+        "summary": "Estadísticas del dashboard",
+        "description": "Métricas agregadas del usuario autenticado",
+        "operationId": "06b55ec316b401263ae54a499fc977ad",
+        "responses": {
+          "200": {
+            "description": "Estadísticas del dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "metrics": {
+                          "type": "object"
+                        },
+                        "projects": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/projects": {
+      "get": {
+        "tags": ["Proyectos"],
+        "summary": "Listar proyectos",
+        "description": "Lista paginada de proyectos del usuario",
+        "operationId": "e66a4b9c561c9e3e0b98d95b6437ff91",
+        "parameters": [
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "status_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de proyectos"
+          },
+          "401": {
+            "description": "No autenticado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Proyectos"],
+        "summary": "Crear proyecto",
+        "description": "Crea un nuevo proyecto (solo Admin o Super Admin)",
+        "operationId": "3e5e24c249cabe95d4c10927fda15c42",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["company_id", "name", "color"],
+                "properties": {
+                  "company_id": {
+                    "type": "integer"
+                  },
+                  "project_status_id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Proyecto creado"
+          },
+          "403": {
+            "description": "No autorizado"
+          },
+          "422": {
+            "description": "Error de validación"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}": {
+      "get": {
+        "tags": ["Proyectos"],
+        "summary": "Detalle de proyecto",
+        "description": "Devuelve el detalle de un proyecto",
+        "operationId": "042e8a7d144e8e7d6f2bc9009f82ae3a",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "include_stats",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle del proyecto"
+          },
+          "404": {
+            "description": "No encontrado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Proyectos"],
+        "summary": "Eliminar proyecto",
+        "description": "Eliminación lógica (soft delete vía status)",
+        "operationId": "9d379dcf6b99d1860846be1e3b9520a9",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proyecto eliminado"
+          },
+          "422": {
+            "description": "Estado no permite eliminación"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": ["Proyectos"],
+        "summary": "Actualizar proyecto",
+        "description": "Actualización parcial de un proyecto",
+        "operationId": "c8489e0b6f426883dbfc90a81c532bb8",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "project_status_id": {
+                    "type": "integer"
+                  },
+                  "color": {
+                    "type": "string"
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proyecto actualizado"
+          },
+          "422": {
+            "description": "Transición de estado inválida"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/restore": {
+      "post": {
+        "tags": ["Proyectos"],
+        "summary": "Restaurar proyecto",
+        "description": "Restaura un proyecto eliminado",
+        "operationId": "7b25c2a0f064ede37cae606b0cbec69c",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proyecto restaurado"
+          },
+          "422": {
+            "description": "El proyecto no está eliminado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/projects/{project}/tasks": {
+      "get": {
+        "tags": ["Tareas"],
+        "summary": "Listar tareas",
+        "description": "Lista paginada de tareas de un proyecto",
+        "operationId": "b8c7fa0a8f2164c2591a29a17495861c",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "status_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start_date_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "start_date_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de tareas"
+          },
+          "404": {
+            "description": "Proyecto no encontrado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "post": {
+        "tags": ["Tareas"],
+        "summary": "Crear tarea",
+        "description": "Crea una tarea dentro de un proyecto",
+        "operationId": "a9d185726323607499e67377ad9ceef9",
+        "parameters": [
+          {
+            "name": "project",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["type", "title"],
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "parent_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "task_status_id": {
+                    "type": "integer"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "progress": {
+                    "type": "integer"
+                  },
+                  "dependency_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "dependency_type": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tarea creada"
+          },
+          "422": {
+            "description": "Error de validación o ciclo detectado"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/tasks/{task}": {
+      "get": {
+        "tags": ["Tareas"],
+        "summary": "Detalle de tarea",
+        "description": "Devuelve el detalle de una tarea con relaciones",
+        "operationId": "2507ad5dcbf3084e44634aa11b15da4e",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalle de la tarea"
+          },
+          "404": {
+            "description": "No encontrada"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Tareas"],
+        "summary": "Eliminar tarea",
+        "description": "Eliminación lógica con cascada a descendientes",
+        "operationId": "70a8dde6171ddd9371617d15b1b1b750",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tarea eliminada"
+          },
+          "422": {
+            "description": "Estado no permite eliminación"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": ["Tareas"],
+        "summary": "Actualizar tarea",
+        "description": "Actualización parcial de una tarea",
+        "operationId": "39485a75925f3070dd18a69d0f480611",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "task_status_id": {
+                    "type": "integer"
+                  },
+                  "progress": {
+                    "type": "integer"
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "parent_id": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "dependency_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tarea actualizada"
+          },
+          "422": {
+            "description": "Transición de estado inválida"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/tasks/{task}/restore": {
+      "post": {
+        "tags": ["Tareas"],
+        "summary": "Restaurar tarea",
+        "description": "Restaura una tarea eliminada con cascada",
+        "operationId": "07565c37b3ebd9a5ed6a01338551a795",
+        "parameters": [
+          {
+            "name": "task",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tarea restaurada"
+          },
+          "422": {
+            "description": "La tarea no está eliminada"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/tasks/bulk-update": {
+      "patch": {
+        "tags": ["Tareas"],
+        "summary": "Actualización masiva",
+        "description": "Actualiza múltiples tareas con los mismos datos",
+        "operationId": "bde426156395deb0934a2906e6d07d13",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["task_ids", "data"],
+                "properties": {
+                  "task_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "data": {
+                    "properties": {
+                      "task_status_id": {
+                        "type": "integer"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "progress": {
+                        "type": "integer"
+                      },
+                      "start_date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "end_date": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tareas actualizadas"
+          },
+          "422": {
+            "description": "Error de validación"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "sanctum": {
+        "type": "http",
+        "description": "Token de autenticación Laravel Sanctum",
+        "bearerFormat": "JWT",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Autenticación",
+      "description": "Autenticación"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard"
+    },
+    {
+      "name": "Proyectos",
+      "description": "Proyectos"
+    },
+    {
+      "name": "Tareas",
+      "description": "Tareas"
+    }
+  ]
+}
