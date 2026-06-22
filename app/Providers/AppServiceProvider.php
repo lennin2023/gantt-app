@@ -94,6 +94,18 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(60)->by($user?->id ?: $request->ip());
         });
+
+        RateLimiter::for('api-read', function ($request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('api-write', function ($request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('api-bulk', function ($request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
+        });
     }
 
     private function configureDefaults(): void
