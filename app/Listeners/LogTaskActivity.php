@@ -4,24 +4,27 @@ namespace App\Listeners;
 
 use App\Events\TaskCompleted;
 use App\Events\TaskCreated;
+use App\Events\TaskEvent;
 use App\Events\TaskUpdated;
 use Illuminate\Support\Facades\Log;
 
 class LogTaskActivity
 {
-    public function handle(object $event): void
+    public function handle(TaskEvent $event): void
     {
-        $action = match (true) {
-            $event instanceof TaskCreated => 'created',
-            $event instanceof TaskUpdated => 'updated',
-            $event instanceof TaskCompleted => 'completed',
+        $action = match ($event::class) {
+            TaskCreated::class => 'created',
+            TaskUpdated::class => 'updated',
+            TaskCompleted::class => 'completed',
             default => 'unknown',
         };
 
+        $task = $event->task();
+
         Log::info("Task {$action}", [
-            'task_id' => $event->task->id,
-            'project_id' => $event->task->project_id,
-            'title' => $event->task->title,
+            'task_id' => $task->id,
+            'project_id' => $task->project_id,
+            'title' => $task->title,
         ]);
     }
 }

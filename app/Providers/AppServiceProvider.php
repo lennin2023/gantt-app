@@ -14,10 +14,12 @@ use App\Listeners\LogProjectUserActivity;
 use App\Listeners\LogTaskActivity;
 use App\Listeners\RefreshProjectStatus;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\Task;
 use App\Models\TaskAssignment;
 use App\Models\User;
 use App\Policies\ProjectPolicy;
+use App\Policies\ProjectUserPolicy;
 use App\Policies\TaskAssignmentPolicy;
 use App\Policies\TaskPolicy;
 use App\Repositories\Contracts\DashboardRepositoryInterface;
@@ -64,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
     private function configurePolicies(): void
     {
         Gate::policy(Project::class, ProjectPolicy::class);
+        Gate::policy(ProjectUser::class, ProjectUserPolicy::class);
         Gate::policy(Task::class, TaskPolicy::class);
         Gate::policy(TaskAssignment::class, TaskAssignmentPolicy::class);
 

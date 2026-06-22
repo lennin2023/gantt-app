@@ -14,13 +14,13 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'role_id' => RoleEnum::SUPER_ADMIN->value,
-                'name' => 'Donny Arce',
-                'email' => 'darce@onnesta.pe',
+                'name' => 'Super Admin',
+                'email' => 'superadmin@example.com',
             ],
             [
                 'role_id' => RoleEnum::SUPER_ADMIN->value,
-                'name' => 'Super Admin',
-                'email' => 'superadmin@example.com',
+                'name' => 'Super Admin Two',
+                'email' => 'superadmin2@example.com',
             ],
             [
                 'role_id' => RoleEnum::ADMIN->value,
@@ -34,10 +34,12 @@ class UserSeeder extends Seeder
             ],
         ];
 
+        $password = Hash::make(config('app.seeder_password', env('SEEDER_PASSWORD', 'password')));
+
         foreach ($users as $data) {
             User::firstOrCreate(
                 ['email' => $data['email']],
-                array_merge($data, ['password' => Hash::make('password')])
+                array_merge($data, ['password' => $password])
             );
         }
     }

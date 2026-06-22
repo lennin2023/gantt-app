@@ -12,13 +12,9 @@ class RefreshProjectStatus
         private readonly ProjectService $projectService,
     ) {}
 
-    public function handle(object $event): void
+    public function handle(TaskCompleted $event): void
     {
-        if (! $event instanceof TaskCompleted) {
-            return;
-        }
-
-        $task = $event->task;
+        $task = $event->task();
         $project = $task->project;
 
         if (! $project) {

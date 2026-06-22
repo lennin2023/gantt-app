@@ -7,6 +7,12 @@ return [
         'deleted_cannot_be_updated' => 'Las tareas eliminadas no pueden ser actualizadas.',
         'not_deleted' => 'Solo las tareas eliminadas pueden ser restauradas.',
         'invalid_status_transition' => 'No se puede cambiar la tarea de :from a :to.',
+        'cycle_detected' => 'Agregar esta dependencia crearía un ciclo.',
+        'bulk' => [
+            'tasks_not_found' => 'No se encontraron tareas con los IDs proporcionados.',
+            'tasks_must_belong_to_same_project' => 'Todas las tareas deben pertenecer al mismo proyecto.',
+            'no_task_ids_provided' => 'No se proporcionaron IDs de tareas.',
+        ],
     ],
     'project' => [
         'already_in_status' => 'El proyecto ya se encuentra en estado :status.',

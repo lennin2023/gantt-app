@@ -7,6 +7,12 @@ return [
         'deleted_cannot_be_updated' => 'Deleted tasks cannot be updated.',
         'not_deleted' => 'Only deleted tasks can be restored.',
         'invalid_status_transition' => 'Cannot transition task from :from to :to.',
+        'cycle_detected' => 'Adding this dependency would create a cycle.',
+        'bulk' => [
+            'tasks_not_found' => 'No tasks found with the provided IDs.',
+            'tasks_must_belong_to_same_project' => 'All tasks must belong to the same project.',
+            'no_task_ids_provided' => 'No task IDs provided.',
+        ],
     ],
     'project' => [
         'already_in_status' => 'The project is already in status :status.',

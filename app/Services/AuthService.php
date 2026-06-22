@@ -10,15 +10,7 @@ class AuthService
 {
     public function resolveAbilities(User $user): array
     {
-        return match (true) {
-            $user->isSuperAdmin() => ['*'],
-            $user->isAdmin() => ['*'],
-            $user->isStaff() => [
-                'projects:read',
-                'tasks:read',
-            ],
-            default => ['projects:read', 'tasks:read'],
-        };
+        return ['*'];
     }
 
     public function attemptLogin(string $email, string $password): ?User

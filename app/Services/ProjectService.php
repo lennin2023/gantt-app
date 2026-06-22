@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\DTOs\ProjectDTO;
 use App\Enums\ProjectStatusEnum;
-use App\Enums\TaskStatusEnum;
 use App\Events\ProjectCreated;
 use App\Events\ProjectUpdated;
 use App\Exceptions\ProjectAlreadyInStatusException;
@@ -12,8 +11,8 @@ use App\Exceptions\ProjectDeletedCannotBeUpdatedException;
 use App\Exceptions\ProjectInvalidStatusTransitionException;
 use App\Exceptions\ProjectNotDeletedException;
 use App\Models\Project;
-use App\Models\Task;
 use App\Repositories\Contracts\ProjectRepositoryInterface;
+use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -46,6 +45,7 @@ class ProjectService
 
     public function __construct(
         private readonly ProjectRepositoryInterface $projectRepository,
+        private readonly TaskRepositoryInterface $taskRepository,
     ) {}
 
     public function getUserProjects(int $userId, int $perPage = 10, ?int $statusId = null): LengthAwarePaginator
@@ -165,13 +165,7 @@ class ProjectService
      */
     public function refreshDates(int $projectId): void
     {
-        $rootTasks = Task::where('project_id', $projectId)
-            ->whereNull('parent_id')
-            ->whereNotIn('task_status_id', [
-                TaskStatusEnum::CANCELLED->value,
-                TaskStatusEnum::DELETED->value,
-            ])
-            ->get();
+        $rootTasks = $this->taskRepository->getActiveRootTasks($projectId);
 
         $project = Project::find($projectId);
 

@@ -3,14 +3,15 @@
 namespace App\Services;
 
 use App\Enums\TaskStatusEnum;
-use App\Enums\TaskTypeEnum;
 use App\Models\Task;
+use App\Repositories\Contracts\TaskRepositoryInterface;
 use Illuminate\Support\Collection;
 
 class TaskProgressService
 {
     public function __construct(
         private readonly ProjectService $projectService,
+        private readonly TaskRepositoryInterface $taskRepository,
     ) {}
 
     public function recalculateAncestors(Task $task): void
@@ -63,13 +64,7 @@ class TaskProgressService
             return false;
         }
 
-        $children = Task::where('parent_id', $parent->id)
-            ->whereNotIn('task_status_id', [
-                TaskStatusEnum::CANCELLED->value,
-                TaskStatusEnum::DELETED->value,
-            ])
-            ->where('type', '!=', TaskTypeEnum::MILESTONE->value)
-            ->get();
+        $children = $this->taskRepository->getChildrenForProgressCalc($parent->id);
 
         if ($children->isEmpty()) {
             return $this->clear($parent);

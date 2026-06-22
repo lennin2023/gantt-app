@@ -6,8 +6,8 @@ use Exception;
 
 class CycleDetectionException extends Exception
 {
-    public function __construct(string $message = 'Adding this dependency would create a cycle')
+    public function __construct(?string $message = null)
     {
-        parent::__construct($message);
+        parent::__construct($message ?? __('exceptions.task.cycle_detected'));
     }
 }

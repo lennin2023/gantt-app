@@ -7,11 +7,16 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ProjectCreated
+class ProjectCreated implements ProjectEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public readonly Project $project,
     ) {}
+
+    public function project(): Project
+    {
+        return $this->project;
+    }
 }

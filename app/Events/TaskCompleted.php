@@ -7,11 +7,16 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TaskCompleted
+class TaskCompleted implements TaskEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public readonly Task $task,
     ) {}
+
+    public function task(): Task
+    {
+        return $this->task;
+    }
 }

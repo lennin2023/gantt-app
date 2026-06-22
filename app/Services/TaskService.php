@@ -174,7 +174,7 @@ class TaskService
 
         DB::transaction(function () use ($task) {
             // Cascadear DELETED a todos los descendientes
-            Task::where('path', 'LIKE', "{$task->path}/%")
+            $this->taskRepository->getDescendantsByPath($task->path)
                 ->whereNotIn('task_status_id', [
                     TaskStatusEnum::DELETED->value,
                     TaskStatusEnum::COMPLETED->value,
@@ -199,7 +199,7 @@ class TaskService
 
         DB::transaction(function () use ($task) {
             // Restaurar descendientes eliminados
-            Task::where('path', 'LIKE', "{$task->path}/%")
+            $this->taskRepository->getDescendantsByPath($task->path)
                 ->where('task_status_id', TaskStatusEnum::DELETED->value)
                 ->each(function (Task $descendant) {
                     $descendant->task_status_id = TaskStatusEnum::PENDING->value;
@@ -219,7 +219,7 @@ class TaskService
             throw BulkOperationException::noTaskIdsProvided();
         }
 
-        $tasks = Task::whereIn('id', $taskIds)->get();
+        $tasks = $this->taskRepository->findByIds($taskIds);
 
         if ($tasks->isEmpty()) {
             throw BulkOperationException::tasksNotFound();

@@ -2,22 +2,16 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\TaskStatusEnum;
+use App\Enums\TaskTypeEnum;
 use App\Models\Task;
 use App\Repositories\Contracts\TaskRepositoryInterface;
-use App\Services\ProjectService;
-use App\Services\TaskProgressService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class TaskRepository implements TaskRepositoryInterface
 {
-    private const PAD_LENGTH = 4;
-
-    public function __construct(
-        private readonly TaskProgressService $taskProgressService,
-        private readonly ProjectService $projectService,
-    ) {}
-
     public function getAllByProject(int $projectId, int $perPage = 10): LengthAwarePaginator
     {
         return Task::with([
@@ -54,42 +48,7 @@ class TaskRepository implements TaskRepositoryInterface
 
     public function update(Task $task, array $data): Task
     {
-        $oldParentId = $task->parent_id;
-        $oldPath = $task->path;
-        $parentChanged = isset($data['parent_id'])
-            && (int) $data['parent_id'] !== (int) $task->parent_id;
-
         $task->update($data);
-
-        if ($parentChanged) {
-            $newParentPath = $task->parent_id
-                ? Task::findOrFail($task->parent_id)->path
-                : null;
-
-            $segment = $this->nextSegment($task->parent_id, $task->id);
-
-            $newPath = $newParentPath
-                ? "{$newParentPath}/{$segment}"
-                : $segment;
-
-            $task->path = $newPath;
-            $task->saveQuietly();
-
-            $this->updateDescendantPaths($oldPath, $newPath);
-            $this->renumberSiblings($oldParentId);
-
-            if ($oldParentId) {
-                $this->taskProgressService->recalculateById($oldParentId);
-            } else {
-                $this->projectService->refreshDates($task->project_id);
-            }
-
-            if ($task->parent_id) {
-                $this->taskProgressService->recalculateById($task->parent_id);
-            } else {
-                $this->projectService->refreshDates($task->project_id);
-            }
-        }
 
         return $task->fresh();
     }
@@ -126,44 +85,35 @@ class TaskRepository implements TaskRepositoryInterface
         return ! empty($result);
     }
 
-    public function updateDescendantPaths(string $oldPath, string $newPath): void
+    public function findByIds(array $ids): Collection
     {
-        Task::where('path', 'LIKE', "{$oldPath}/%")
-            ->each(function (Task $task) use ($oldPath, $newPath) {
-                $task->path = str_replace($oldPath.'/', $newPath.'/', $task->path);
-                $task->saveQuietly();
-            });
+        return Task::whereIn('id', $ids)->get();
     }
 
-    private function renumberSiblings(?int $parentId): void
+    public function getDescendantsByPath(string $path): Collection
     {
-        $siblings = Task::where('parent_id', $parentId)
-            ->orderBy('path')
+        return Task::where('path', 'LIKE', "{$path}/%")->get();
+    }
+
+    public function getActiveRootTasks(int $projectId): Collection
+    {
+        return Task::where('project_id', $projectId)
+            ->whereNull('parent_id')
+            ->whereNotIn('task_status_id', [
+                TaskStatusEnum::CANCELLED->value,
+                TaskStatusEnum::DELETED->value,
+            ])
             ->get();
-
-        $parentPath = $parentId ? Task::find($parentId)?->path : null;
-
-        foreach ($siblings as $index => $sibling) {
-            $segment = str_pad((string) ($index + 1), self::PAD_LENGTH, '0', STR_PAD_LEFT);
-            $newPath = $parentPath ? "{$parentPath}/{$segment}" : $segment;
-
-            if ($sibling->path !== $newPath) {
-                $oldSiblingPath = $sibling->path;
-
-                $sibling->path = $newPath;
-                $sibling->saveQuietly();
-
-                $this->updateDescendantPaths($oldSiblingPath, $newPath);
-            }
-        }
     }
 
-    private function nextSegment(?int $parentId, int $excludeTaskId): string
+    public function getChildrenForProgressCalc(int $parentId): Collection
     {
-        $count = Task::where('parent_id', $parentId)
-            ->where('id', '!=', $excludeTaskId)
-            ->count();
-
-        return str_pad((string) ($count + 1), self::PAD_LENGTH, '0', STR_PAD_LEFT);
+        return Task::where('parent_id', $parentId)
+            ->whereNotIn('task_status_id', [
+                TaskStatusEnum::CANCELLED->value,
+                TaskStatusEnum::DELETED->value,
+            ])
+            ->where('type', '!=', TaskTypeEnum::MILESTONE->value)
+            ->get();
     }
 }

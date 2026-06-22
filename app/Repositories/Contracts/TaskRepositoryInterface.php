@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Task;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 interface TaskRepositoryInterface
 {
@@ -19,5 +20,11 @@ interface TaskRepositoryInterface
 
     public function wouldCreateCycle(Task $task, int $newDependencyId): bool;
 
-    public function updateDescendantPaths(string $oldPath, string $newPath): void;
+    public function findByIds(array $ids): Collection;
+
+    public function getDescendantsByPath(string $path): Collection;
+
+    public function getActiveRootTasks(int $projectId): Collection;
+
+    public function getChildrenForProgressCalc(int $parentId): Collection;
 }

@@ -8,16 +8,16 @@ class BulkOperationException extends Exception
 {
     public static function tasksNotFound(): self
     {
-        return new self('No tasks found with the provided IDs');
+        return new self(__('exceptions.task.bulk.tasks_not_found'));
     }
 
     public static function tasksMustBelongToSameProject(): self
     {
-        return new self('All tasks must belong to the same project');
+        return new self(__('exceptions.task.bulk.tasks_must_belong_to_same_project'));
     }
 
     public static function noTaskIdsProvided(): self
     {
-        return new self('No task IDs provided');
+        return new self(__('exceptions.task.bulk.no_task_ids_provided'));
     }
 }
